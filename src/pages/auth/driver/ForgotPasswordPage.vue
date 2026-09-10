@@ -60,7 +60,7 @@
 
       <!-- ================= BACK TO DRIVER LOGIN ================= -->
       <div class="bottom-link">
-        <router-link to="/driver-login"> ← Back to Driver Login </router-link>
+        <router-link to="/"> ← Back to Driver Login </router-link>
       </div>
     </div>
   </div>

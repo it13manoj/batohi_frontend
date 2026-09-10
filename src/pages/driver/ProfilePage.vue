@@ -1003,728 +1003,178 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed } from 'vue'
+import { useQuasar } from 'quasar'
 
-import { Notify } from 'quasar'
-import api, { imagesBaseUrl } from '@/config/api'
+const $q = useQuasar()
 
-/* =====================================================
-   STATE
-===================================================== */
-
+// Configuration / Constants
+const imagesBaseUrl = ref('https://your-domain.com/uploads/')
 const editMode = ref(false)
-
 const saving = ref(false)
 
-const changingPassword = ref(false)
+// Options for Dropdowns
+const genderOptions = ['Male', 'Female', 'Other']
+const agencyTypeOptions = ['Individual / Freelance', 'Fleet Partner', 'Corporate Agency']
+const stateOptions = ['Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Telangana', 'Uttar Pradesh']
 
-const passwordDialog = ref(false)
+// Profile State Model
+const profile = reactive({
+  driverId: 'DRV-98421',
+  name: 'John Doe',
+  phone: '+91 9876543210',
+  email: 'john.doe@example.com',
+  city: 'Mumbai',
+  state: 'Maharashtra',
+  address: '402, Green Acres, Andheri West',
+  agencyType: 'Individual / Freelance',
+  joinedDate: ' Jan 15, 2023',
+  photo: '',
+  rating: 4.8,
+  totalReviews: 124,
+  aadharNumber: '',
+  aadharPhoto: null,
+  panNumber: 'ABCDE1234F',
+  panPhoto: 'pan_doc.jpg',
+  licenseNumber: 'MH-02-20210012345',
+  licenseExpiry: '2028-11-20',
+  licensePhoto: 'license_doc.jpg',
+  insuranceNumber: 'POL-77889922',
+  insuranceExpiry: '2025-12-31',
+  insurancePhoto: 'insurance_doc.pdf'
+})
 
-/* =====================================================
-   FILE INPUTS
-===================================================== */
+// Backup state for canceling edits
+let profileBackup = {}
 
+// DOM References for hidden file inputs
 const profileInput = ref(null)
-
 const aadharInput = ref(null)
-
 const panInput = ref(null)
-
 const licenseInput = ref(null)
-
 const insuranceInput = ref(null)
 
-/* =====================================================
-   PASSWORD VISIBILITY
-===================================================== */
-
-const showCurrentPassword = ref(false)
-
-const showNewPassword = ref(false)
-
-const showConfirmPassword = ref(false)
-
-/* =====================================================
-   PROFILE DATA
-===================================================== */
-
-const profile = reactive({
-  name: '',
-  driverId: '',
-  phone: '',
-  email: '',
-  photo: '',
-
-  aadharNumber: '',
-  aadharPhoto: '',
-
-  panNumber: '',
-  panPhoto: '',
-
-  dateOfBirth: '',
-  gender: '',
-
-  agencyType: '',
-  state: '',
-  city: '',
-  address: '',
-
-  joinedDate: '',
-
-  rating: 0,
-  totalReviews: 0,
-
-  licenseNumber: '',
-  licenseExpiry: '',
-  licensePhoto: '',
-
-  insuranceNumber: '',
-  insuranceExpiry: '',
-  insurancePhoto: ''
-})
-
-const fetchProfileData = async () => {
-  try {
-    const response = await api.get('/driver/profile')
-
-    console.log('Profile API Response:', response.data)
-
-    const driver = response.data?.data
-
-    if (!driver) {
-      console.error('Driver data not found')
-      return
-    }
-
-    // ==========================================
-    // BASIC PROFILE
-    // ==========================================
-
-    profile.name = `${driver.first_name || ''} ${driver.last_name || ''}`.trim()
-
-    profile.driverId = driver.driver_code || ''
-
-    profile.phone = driver.mobile_number || ''
-
-    profile.email = driver.email || ''
-
-    profile.photo = driver.profile_image || ''
-
-    // ==========================================
-    // AADHAAR
-    // ==========================================
-
-    profile.aadharNumber = driver.aadhaar_number || ''
-
-    profile.aadharPhoto = driver.aadhaar_image || ''
-
-    // ==========================================
-    // PAN
-    // ==========================================
-
-    profile.panNumber = driver.pan_number || ''
-
-    profile.panPhoto = driver.pan_image || ''
-
-    // ==========================================
-    // PERSONAL DETAILS
-    // ==========================================
-
-    profile.dateOfBirth = driver.date_of_birth || ''
-
-    profile.gender = driver.gender || ''
-
-    // ==========================================
-    // LOCATION
-    // ==========================================
-
-    profile.state = driver.state || ''
-
-    profile.city = driver.city || ''
-
-    profile.address = driver.address || ''
-
-    // ==========================================
-    // DRIVER DETAILS
-    // ==========================================
-
-    profile.licenseNumber = driver.driving_license_no || ''
-
-    profile.licenseExpiry = driver.license_expiry_date || ''
-
-    profile.licensePhoto = driver.license_image || ''
-
-    // ==========================================
-    // RATING
-    // ==========================================
-
-    profile.rating = Number(driver.rating || 0)
-
-    profile.totalReviews = Number(driver.total_rides || 0)
-
-    // ==========================================
-    // JOINED DATE
-    // ==========================================
-
-    if (driver.created_at) {
-      profile.joinedDate = new Date(driver.created_at).toLocaleDateString(
-        'en-IN',
-        {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric'
-        }
-      )
-    }
-
-    // ==========================================
-    // AGENCY TYPE
-    // ==========================================
-
-    // API response mein agencyType nahi hai.
-    // Isliye currently default value rakhi hai.
-    profile.agencyType = 'Owner'
-
-    // ==========================================
-    // INSURANCE
-    // ==========================================
-
-    // API response mein insurance fields nahi hain.
-    // Jab backend se aayenge tab map kar sakte hain.
-
-    profile.insuranceNumber = driver.insurance_number || ''
-
-    profile.insuranceExpiry = driver.insurance_expiry_date || ''
-
-    profile.insurancePhoto = driver.insurance_image || ''
-
-    console.log('Mapped Profile:', profile)
-  } catch (error) {
-    console.error('Error fetching driver profile:', error)
-  }
-}
-
-onMounted(() => {
-  fetchProfileData()
-})
-
-/* =====================================================
-   ORIGINAL PROFILE
-===================================================== */
-
-const originalProfile = ref(null)
-
-/* =====================================================
-   OPTIONS
-===================================================== */
-
-const genderOptions = ['Male', 'Female', 'Other']
-
-const agencyTypeOptions = ['Owner', 'Agent']
-
-const stateOptions = [
-  'Bihar',
-  'Uttar Pradesh',
-  'Jharkhand',
-  'West Bengal',
-  'Delhi',
-  'Madhya Pradesh',
-  'Rajasthan',
-  'Maharashtra'
-]
-
-/* =====================================================
-   PASSWORD FORM
-===================================================== */
-
-const passwordForm = reactive({
-  currentPassword: '',
-
-  newPassword: '',
-
-  confirmPassword: ''
-})
-
-/* =====================================================
-   INSURANCE STATUS
-===================================================== */
-
+// Computed Properties
 const insuranceStatus = computed(() => {
-  if (!profile.insuranceExpiry) {
-    return 'Not Available'
-  }
-
+  if (!profile.insuranceExpiry) return 'Unverified'
+  const expiryDate = new Date(profile.insuranceExpiry)
   const today = new Date()
-
-  const expiry = new Date(profile.insuranceExpiry)
-
-  if (expiry < today) {
-    return 'Expired'
-  }
-
-  return 'Active'
+  return expiryDate >= today ? 'Valid' : 'Expired'
 })
 
 const insuranceStatusColor = computed(() => {
-  if (insuranceStatus.value === 'Expired') {
-    return 'negative'
-  }
-
-  if (insuranceStatus.value === 'Active') {
-    return 'positive'
-  }
-
-  return 'grey'
+  return insuranceStatus.value === 'Valid' ? 'positive' : 'negative'
 })
 
-/* =====================================================
-   INITIALS
-===================================================== */
-
-function getInitials(name) {
-  if (!name) {
-    return 'D'
-  }
-
+// Helper Functions
+const getInitials = (name) => {
+  if (!name) return 'D'
   return name
-    .trim()
-    .split(/\s+/)
-    .map(word => word.charAt(0))
+    .split(' ')
+    .map((word) => word[0])
     .join('')
-    .substring(0, 2)
     .toUpperCase()
+    .substring(0, 2)
 }
 
-/* =====================================================
-   START EDIT
-===================================================== */
-
-function startEdit() {
-  originalProfile.value = {
-    ...profile
-  }
-
+// Edit Mode Actions
+const startEdit = () => {
+  profileBackup = JSON.parse(JSON.stringify(profile))
   editMode.value = true
 }
 
-/* =====================================================
-   CANCEL EDIT
-===================================================== */
-
-function cancelEdit() {
-  if (originalProfile.value) {
-    Object.assign(profile, originalProfile.value)
-  }
-
+const cancelEdit = () => {
+  Object.assign(profile, profileBackup)
   editMode.value = false
 }
 
-/* =====================================================
-   SAVE PROFILE
-===================================================== */
-
-async function saveProfile() {
-  if (!profile.name?.trim()) {
-    Notify.create({
-      type: 'warning',
-      message: 'Please enter your full name'
-    })
-
-    return
-  }
-
-  if (!profile.phone?.trim()) {
-    Notify.create({
-      type: 'warning',
-      message: 'Please enter your phone number'
-    })
-
-    return
-  }
-
-  if (profile.aadharNumber && profile.aadharNumber.length !== 12) {
-    Notify.create({
-      type: 'warning',
-      message: 'Aadhaar number must contain 12 digits'
-    })
-
-    return
-  }
-
-  if (
-    profile.panNumber &&
-    !/^[A-Z]{5}[0-9]{4}[A-Z]$/i.test(profile.panNumber)
-  ) {
-    Notify.create({
-      type: 'warning',
-      message: 'Please enter a valid PAN number'
-    })
-
-    return
-  }
-
+const saveProfile = async () => {
   saving.value = true
 
+  console.log(profile);
+
   try {
-    /*
-      Connect API here:
-
-      await api.put(
-        '/driver/profile',
-        profile
-      )
-    */
-
-    await new Promise(resolve => setTimeout(resolve, 700))
-
-    originalProfile.value = {
-      ...profile
-    }
-
+    // API call simulation
+    await new Promise((resolve) => setTimeout(resolve, 1200))
     editMode.value = false
-
-    Notify.create({
+    $q.notify({
       type: 'positive',
-      message: 'Profile updated successfully',
-      icon: 'check_circle'
+      message: 'Profile updated successfully!',
+      position: 'top'
     })
   } catch (error) {
-    console.error('Profile Update Error:', error)
-
-    Notify.create({
+    $q.notify({
       type: 'negative',
-      message: 'Unable to update profile'
+      message: 'Failed to update profile.',
+      position: 'top'
     })
   } finally {
     saving.value = false
   }
 }
 
-/* =====================================================
-   PROFILE PHOTO
-===================================================== */
+// Document / Image Upload Triggers
+const openProfilePicker = () => profileInput.value.click()
+const openAadharPicker = () => aadharInput.value.click()
+const openPanPicker = () => panInput.value.click()
+const openLicensePicker = () => licenseInput.value.click()
+const openInsurancePicker = () => insuranceInput.value.click()
 
-function openProfilePicker() {
-  profileInput.value?.click()
+// File Handlers
+const handleProfilePhoto = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    profile.photo = URL.createObjectURL(file)
+    $q.notify({ type: 'positive', message: 'Profile photo updated' })
+  }
 }
 
-function handleProfilePhoto(event) {
-  const file = event.target.files?.[0]
-
-  if (!file) return
-
-  if (!file.type.startsWith('image/')) {
-    Notify.create({
-      type: 'warning',
-      message: 'Please select an image file'
-    })
-
-    return
+const handleAadharPhoto = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    profile.aadharPhoto = file.name
+    $q.notify({ type: 'positive', message: 'Aadhaar document updated' })
   }
+}
 
-  if (file.size > 5 * 1024 * 1024) {
-    Notify.create({
-      type: 'warning',
-      message: 'Image size must be less than 5 MB'
-    })
-
-    return
+const handlePanPhoto = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    profile.panPhoto = file.name
+    $q.notify({ type: 'positive', message: 'PAN document updated' })
   }
+}
 
-  profile.photo = URL.createObjectURL(file)
+const handleLicensePhoto = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    profile.licensePhoto = file.name
+    $q.notify({ type: 'positive', message: 'License document updated' })
+  }
+}
 
-  Notify.create({
-    type: 'positive',
-    message: 'Profile photo selected'
+const handleInsurancePhoto = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    profile.insurancePhoto = file.name
+    $q.notify({ type: 'positive', message: 'Insurance document updated' })
+  }
+}
+
+const changePassword = () => {
+  $q.dialog({
+    title: 'Change Password',
+    message: 'Enter your new password:',
+    prompt: {
+      model: '',
+      type: 'password'
+    },
+    cancel: true,
+    persistent: true
+  }).onOk((data) => {
+    $q.notify({ type: 'positive', message: 'Password changed successfully' })
   })
 }
-
-/* =====================================================
-   AADHAAR PHOTO
-===================================================== */
-
-function openAadharPicker() {
-  aadharInput.value?.click()
-}
-
-function handleAadharPhoto(event) {
-  const file = event.target.files?.[0]
-
-  if (!file) return
-
-  if (!file.type.startsWith('image/')) {
-    Notify.create({
-      type: 'warning',
-      message: 'Please select an Aadhaar image'
-    })
-
-    return
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    Notify.create({
-      type: 'warning',
-      message: 'Image size must be less than 5 MB'
-    })
-
-    return
-  }
-
-  profile.aadharPhoto = URL.createObjectURL(file)
-
-  Notify.create({
-    type: 'positive',
-    message: 'Aadhaar card photo selected'
-  })
-}
-
-/* =====================================================
-   PAN PHOTO
-===================================================== */
-
-function openPanPicker() {
-  panInput.value?.click()
-}
-
-function handlePanPhoto(event) {
-  const file = event.target.files?.[0]
-
-  if (!file) return
-
-  if (!file.type.startsWith('image/')) {
-    Notify.create({
-      type: 'warning',
-      message: 'Please select a PAN card image'
-    })
-
-    return
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    Notify.create({
-      type: 'warning',
-      message: 'Image size must be less than 5 MB'
-    })
-
-    return
-  }
-
-  profile.panPhoto = URL.createObjectURL(file)
-
-  Notify.create({
-    type: 'positive',
-    message: 'PAN card photo selected'
-  })
-}
-
-/* =====================================================
-   LICENSE PHOTO
-===================================================== */
-
-function openLicensePicker() {
-  licenseInput.value?.click()
-}
-
-function handleLicensePhoto(event) {
-  const file = event.target.files?.[0]
-
-  if (!file) return
-
-  if (!file.type.startsWith('image/')) {
-    Notify.create({
-      type: 'warning',
-      message: 'Please select a license image'
-    })
-
-    return
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    Notify.create({
-      type: 'warning',
-      message: 'Image size must be less than 5 MB'
-    })
-
-    return
-  }
-
-  profile.licensePhoto = URL.createObjectURL(file)
-
-  Notify.create({
-    type: 'positive',
-    message: 'License photo selected'
-  })
-}
-
-/* =====================================================
-   INSURANCE PHOTO
-===================================================== */
-
-function openInsurancePicker() {
-  insuranceInput.value?.click()
-}
-
-function handleInsurancePhoto(event) {
-  const file = event.target.files?.[0]
-
-  if (!file) return
-
-  const allowedTypes = [
-    'image/jpeg',
-    'image/png',
-    'image/webp',
-    'application/pdf'
-  ]
-
-  if (!allowedTypes.includes(file.type)) {
-    Notify.create({
-      type: 'warning',
-      message: 'Please select an image or PDF file'
-    })
-
-    return
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    Notify.create({
-      type: 'warning',
-      message: 'File size must be less than 5 MB'
-    })
-
-    return
-  }
-
-  profile.insurancePhoto = URL.createObjectURL(file)
-
-  Notify.create({
-    type: 'positive',
-    message: 'Insurance document selected'
-  })
-}
-
-/* =====================================================
-   CHANGE PASSWORD
-===================================================== */
-
-function changePassword() {
-  passwordForm.currentPassword = ''
-
-  passwordForm.newPassword = ''
-
-  passwordForm.confirmPassword = ''
-
-  showCurrentPassword.value = false
-
-  showNewPassword.value = false
-
-  showConfirmPassword.value = false
-
-  passwordDialog.value = true
-}
-
-/* =====================================================
-   UPDATE PASSWORD
-===================================================== */
-
-async function updatePassword() {
-  if (!passwordForm.currentPassword) {
-    Notify.create({
-      type: 'warning',
-      message: 'Enter your current password'
-    })
-
-    return
-  }
-
-  if (!passwordForm.newPassword) {
-    Notify.create({
-      type: 'warning',
-      message: 'Enter a new password'
-    })
-
-    return
-  }
-
-  if (passwordForm.newPassword.length < 6) {
-    Notify.create({
-      type: 'warning',
-      message: 'Password must contain at least 6 characters'
-    })
-
-    return
-  }
-
-  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    Notify.create({
-      type: 'negative',
-      message: 'Passwords do not match'
-    })
-
-    return
-  }
-
-  changingPassword.value = true
-
-  try {
-    /*
-      Connect API here:
-
-      await api.put(
-        '/driver/change-password',
-        passwordForm
-      )
-    */
-
-    await new Promise(resolve => setTimeout(resolve, 700))
-
-    passwordDialog.value = false
-
-    Notify.create({
-      type: 'positive',
-      message: 'Password changed successfully',
-      icon: 'check_circle'
-    })
-  } catch (error) {
-    console.error('Password Error:', error)
-
-    Notify.create({
-      type: 'negative',
-      message: 'Unable to change password'
-    })
-  } finally {
-    changingPassword.value = false
-  }
-}
-
-/* =====================================================
-   LOAD PROFILE
-===================================================== */
-
-async function loadProfile() {
-  /*
-    Connect API here:
-
-    const response =
-      await api.get('/driver/profile')
-
-    Object.assign(
-      profile,
-      response.data.data
-    )
-  */
-}
-
-/* =====================================================
-   MOUNT
-===================================================== */
-
-onMounted(() => {
-  originalProfile.value = {
-    ...profile
-  }
-
-  loadProfile()
-})
 </script>
 
 <style scoped>

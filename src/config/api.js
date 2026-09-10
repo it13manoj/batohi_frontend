@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { LocalStorage, SessionStorage } from 'quasar'
 
-const BASE_URL = 'https://api.batohidriver.com/api/v1'
+// const BASE_URL = 'https://api.batohidriver.com/api/v1'
+const BASE_URL = 'http://localhost:3300/api/v1'
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -54,4 +55,5 @@ api.interceptors.request.use(
 
 export default api
 
-export const imagesBaseUrl = 'https://api.batohidriver.com/uploads'
+// export const imagesBaseUrl = 'https://api.batohidriver.com/uploads'
+export const imagesBaseUrl = 'http://localhost:3300/uploads'

@@ -77,9 +77,9 @@
               narrow-indicator
               @update:model-value="onRoleChange"
             >
-              <q-tab name="user" icon="person" label="User" />
-              <q-tab name="driver" icon="directions_car" label="Driver" />
-              <q-tab name="agent" icon="support_agent" label="Agent" />
+              <q-tab name="USERS" icon="person" label="User" />
+              <q-tab name="DRIVER" icon="directions_car" label="Driver" />
+              <q-tab name="AGENT" icon="support_agent" label="Agent" />
             </q-tabs>
           </q-card-section>
 
@@ -151,7 +151,7 @@
               </q-input>
 
               <!-- DRIVER-SPECIFIC FIELDS -->
-              <template v-if="activeRole === 'driver'">
+              <template v-if="activeRole === 'DRIVER'">
                 <q-input
                   v-model="form.licenseNumber"
                   outlined
@@ -182,7 +182,7 @@
               </template>
 
               <!-- AGENT-SPECIFIC FIELDS -->
-              <template v-if="activeRole === 'agent'">
+              <template v-if="activeRole === 'AGENT'">
                 <q-input
                   v-model="form.agencyCode"
                   outlined
@@ -190,7 +190,7 @@
                   label="Agency / Partner Code"
                   placeholder="Enter Agency Identification Code"
                   :disable="loading"
-                  :rules="[val => !!val?.trim() || 'Agency code is required for agents']"
+                  :rules="[val => !!val?.trim() || 'Agency code is required for AGENT']"
                 >
                   <template #prepend>
                     <q-icon name="confirmation_number" />
@@ -308,7 +308,7 @@ const loading = ref(false)
 
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
-const activeRole = ref('user') // 'user' | 'driver' | 'agent'
+const activeRole = ref('USERS') // 'USERS' | 'DRIVER' | 'AGENT'
 
 const form = reactive({
   name: '',
@@ -323,14 +323,14 @@ const form = reactive({
 })
 
 const roleLabel = computed(() => {
-  if (activeRole.value === 'driver') return 'Driver'
-  if (activeRole.value === 'agent') return 'Agent'
+  if (activeRole.value === 'DRIVER') return 'Driver'
+  if (activeRole.value === 'AGENT') return 'Agent'
   return 'User'
 })
 
 const roleIcon = computed(() => {
-  if (activeRole.value === 'driver') return 'directions_car'
-  if (activeRole.value === 'agent') return 'support_agent'
+  if (activeRole.value === 'DRIVER') return 'directions_car'
+  if (activeRole.value === 'AGENT') return 'support_agent'
   return 'person_add'
 })
 
@@ -375,14 +375,14 @@ const handleRegister = async () => {
       username: form.name.trim(),
       email: form.email.trim().toLowerCase(),
       mobile: form.mobile,
-      user_type: activeRole.value,
+      user_type: activeRole.value, // Sends 'USERS', 'DRIVER', or 'AGENT'
       status: 1,
       password: form.password,
-      ...(activeRole.value === 'driver' && {
+      ...(activeRole.value === 'DRIVER' && {
         license_number: form.licenseNumber.trim(),
         vehicle_number: form.vehicleNumber.trim()
       }),
-      ...(activeRole.value === 'agent' && {
+      ...(activeRole.value === 'AGENT' && {
         agency_code: form.agencyCode.trim()
       })
     }

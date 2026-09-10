@@ -908,7 +908,7 @@ const confirmLogout = async () => {
        REDIRECT TO DRIVER LOGIN
     ------------------------------------------------------- */
 
-    await router.replace('/driver-login')
+    await router.replace('/')
   } catch (error) {
     console.error('Logout Error:', error)
   } finally {

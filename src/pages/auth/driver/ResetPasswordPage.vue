@@ -225,7 +225,7 @@
           color="grey-7"
           icon="arrow_back"
           label="Back to Driver Login"
-          :to="'/driver-login'"
+          :to="'/'"
         />
       </div>
 
@@ -553,7 +553,7 @@ const resetPassword = () => {
       // ===============================================
 
       setTimeout(() => {
-        router.push('/driver-login')
+        router.push('/')
       }, 1200)
     } catch (err) {
       console.error('Driver Reset Password Error:', err)

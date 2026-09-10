@@ -17,9 +17,9 @@
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval';
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data: blob: https://api.batohidriver.com;
+    img-src 'self' data: blob: http://localhost:3300;
     font-src 'self' data:;
-    connect-src 'self' https://api.batohidriver.com ws://localhost:* ws://api.batohidriver.com:*;
+    connect-src 'self' http://localhost:3300 ws://localhost:* ws://localhost:*;
     media-src 'self' blob:;
     object-src 'none';
     base-uri 'self';

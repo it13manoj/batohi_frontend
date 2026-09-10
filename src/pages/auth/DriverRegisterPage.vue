@@ -471,7 +471,7 @@ const handleRegister = async () => {
     ---------------------------------------------- */
 
     setTimeout(() => {
-      router.push('/driver-login')
+      router.push('/')
     }, 1000)
   } catch (error) {
     console.error('Driver Registration Error:', error)
@@ -525,7 +525,7 @@ const handleRegister = async () => {
 ===================================================== */
 
 const goToLogin = () => {
-  router.push('/driver-login')
+  router.push('/')
 }
 </script>
 

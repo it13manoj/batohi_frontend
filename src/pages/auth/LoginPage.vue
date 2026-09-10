@@ -89,9 +89,9 @@
               align="justify"
               narrow-indicator
             >
-              <q-tab name="customer" icon="person" label="User" />
-              <q-tab name="driver" icon="directions_car" label="Driver" />
-              <q-tab name="agent" icon="support_agent" label="Agent" />
+              <q-tab name="USERS" icon="person" label="User" />
+              <q-tab name="DRIVER" icon="directions_car" label="Driver" />
+              <q-tab name="AGENT" icon="support_agent" label="Agent" />
             </q-tabs>
           </q-card-section>
 
@@ -202,7 +202,7 @@ const $q = useQuasar()
 const loginForm = ref(null)
 const loading = ref(false)
 const showPassword = ref(false)
-const activeRole = ref('customer') // Options: 'customer' | 'driver' | 'agent'
+const activeRole = ref('USERS') // Options: 'USERS' | 'DRIVER' | 'AGENT'
 
 const form = reactive({
   email: '',
@@ -212,16 +212,61 @@ const form = reactive({
 
 // Dynamic UI labels based on tab choice
 const roleLabel = computed(() => {
-  if (activeRole.value === 'driver') return 'Driver'
-  if (activeRole.value === 'agent') return 'Agent'
+  if (activeRole.value === 'DRIVER') return 'Driver'
+  if (activeRole.value === 'AGENT') return 'Agent'
   return 'User'
 })
 
 const roleIcon = computed(() => {
-  if (activeRole.value === 'driver') return 'directions_car'
-  if (activeRole.value === 'agent') return 'support_agent'
+  if (activeRole.value === 'DRIVER') return 'directions_car'
+  if (activeRole.value === 'AGENT') return 'support_agent'
   return 'person'
 })
+
+const getCurrentLocation = () => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation is not supported by your browser.'))
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        position => resolve(position.coords),
+        error => reject(error),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      )
+    }
+  })
+}
+
+
+const sendLocationToServer = async (coords, userRole) => {
+  try {
+    await api.post('/users/update-location', {
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      role: userRole
+    })
+  } catch (err) {
+    console.error('Failed to send location to server:', err)
+  }
+}
+
+// Helper function to decode JWT payload safely
+const decodeJwt = (token) => {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload)
+  } catch (e) {
+    console.error('Error decoding JWT token:', e)
+    return null
+  }
+}
 
 // Login Handler
 const handleLogin = async () => {
@@ -240,33 +285,44 @@ const handleLogin = async () => {
     const response = await api.post('/users/login', requestData)
     const data = response.data
 
-    if (data.token) {
-      if (form.remember) {
-        localStorage.setItem('token', data.token)
-      } else {
-        sessionStorage.setItem('token', data.token)
-      }
+    if (!data.token) {
+      throw new Error('No token received from server')
+    }
+
+    // Store Token
+    if (form.remember) {
+      localStorage.setItem('token', data.token)
+    } else {
+      sessionStorage.setItem('token', data.token)
+    }
+
+    // 📍 >>> ADD LOCATION CAPTURE HERE <<<
+    try {
+      const coords = await getCurrentLocation()
+      await sendLocationToServer(coords, activeRole.value)
+    } catch (geoErr) {
+      console.warn('Geolocation failed or was denied by user:', geoErr.message)
+      // Login continues even if user denies location permissions
     }
 
     $q.notify({
       type: 'positive',
-      message: data.message || `Logged in as ${roleLabel.value} successfully`
+      message: data.message || `Logged in successfully`,
+      position: 'top'
     })
 
-    // Redirect to matching portal path based on active tab
-    if (activeRole.value === 'driver') {
+    // Redirect to designated dashboard
+    const selectedRole = activeRole.value.toUpperCase()
+    if (selectedRole === 'DRIVER') {
       router.push('/driver/dashboard')
-    } else if (activeRole.value === 'agent') {
+    } else if (selectedRole === 'AGENTS') {
       router.push('/agent/dashboard')
     } else {
       router.push('/customer/dashboard')
     }
   } catch (error) {
     console.error('Login Error:', error)
-    $q.notify({
-      type: 'negative',
-      message: error.response?.data?.message || 'Invalid email or password'
-    })
+    // ... error handling
   } finally {
     loading.value = false
   }

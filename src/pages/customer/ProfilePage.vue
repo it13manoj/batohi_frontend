@@ -44,6 +44,7 @@
                 :src="profileImage"
                 alt="Profile Photo"
                 class="profile-image"
+                @error="(e) => e.target.src = ''"
               />
 
               <q-btn
@@ -62,11 +63,11 @@
                 type="file"
                 accept="image/*"
                 class="hidden-file"
+                style="display: none;"
                 @change="handleImageUpload"
               />
             </div>
-
-            <!-- BASIC INFORMATION -->
+                    <!-- BASIC INFORMATION -->
 
             <div class="profile-basic">
               <div class="profile-name">
@@ -562,7 +563,7 @@
 </template>
 
 <script setup>
-import { ref , onMounted} from 'vue'
+import { ref , onMounted, computed } from 'vue'
 
 import { useRouter } from 'vue-router'
 
@@ -577,7 +578,7 @@ const router = useRouter()
 
 const fileInput = ref(null)
 
-const profileImage = ref('https://cdn.quasar.dev/img/avatar.png')
+
 
 const openFilePicker = () => {
   fileInput.value?.click()
@@ -722,45 +723,52 @@ const stateOptions = [
 ]
 
 // ===============================
+// Ref to hold selected file or local preview URL
+const selectedImageFile = ref(null)
+const selectedImagePreview = ref(null)
+
+
+// Computed property handles precedence:
+// 1. Newly selected file preview (Blob URL)
+// 2. Server image URL (if filename exists in form state)
+// 3. Default fallback avatar
+const profileImage = computed(() => {
+  if (selectedImagePreview.value) {
+    return selectedImagePreview.value
+  }
+
+  if (form.value.profileImages) {
+    // Generates: http://localhost:3300/uploads/images/users/{user_id}/profile/{filename}
+    return `${imagesBaseUrl}/images/users/${form.value.userId}/profile/${form.value.profileImages}`
+  }
+
+  return ''
+})
+
+// Fetch Profile from API
 const fetchProfile = async () => {
   try {
     const response = await api.get('/users/profile')
     const data = response.data?.data || response.data
 
     if (data) {
-      // 1. Full Name mapping
-      const fullName = [data.first_name, data.last_name].filter(Boolean).join(' ')
-
-      // 2. Format Member Since Date
-      const createdAtDate = data.created_at ? new Date(data.created_at) : null
-      const formattedMemberSince = createdAtDate
-        ? createdAtDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-        : form.value.memberSince
-
-      // 3. Construct and Verify Profile Image Path
-      if (data.profile_image) {
-        // Option A: If server static folder is set to /uploads
-        // Result: https://api.batohidriver.com/uploads/images/users/1/profile_1789026836340.png
-        profileImagePreview.value = `${imagesBaseUrl}/images/users/${data.user_id}/${data.profile_image}`
-
-        console.log('Generated Profile Image URL:', profileImagePreview.value)
-      } else {
-        profileImagePreview.value = null
-      }
-
-      // 4. Update Form Reactive Object
       form.value = {
         ...form.value,
-        name: fullName || form.value.name,
-        email: data.email || form.value.email,
-        mobile: data.mobile_number ? `+91 ${data.mobile_number}` : form.value.mobile,
+        userId: data.user_id,
+        name: [data.first_name, data.last_name].filter(Boolean).join(' ') || data.user?.username || '',
+        email: data.email || data.user?.email || '',
+        mobile: data.mobile_number || data.user?.mobile_no || '',
         gender: data.gender || form.value.gender,
         dateOfBirth: data.date_of_birth || form.value.dateOfBirth,
         address: data.address || form.value.address,
         city: data.city || form.value.city,
         state: data.state || form.value.state,
         pincode: data.pincode || form.value.pincode,
-        memberSince: formattedMemberSince,
+        country: data.country || form.value.country || 'India',
+        alternateMobile: data.alternate_mobile || form.value.alternateMobile || '',
+        emergencyContactName: data.emergency_contact_name || form.value.emergencyContactName || '',
+        emergencyContactNumber: data.emergency_contact_number || form.value.emergencyContactNumber || '',
+        preferredLanguage: data.preferred_language || form.value.preferredLanguage || 'English',
         profileImages: data.profile_image || ''
       }
     }

@@ -1467,8 +1467,16 @@ import {
 } from 'vue-router'
 
 import axios from 'axios'
+import { useLocationTracker } from '@/composables/useLocationTracker'
+import api from '@/config/api'
 
 
+const { startTracking } = useLocationTracker()
+
+onMounted(() => {
+  // Starts sending live updates as soon as the driver enters the dashboard
+  startTracking()
+})
 /* =========================================================
    QUASAR / ROUTER
 ========================================================= */
@@ -1659,11 +1667,7 @@ const loadDashboard = async () => {
      * Change endpoint according
      * to your backend.
      */
-
-    const response =
-      await axios.get(
-        '/drivers/dashboard'
-      )
+    const response = await api.get('/drivers/dashboard')
 
 
     const data =
