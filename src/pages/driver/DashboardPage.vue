@@ -1451,7 +1451,6 @@
 
 
 <script setup>
-
 import {
   ref,
   computed,
@@ -1470,434 +1469,218 @@ import axios from 'axios'
 import { useLocationTracker } from '@/composables/useLocationTracker'
 import api from '@/config/api'
 
-
 const { startTracking } = useLocationTracker()
 
-onMounted(() => {
-  // Starts sending live updates as soon as the driver enters the dashboard
-  startTracking()
-})
 /* =========================================================
    QUASAR / ROUTER
 ========================================================= */
-
 const $q = useQuasar()
-
 const router = useRouter()
-
 
 /* =========================================================
    LOADING
 ========================================================= */
-
 const loading = ref(false)
-
 const statusUpdating = ref(false)
-
 
 /* =========================================================
    DRIVER
 ========================================================= */
-
 const driver = ref({
-
   id: null,
-
   name: '',
-
   mobile: '',
-
   email: '',
-
   image: '',
-
   isOnline: false,
-
   licenseExpiry: '',
-
   vehicleId: null,
-
   vehicleName: '',
-
   vehicleType: '',
-
   vehicleRegistration: ''
-
 })
-
 
 /* =========================================================
    STATISTICS
 ========================================================= */
-
 const stats = ref({
-
   todayTrips: 0,
-
   completedTrips: 0,
-
   todayEarnings: 0,
-
   totalEarnings: 0
-
 })
-
 
 /* =========================================================
    EARNINGS
 ========================================================= */
-
 const earnings = ref({
-
   monthly: 0,
-
   paid: 0,
-
   pending: 0
-
 })
-
 
 /* =========================================================
    PERFORMANCE
 ========================================================= */
-
 const performance = ref({
-
   completionRate: 0,
-
   rating: 0,
-
   totalTrips: 0
-
 })
-
 
 /* =========================================================
    TRIPS
 ========================================================= */
-
 const currentTrip = ref(null)
-
 const upcomingTrip = ref(null)
-
 const recentTrips = ref([])
-
 
 /* =========================================================
    NOTIFICATIONS
 ========================================================= */
-
 const notifications = ref([])
-
 const notificationDialog = ref(false)
 
-
 const notificationCount = computed(() => {
-
   return notifications.value.filter(
-    notification =>
-      !notification.read
+    notification => !notification.read
   ).length
-
 })
-
 
 /* =========================================================
    LICENSE WARNING
 ========================================================= */
-
 const licenseWarning = computed(() => {
-
   if (!driver.value.licenseExpiry) {
     return false
   }
 
-  const expiry =
-    new Date(
-      driver.value.licenseExpiry
-    )
+  const expiry = new Date(driver.value.licenseExpiry)
 
-  if (
-    Number.isNaN(
-      expiry.getTime()
-    )
-  ) {
+  if (Number.isNaN(expiry.getTime())) {
     return false
   }
 
   const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-  today.setHours(
-    0,
-    0,
-    0,
-    0
-  )
-
-  const difference =
-    expiry.getTime() -
-    today.getTime()
-
-  const days =
-    Math.ceil(
-      difference /
-      (1000 * 60 * 60 * 24)
-    )
+  const difference = expiry.getTime() - today.getTime()
+  const days = Math.ceil(difference / (1000 * 60 * 60 * 24))
 
   return days <= 30
-
 })
-
 
 /* =========================================================
    LOAD DASHBOARD
 ========================================================= */
-
 const loadDashboard = async () => {
-
   try {
-
     loading.value = true
 
+    const response = await api.get('/driver/dashboard')
 
-    /*
-     * Driver dashboard API
-     *
-     * Change endpoint according
-     * to your backend.
-     */
-    const response = await api.get('/drivers/dashboard')
+    // Handle nested or top-level API payload structure
+    const data = response.data?.data || response.data || {}
 
-
-    const data =
-      response.data?.data ||
-      response.data ||
-      {}
-
-
-    /* DRIVER */
-
-    if (data.driver) {
-
-      driver.value =
-        normalizeDriver(
-          data.driver
-        )
-
+    /* DRIVER & VEHICLE MAPPING */
+    // If the top-level response is the driver object itself, pass 'data'
+    const driverRawData = data.driver || (data.id ? data : null)
+    if (driverRawData) {
+      driver.value = normalizeDriver(driverRawData)
+      driver.value.isOnline = driverRawData.status
     }
-
 
     /* STATISTICS */
-
-    if (data.stats) {
-
-      stats.value = {
-
-        todayTrips:
-          Number(
-            data.stats.todayTrips ||
-            0
-          ),
-
-        completedTrips:
-          Number(
-            data.stats.completedTrips ||
-            0
-          ),
-
-        todayEarnings:
-          Number(
-            data.stats.todayEarnings ||
-            0
-          ),
-
-        totalEarnings:
-          Number(
-            data.stats.totalEarnings ||
-            0
-          )
-
-      }
-
+    const statsData = data.stats || {}
+    stats.value = {
+      todayTrips: Number(statsData.todayTrips || 0),
+      completedTrips: Number(statsData.completedTrips || 0),
+      todayEarnings: Number(statsData.todayEarnings || 0),
+      totalEarnings: Number(statsData.totalEarnings || 0)
     }
-
 
     /* EARNINGS */
-
-    if (data.earnings) {
-
-      earnings.value = {
-
-        monthly:
-          Number(
-            data.earnings.monthly ||
-            0
-          ),
-
-        paid:
-          Number(
-            data.earnings.paid ||
-            0
-          ),
-
-        pending:
-          Number(
-            data.earnings.pending ||
-            0
-          )
-
-      }
-
+    const earningsData = data.earnings || {}
+    earnings.value = {
+      monthly: Number(earningsData.monthly || 0),
+      paid: Number(earningsData.paid || 0),
+      pending: Number(earningsData.pending || 0)
     }
 
-
-    /* PERFORMANCE */
-
-    if (data.performance) {
-
-      performance.value = {
-
-        completionRate:
-          Number(
-            data.performance.completionRate ||
-            0
-          ),
-
-        rating:
-          Number(
-            data.performance.rating ||
-            0
-          ),
-
-        totalTrips:
-          Number(
-            data.performance.totalTrips ||
-            0
-          )
-
-      }
-
+    /* PERFORMANCE (Mapped directly from API driver object if nested stats aren't present) */
+    const performanceData = data.performance || {}
+    performance.value = {
+      completionRate: Number(performanceData.completionRate || 0),
+      rating: Number(performanceData.rating || driverRawData?.rating || 0),
+      totalTrips: Number(performanceData.totalTrips || driverRawData?.total_rides || 0)
     }
-
 
     /* CURRENT TRIP */
-
-    currentTrip.value =
-      normalizeTrip(
-        data.currentTrip
-      )
-
+    currentTrip.value = normalizeTrip(data.currentTrip)
 
     /* UPCOMING */
-
-    upcomingTrip.value =
-      normalizeTrip(
-        data.upcomingTrip
-      )
-
+    upcomingTrip.value = normalizeTrip(data.upcomingTrip)
 
     /* RECENT */
-
-    recentTrips.value =
-      Array.isArray(
-        data.recentTrips
-      )
-        ? data.recentTrips.map(
-            normalizeTrip
-          )
-        : []
-
+    recentTrips.value = Array.isArray(data.recentTrips)
+      ? data.recentTrips.map(normalizeTrip)
+      : []
 
     /* NOTIFICATIONS */
-
-    notifications.value =
-      Array.isArray(
-        data.notifications
-      )
-        ? data.notifications
-        : []
-
+    notifications.value = Array.isArray(data.notifications)
+      ? data.notifications
+      : []
 
   } catch (error) {
-
-    console.error(
-      'Driver Dashboard Error:',
-      error
-    )
-
+    console.error('Driver Dashboard Error:', error)
 
     $q.notify({
-
       type: 'negative',
-
-      message:
-        error.response?.data?.message ||
-        'Unable to load driver dashboard.'
-
+      message: error.response?.data?.message || 'Unable to load driver dashboard.'
     })
-
   } finally {
-
     loading.value = false
-
   }
-
 }
-
 
 /* =========================================================
    NORMALIZE DRIVER
 ========================================================= */
-
 const normalizeDriver = driverData => {
-
   if (!driverData) {
-
     return {
-
       id: null,
-
       name: '',
-
       mobile: '',
-
       email: '',
-
       image: '',
-
       isOnline: false,
-
       licenseExpiry: '',
-
       vehicleId: null,
-
       vehicleName: '',
-
       vehicleType: '',
-
       vehicleRegistration: ''
-
     }
-
   }
 
+  // Construct full name if first_name / last_name exist
+  const fullName = [driverData.first_name, driverData.last_name]
+    .filter(Boolean)
+    .join(' ')
 
   return {
-
-    id:
-      driverData.id,
+    id: driverData.id,
 
     name:
+      fullName ||
       driverData.name ||
-      driverData.driverName ||
-      driverData.user?.name ||
+      driverData.user?.username ||
       'Driver',
 
     mobile:
+      driverData.mobile_number ||
       driverData.mobile ||
-      driverData.phone ||
-      driverData.user?.mobile ||
+      driverData.user?.mobile_no ||
       '',
 
     email:
@@ -1906,65 +1689,52 @@ const normalizeDriver = driverData => {
       '',
 
     image:
+      driverData.profile_image ||
       driverData.image ||
-      driverData.profileImage ||
-      driverData.avatar ||
       '',
 
     isOnline:
-      driverData.isOnline ??
-      driverData.online ??
-      driverData.is_online ??
-      false,
+      driverData.availability_status === 'online' ||
+      driverData.isOnline === true ||
+      driverData.is_online === true,
 
     licenseExpiry:
+      driverData.license_expiry_date ||
       driverData.licenseExpiry ||
-      driverData.license_expiry ||
       '',
 
     vehicleId:
-      driverData.vehicleId ||
-      driverData.vehicle_id ||
       driverData.vehicle?.id ||
+      driverData.vehicleId ||
       null,
 
     vehicleName:
+      driverData.vehicle?.vehicle_name ||
       driverData.vehicleName ||
-      driverData.vehicle?.name ||
       '',
 
     vehicleType:
+      driverData.vehicle?.fuel_type ||
       driverData.vehicleType ||
-      driverData.vehicle?.type ||
-      driverData.vehicle?.vehicleType ||
       '',
 
     vehicleRegistration:
+      driverData.vehicle?.registration_no ||
       driverData.vehicleRegistration ||
-      driverData.vehicle?.registrationNumber ||
-      driverData.vehicle?.registration_number ||
       ''
-
   }
-
 }
-
 
 /* =========================================================
    NORMALIZE TRIP
 ========================================================= */
-
 const normalizeTrip = trip => {
-
   if (!trip) {
     return null
   }
 
-
   return {
-
-    id:
-      trip.id,
+    id: trip.id,
 
     bookingId:
       trip.bookingId ||
@@ -2010,441 +1780,142 @@ const normalizeTrip = trip => {
       trip.status ||
       'Assigned',
 
-    earning:
-      Number(
-        trip.earning ||
-        trip.driverEarning ||
-        trip.driver_earning ||
-        trip.amount ||
-        0
-      )
-
+    earning: Number(
+      trip.earning ||
+      trip.driverEarning ||
+      trip.driver_earning ||
+      trip.amount ||
+      0
+    )
   }
-
 }
-
 
 /* =========================================================
    CHANGE DRIVER ONLINE STATUS
 ========================================================= */
-
 const changeDriverStatus = async status => {
-
   try {
-
     statusUpdating.value = true
 
+    await api.post(`/driver/${driver.value.id}/status`, {
+      availability_status: status ? 'online' : 'offline',
+      isOnline: status
+    })
 
-    await axios.patch(
-
-      `/drivers/${driver.value.id}/status`,
-
-      {
-        isOnline: status,
-        status: status
-          ? 'Online'
-          : 'Offline'
-      }
-
-    )
-
+    driver.value.isOnline = status
 
     $q.notify({
-
       type: 'positive',
-
-      message:
-        status
-          ? 'You are now online.'
-          : 'You are now offline.'
-
+      message: status ? 'You are now online.' : 'You are now offline.'
     })
-
-
   } catch (error) {
+    console.error('Driver Status Error:', error)
 
-    console.error(
-      'Driver Status Error:',
-      error
-    )
-
-
-    /*
-     * Revert switch when API fails.
-     */
-
-    driver.value.isOnline =
-      !status
-
+    // Revert switch on API failure
+    driver.value.isOnline = !status
 
     $q.notify({
-
       type: 'negative',
-
-      message:
-        error.response?.data?.message ||
-        'Unable to update driver status.'
-
+      message: error.response?.data?.message || 'Unable to update driver status.'
     })
-
   } finally {
-
     statusUpdating.value = false
-
   }
-
 }
 
-
 /* =========================================================
-   VIEW TRIP
+   NAVIGATION HANDLERS
 ========================================================= */
-
 const viewTrip = trip => {
-
-  if (!trip?.id) {
-    return
-  }
-
-
-  router.push({
-
-    name: 'DriverTripDetails',
-
-    params: {
-      id: trip.id
-    }
-
-  })
-
+  if (!trip?.id) return
+  router.push({ name: 'DriverTripDetails', params: { id: trip.id } })
 }
 
-
-/* =========================================================
-   ASSIGNED TRIPS
-========================================================= */
-
-const goToAssignedTrips = () => {
-
-  router.push({
-
-    name: 'DriverAssignedTrips'
-
-  })
-
-}
-
-
-/* =========================================================
-   EARNINGS
-========================================================= */
-
-const goToEarnings = () => {
-
-  router.push({
-
-    name: 'DriverEarnings'
-
-  })
-
-}
-
-
-/* =========================================================
-   TRIP HISTORY
-========================================================= */
-
-const goToTripHistory = () => {
-
-  router.push({
-
-    name: 'DriverTripHistory'
-
-  })
-
-}
-
-
-/* =========================================================
-   PROFILE
-========================================================= */
-
-const goToProfile = () => {
-
-  router.push({
-
-    name: 'DriverProfile'
-
-  })
-
-}
-
-
-/* =========================================================
-   NOTIFICATIONS
-========================================================= */
+const goToAssignedTrips = () => router.push({ name: 'DriverAssignedTrips' })
+const goToEarnings = () => router.push({ name: 'DriverEarnings' })
+const goToTripHistory = () => router.push({ name: 'DriverTripHistory' })
+const goToProfile = () => router.push({ name: 'DriverProfile' })
 
 const openNotifications = () => {
-
-  notificationDialog.value =
-    true
-
+  notificationDialog.value = true
 }
 
-
 /* =========================================================
-   INITIALS
+   UTILITY & FORMATTING FUNCTIONS
 ========================================================= */
-
 const getInitials = name => {
-
-  if (!name) {
-    return 'D'
-  }
-
-
+  if (!name) return 'D'
   return name
-
     .split(' ')
-
     .filter(Boolean)
-
-    .map(
-      word =>
-        word.charAt(0)
-    )
-
+    .map(word => word.charAt(0))
     .join('')
-
     .substring(0, 2)
-
     .toUpperCase()
-
 }
-
-
-/* =========================================================
-   FORMAT CURRENCY
-========================================================= */
 
 const formatCurrency = amount => {
-
-  const value =
-    Number(amount || 0)
-
-
-  return new Intl.NumberFormat(
-    'en-IN',
-    {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }
-  ).format(value)
-
+  const value = Number(amount || 0)
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0
+  }).format(value)
 }
-
-
-/* =========================================================
-   FORMAT DATE
-========================================================= */
 
 const formatDate = date => {
-
-  if (!date) {
-    return '-'
-  }
-
-
-  const parsed =
-    new Date(date)
-
-
-  if (
-    Number.isNaN(
-      parsed.getTime()
-    )
-  ) {
-
-    return date
-
-  }
-
-
-  return parsed.toLocaleDateString(
-
-    'en-IN',
-
-    {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    }
-
-  )
-
+  if (!date) return '-'
+  const parsed = new Date(date)
+  if (Number.isNaN(parsed.getTime())) return date
+  return parsed.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
 }
-
-
-/* =========================================================
-   FORMAT DATE TIME
-========================================================= */
 
 const formatDateTime = date => {
-
-  if (!date) {
-    return '-'
-  }
-
-
-  const parsed =
-    new Date(date)
-
-
-  if (
-    Number.isNaN(
-      parsed.getTime()
-    )
-  ) {
-
-    return date
-
-  }
-
-
-  return parsed.toLocaleString(
-
-    'en-IN',
-
-    {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }
-
-  )
-
+  if (!date) return '-'
+  const parsed = new Date(date)
+  if (Number.isNaN(parsed.getTime())) return date
+  return parsed.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
-
-
-/* =========================================================
-   DAY
-========================================================= */
 
 const getDay = date => {
-
-  if (!date) {
-    return '-'
-  }
-
-
-  const parsed =
-    new Date(date)
-
-
-  if (
-    Number.isNaN(
-      parsed.getTime()
-    )
-  ) {
-
-    return '-'
-
-  }
-
-
+  if (!date) return '-'
+  const parsed = new Date(date)
+  if (Number.isNaN(parsed.getTime())) return '-'
   return parsed.getDate()
-
 }
-
-
-/* =========================================================
-   DAY NAME
-========================================================= */
 
 const getDayName = date => {
-
-  if (!date) {
-    return ''
-  }
-
-
-  const parsed =
-    new Date(date)
-
-
-  if (
-    Number.isNaN(
-      parsed.getTime()
-    )
-  ) {
-
-    return ''
-
-  }
-
-
-  return parsed.toLocaleDateString(
-    'en-IN',
-    {
-      weekday: 'short'
-    }
-  )
-
+  if (!date) return ''
+  const parsed = new Date(date)
+  if (Number.isNaN(parsed.getTime())) return ''
+  return parsed.toLocaleDateString('en-IN', { weekday: 'short' })
 }
-
-
-/* =========================================================
-   MONTH NAME
-========================================================= */
 
 const getMonthName = date => {
-
-  if (!date) {
-    return ''
-  }
-
-
-  const parsed =
-    new Date(date)
-
-
-  if (
-    Number.isNaN(
-      parsed.getTime()
-    )
-  ) {
-
-    return ''
-
-  }
-
-
-  return parsed.toLocaleDateString(
-    'en-IN',
-    {
-      month: 'short'
-    }
-  )
-
+  if (!date) return ''
+  const parsed = new Date(date)
+  if (Number.isNaN(parsed.getTime())) return ''
+  return parsed.toLocaleDateString('en-IN', { month: 'short' })
 }
 
-
 /* =========================================================
-   MOUNT
+   MOUNT LIFECYCLE
 ========================================================= */
-
 onMounted(() => {
-
+  startTracking()
   loadDashboard()
-
 })
-
 </script>
-
-
 <style scoped>
 
 /* =========================================================

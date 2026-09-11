@@ -738,7 +738,7 @@ const profileImage = computed(() => {
   }
 
   if (form.value.profileImages) {
-    // Generates: http://localhost:3300/uploads/images/users/{user_id}/profile/{filename}
+    // Generates: https://api.batohidriver.com/uploads/images/users/{user_id}/profile/{filename}
     return `${imagesBaseUrl}/images/users/${form.value.userId}/profile/${form.value.profileImages}`
   }
 

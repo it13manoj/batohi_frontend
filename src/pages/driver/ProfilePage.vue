@@ -473,7 +473,7 @@
                   label="Aadhaar Card Number"
                   outlined
                   dense
-                  readonly
+                  :readonly="!editMode"
                 >
                   <template #prepend>
                     <q-icon name="badge" />
@@ -555,7 +555,7 @@
                   outlined
                   dense
                   maxlength="10"
-                  readonly
+                  :readonly="!editMode"
                 >
                   <template #prepend>
                     <q-icon name="credit_card" />
@@ -636,7 +636,7 @@
                   label="License Number"
                   outlined
                   dense
-                  readonly
+                  :readonly="!editMode"
                 >
                   <template #prepend>
                     <q-icon name="badge" />
@@ -644,6 +644,34 @@
                 </q-input>
               </div>
 
+
+              <div class="col-12 col-md-6">
+                <q-input
+                  v-model="profile.licenseIssueDate"
+                  label="License Issue Date"
+                  outlined
+                  dense
+                  :readonly="!editMode"
+                >
+                  <template #prepend>
+                    <q-icon name="event" />
+                  </template>
+                   <template #append>
+                    <q-icon v-if="editMode" name="event" class="cursor-pointer">
+                      <q-popup-proxy
+                        cover
+                        transition-show="scale"
+                        transition-hide="scale"
+                      >
+                        <q-date
+                          v-model="profile.licenseIssueDate"
+                          mask="YYYY-MM-DD"
+                        />
+                      </q-popup-proxy>
+                    </q-icon>
+                  </template>
+                </q-input>
+              </div>
               <!-- License Expiry -->
               <div class="col-12 col-md-6">
                 <q-input
@@ -651,10 +679,24 @@
                   label="License Expiry Date"
                   outlined
                   dense
-                  readonly
+                  :readonly="!editMode"
                 >
                   <template #prepend>
                     <q-icon name="event" />
+                  </template>
+                   <template #append>
+                    <q-icon v-if="editMode" name="event" class="cursor-pointer">
+                      <q-popup-proxy
+                        cover
+                        transition-show="scale"
+                        transition-hide="scale"
+                      >
+                        <q-date
+                          v-model="profile.licenseExpiry"
+                          mask="YYYY-MM-DD"
+                        />
+                      </q-popup-proxy>
+                    </q-icon>
                   </template>
                 </q-input>
               </div>
@@ -741,6 +783,36 @@
                 >
                   <template #prepend>
                     <q-icon name="confirmation_number" />
+                  </template>
+                </q-input>
+              </div>
+
+                <!-- Insurance Expiry -->
+              <div class="col-12 col-md-6">
+                <q-input
+                  v-model="profile.insuranceIssueDate"
+                  label="Insurance Issue Date"
+                  outlined
+                  dense
+                  :readonly="!editMode"
+                >
+                  <template #prepend>
+                    <q-icon name="event" />
+                  </template>
+
+                  <template #append>
+                    <q-icon v-if="editMode" name="event" class="cursor-pointer">
+                      <q-popup-proxy
+                        cover
+                        transition-show="scale"
+                        transition-hide="scale"
+                      >
+                        <q-date
+                          v-model="profile.insuranceIssueDate"
+                          mask="YYYY-MM-DD"
+                        />
+                      </q-popup-proxy>
+                    </q-icon>
                   </template>
                 </q-input>
               </div>
@@ -1003,8 +1075,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import api from '@/config/api'
 
 const $q = useQuasar()
 
@@ -1024,24 +1097,36 @@ const profile = reactive({
   name: 'John Doe',
   phone: '+91 9876543210',
   email: 'john.doe@example.com',
+  gender: 'Male',
+  dateOfBirth: '1995-05-20',
   city: 'Mumbai',
   state: 'Maharashtra',
   address: '402, Green Acres, Andheri West',
   agencyType: 'Individual / Freelance',
-  joinedDate: ' Jan 15, 2023',
-  photo: '',
+  joinedDate: 'Jan 15, 2023',
+  photo: null, // Holds File object or preview URL
   rating: 4.8,
   totalReviews: 124,
   aadharNumber: '',
-  aadharPhoto: null,
+  aadharPhoto: null, // Holds File object
   panNumber: 'ABCDE1234F',
-  panPhoto: 'pan_doc.jpg',
+  panPhoto: null, // Holds File object
   licenseNumber: 'MH-02-20210012345',
+  licenseIssueDate: '2021-01-01',
   licenseExpiry: '2028-11-20',
-  licensePhoto: 'license_doc.jpg',
+  licensePhoto: null, // Holds File object
   insuranceNumber: 'POL-77889922',
   insuranceExpiry: '2025-12-31',
-  insurancePhoto: 'insurance_doc.pdf'
+  insurancePhoto: null
+})
+
+// Stores actual File objects selected from <input type="file">
+const rawFiles = reactive({
+  photo: null,
+  aadharPhoto: null,
+  panPhoto: null,
+  licensePhoto: null,
+  insurancePhoto: null
 })
 
 // Backup state for canceling edits
@@ -1091,11 +1176,54 @@ const cancelEdit = () => {
 const saveProfile = async () => {
   saving.value = true
 
-  console.log(profile);
-
   try {
-    // API call simulation
-    await new Promise((resolve) => setTimeout(resolve, 1200))
+    // Construct Multipart FormData payload
+    const formData = new FormData()
+
+    // Append standard form fields
+    formData.append('driverCode', profile.driverId)
+    formData.append('firstName', profile.name.split(' ')?.[0] || '')
+    formData.append('lastName', profile.name.split(' ')?.[1] || '')
+    formData.append('gender', profile.gender || '')
+    formData.append('dateOfBirth', profile.dateOfBirth || '')
+    formData.append('mobileNo', profile.phone)
+    formData.append('alternateMobile', '')
+    formData.append('email', profile.email)
+    formData.append('address', profile.address)
+    formData.append('city', profile.city)
+    formData.append('state', profile.state)
+    formData.append('country', 'India')
+    formData.append('pincode', 802101)
+    formData.append('drivingLicenseNo', profile.licenseNumber)
+    formData.append('licenseIssueDate', profile.licenseIssueDate)
+    formData.append('licenseExpiryDate', profile.licenseExpiry)
+    formData.append('experienceYears', 5)
+    formData.append('aadhaarNumber', profile.aadharNumber)
+    formData.append('panNumber', profile.panNumber)
+    formData.append('emergencyContactName', 'Suresh Kumar')
+    formData.append('emergencyContactNumber', '9876543211')
+
+    // Append File objects if new files were selected
+    if (rawFiles.photo) {
+      formData.append('profileImage', rawFiles.photo)
+    }
+    if (rawFiles.licensePhoto) {
+      formData.append('licenseImage', rawFiles.licensePhoto)
+    }
+    if (rawFiles.aadharPhoto) {
+      formData.append('adharImage', rawFiles.aadharPhoto)
+    }
+    if (rawFiles.panPhoto) {
+      formData.append('panCard', rawFiles.panPhoto)
+    }
+
+    // API call with multipart headers
+    await api.post('/driver/profile', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
     editMode.value = false
     $q.notify({
       type: 'positive',
@@ -1103,6 +1231,7 @@ const saveProfile = async () => {
       position: 'top'
     })
   } catch (error) {
+    console.error(error)
     $q.notify({
       type: 'negative',
       message: 'Failed to update profile.',
@@ -1120,44 +1249,49 @@ const openPanPicker = () => panInput.value.click()
 const openLicensePicker = () => licenseInput.value.click()
 const openInsurancePicker = () => insuranceInput.value.click()
 
-// File Handlers
+// File Handlers - Store actual File objects into `rawFiles`
 const handleProfilePhoto = (event) => {
   const file = event.target.files[0]
   if (file) {
-    profile.photo = URL.createObjectURL(file)
-    $q.notify({ type: 'positive', message: 'Profile photo updated' })
+    rawFiles.photo = file
+    profile.photo = URL.createObjectURL(file) // For UI Preview
+    $q.notify({ type: 'positive', message: 'Profile photo selected' })
   }
 }
 
 const handleAadharPhoto = (event) => {
   const file = event.target.files[0]
   if (file) {
+    rawFiles.aadharPhoto = file
     profile.aadharPhoto = file.name
-    $q.notify({ type: 'positive', message: 'Aadhaar document updated' })
+    $q.notify({ type: 'positive', message: 'Aadhaar document selected' })
   }
 }
 
 const handlePanPhoto = (event) => {
   const file = event.target.files[0]
   if (file) {
+    rawFiles.panPhoto = file
     profile.panPhoto = file.name
-    $q.notify({ type: 'positive', message: 'PAN document updated' })
+    $q.notify({ type: 'positive', message: 'PAN document selected' })
   }
 }
 
 const handleLicensePhoto = (event) => {
   const file = event.target.files[0]
   if (file) {
+    rawFiles.licensePhoto = file
     profile.licensePhoto = file.name
-    $q.notify({ type: 'positive', message: 'License document updated' })
+    $q.notify({ type: 'positive', message: 'License document selected' })
   }
 }
 
 const handleInsurancePhoto = (event) => {
   const file = event.target.files[0]
   if (file) {
+    rawFiles.insurancePhoto = file
     profile.insurancePhoto = file.name
-    $q.notify({ type: 'positive', message: 'Insurance document updated' })
+    $q.notify({ type: 'positive', message: 'Insurance document selected' })
   }
 }
 
@@ -1175,6 +1309,52 @@ const changePassword = () => {
     $q.notify({ type: 'positive', message: 'Password changed successfully' })
   })
 }
+
+
+const fetchProfile = async () => {
+  try {
+    const response = await api.get('/driver/profile')
+    const data = response.data?.data || response.data // Adjust based on your API's response structure
+    console.log(data);
+
+    if (data) {
+      // Map API response fields back to local reactive profile model
+      profile.driverId = data.driver_code || profile.driverId
+      profile.name = `${data.first_name || ''} ${data.last_name || ''}`.trim() || profile.name
+      profile.gender = data.gender || profile.gender
+      profile.dateOfBirth = data.date_of_birth || profile.dateOfBirth
+      profile.phone = data.mobile_number || profile.phone
+      profile.email = data.email || profile.email
+      profile.address = data.address || profile.address
+      profile.city = data.city || profile.city
+      profile.state = data.state || profile.state
+
+      // Document Numbers
+      profile.licenseNumber = data.driving_license_no || profile.licenseNumber
+      profile.licenseIssueDate = data.license_issue_date || profile.licenseIssueDate
+      profile.licenseExpiry = data.license_expiry_date || profile.licenseExpiry
+      profile.aadharNumber = data.aadhaar_number || profile.aadharNumber
+      profile.panNumber = data.pan_number || profile.panNumber
+
+      // Document Image URLs / Paths returned from backend
+      profile.photo = data.profile_image || profile.photo
+      profile.licensePhoto = data.license_image || profile.licensePhoto
+      profile.aadharPhoto = data.aadhaar_image || profile.aadharPhoto
+      profile.panPhoto = data.pan_image || profile.panPhoto
+    }
+  } catch (error) {
+    console.error('Error fetching driver profile:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to load driver profile details.',
+      position: 'top'
+    })
+  }
+}
+
+onMounted(()=>{
+    fetchProfile();
+})
 </script>
 
 <style scoped>

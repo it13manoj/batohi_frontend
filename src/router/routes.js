@@ -521,7 +521,16 @@ const routes = [
         name: 'DriverAssignedTrips',
         component: () => import('@/pages/driver/AssignedTripsPage.vue')
       },
-
+      {
+        path: 'vehicle-type',
+        name: 'VehicleType',
+        component: () => import('@/pages/driver/VehicleType.vue')
+      },
+      {
+        path: 'vehicle',
+        name: 'Vehicle',
+        component: () => import('@/pages/driver/VehicleManager.vue')
+      },
       {
         path: 'earnings',
         name: 'DriverEarnings',

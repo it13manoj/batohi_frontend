@@ -6,26 +6,12 @@
     <q-header elevated class="driver-header">
       <q-toolbar>
         <!-- MOBILE MENU -->
-        <q-btn
-          flat
-          round
-          dense
-          icon="menu"
-          class="lt-md"
-          @click="drawerOpen = !drawerOpen"
-        >
+        <q-btn flat round dense icon="menu" class="lt-md" @click="drawerOpen = !drawerOpen">
           <q-tooltip> Menu </q-tooltip>
         </q-btn>
 
         <!-- DESKTOP COLLAPSE -->
-        <q-btn
-          flat
-          round
-          dense
-          icon="menu"
-          class="gt-sm"
-          @click="toggleMiniState"
-        >
+        <q-btn flat round dense icon="menu" class="gt-sm" @click="toggleMiniState">
           <q-tooltip>
             {{ miniState ? 'Expand Menu' : 'Collapse Menu' }}
           </q-tooltip>
@@ -45,20 +31,8 @@
         <!-- =================================================
              NOTIFICATIONS
         ================================================== -->
-        <q-btn
-          flat
-          round
-          dense
-          icon="notifications_none"
-          class="q-mr-sm"
-          @click="openNotifications"
-        >
-          <q-badge
-            v-if="notificationCount > 0"
-            color="negative"
-            floating
-            rounded
-          >
+        <q-btn flat round dense icon="notifications_none" class="q-mr-sm" @click="openNotifications">
+          <q-badge v-if="notificationCount > 0" color="negative" floating rounded>
             {{ notificationCount }}
           </q-badge>
 
@@ -152,25 +126,14 @@
     <!-- =====================================================
          SIDEBAR / DRAWER
     ====================================================== -->
-    <q-drawer
-      v-model="drawerOpen"
-      show-if-above
-      bordered
-      :mini="miniState"
-      :width="270"
-      :mini-width="76"
-      class="driver-drawer"
-    >
+    <q-drawer v-model="drawerOpen" show-if-above bordered :mini="miniState" :width="270" :mini-width="76"
+      class="driver-drawer">
       <!-- =================================================
            LOGO / BRAND
       ================================================== -->
       <div class="driver-brand" :class="{ 'driver-brand-mini': miniState }">
         <div class="brand-logo-wrapper">
-          <img
-            src="../assets/images/logo3.png"
-            alt="BatohiDrive"
-            class="brand-logo"
-          />
+          <img src="../assets/images/logo3.png" alt="BatohiDrive" class="brand-logo" />
         </div>
 
         <div v-if="!miniState" class="brand-text">
@@ -238,12 +201,8 @@
           <div v-if="!miniState" class="menu-section-title"> MAIN </div>
 
           <!-- DASHBOARD -->
-          <q-item
-            clickable
-            :active="isRouteActive('DriverDashboard')"
-            active-class="active-menu"
-            @click="navigate('DriverDashboard')"
-          >
+          <q-item clickable :active="isRouteActive('DriverDashboard')" active-class="active-menu"
+            @click="navigate('DriverDashboard')">
             <q-item-section avatar>
               <q-icon name="dashboard" />
             </q-item-section>
@@ -252,12 +211,54 @@
               <q-item-label> Dashboard </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Dashboard
+            </q-tooltip>
+          </q-item>
+
+          <!-- =================================================
+               TRIPS
+          ================================================== -->
+          <div v-if="!miniState" class="menu-section-title"> VEHICLE </div>
+          <q-item clickable :active="isRouteActive('VehicleType')" active-class="active-menu"
+            @click="navigate('VehicleType')">
+            <q-item-section avatar>
+              <q-icon name="VT" />
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label> Vehicle Type </q-item-label>
+            </q-item-section>
+
+            <q-item-section v-if="!miniState && VehicleType > 0" side>
+              <q-badge color="primary" rounded>
+                {{ VehicleType }}
+              </q-badge>
+            </q-item-section>
+
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
+              Vehicle Type
+            </q-tooltip>
+          </q-item>
+
+           <q-item clickable :active="isRouteActive('Vehicle')" active-class="active-menu"
+            @click="navigate('Vehicle')">
+            <q-item-section avatar>
+              <q-icon name="VM" />
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label> Vehicle </q-item-label>
+            </q-item-section>
+
+            <q-item-section v-if="!miniState && Vehicle > 0" side>
+              <q-badge color="primary" rounded>
+                {{ Vehicle }}
+              </q-badge>
+            </q-item-section>
+
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
+              Vehicle Manage
             </q-tooltip>
           </q-item>
 
@@ -267,13 +268,10 @@
 
           <div v-if="!miniState" class="menu-section-title"> TRIPS </div>
 
+
           <!-- ASSIGNED TRIPS -->
-          <q-item
-            clickable
-            :active="isRouteActive('DriverAssignedTrips')"
-            active-class="active-menu"
-            @click="navigate('DriverAssignedTrips')"
-          >
+          <q-item clickable :active="isRouteActive('DriverAssignedTrips')" active-class="active-menu"
+            @click="navigate('DriverAssignedTrips')">
             <q-item-section avatar>
               <q-icon name="assignment" />
             </q-item-section>
@@ -288,22 +286,14 @@
               </q-badge>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Assigned Trips
             </q-tooltip>
           </q-item>
 
           <!-- TRIP HISTORY -->
-          <q-item
-            clickable
-            :active="isRouteActive('DriverTripHistory')"
-            active-class="active-menu"
-            @click="navigate('DriverTripHistory')"
-          >
+          <q-item clickable :active="isRouteActive('DriverTripHistory')" active-class="active-menu"
+            @click="navigate('DriverTripHistory')">
             <q-item-section avatar>
               <q-icon name="history" />
             </q-item-section>
@@ -312,22 +302,14 @@
               <q-item-label> Trip History </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Trip History
             </q-tooltip>
           </q-item>
 
           <!-- TRIP DETAILS -->
-          <q-item
-            clickable
-            :active="isRouteActive('DriverTripDetails')"
-            active-class="active-menu"
-            @click="navigate('DriverTripDetails')"
-          >
+          <q-item clickable :active="isRouteActive('DriverTripDetails')" active-class="active-menu"
+            @click="navigate('DriverTripDetails')">
             <q-item-section avatar>
               <q-icon name="route" />
             </q-item-section>
@@ -336,11 +318,7 @@
               <q-item-label> Trip Details </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Trip Details
             </q-tooltip>
           </q-item>
@@ -352,12 +330,8 @@
           <div v-if="!miniState" class="menu-section-title"> ACCOUNT </div>
 
           <!-- EARNINGS -->
-          <q-item
-            clickable
-            :active="isRouteActive('DriverEarnings')"
-            active-class="active-menu"
-            @click="navigate('DriverEarnings')"
-          >
+          <q-item clickable :active="isRouteActive('DriverEarnings')" active-class="active-menu"
+            @click="navigate('DriverEarnings')">
             <q-item-section avatar>
               <q-icon name="payments" />
             </q-item-section>
@@ -366,22 +340,14 @@
               <q-item-label> Earnings </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Earnings
             </q-tooltip>
           </q-item>
 
           <!-- PROFILE -->
-          <q-item
-            clickable
-            :active="isRouteActive('DriverProfile')"
-            active-class="active-menu"
-            @click="navigate('DriverProfile')"
-          >
+          <q-item clickable :active="isRouteActive('DriverProfile')" active-class="active-menu"
+            @click="navigate('DriverProfile')">
             <q-item-section avatar>
               <q-icon name="person" />
             </q-item-section>
@@ -390,11 +356,7 @@
               <q-item-label> Profile </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Profile
             </q-tooltip>
           </q-item>
@@ -406,12 +368,8 @@
           <div v-if="!miniState" class="menu-section-title"> MANAGEMENT </div>
 
           <!-- MANAGEMENT -->
-          <q-item
-            clickable
-            :active="isRouteActive('driver-management')"
-            active-class="active-menu"
-            @click="navigate('driver-management')"
-          >
+          <q-item clickable :active="isRouteActive('driver-management')" active-class="active-menu"
+            @click="navigate('driver-management')">
             <q-item-section avatar>
               <q-icon name="manage_accounts" />
             </q-item-section>
@@ -420,22 +378,14 @@
               <q-item-label> Management </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Management
             </q-tooltip>
           </q-item>
 
           <!-- NOTIFICATIONS -->
-          <q-item
-            clickable
-            :active="isRouteActive('DriverNotifications')"
-            active-class="active-menu"
-            @click="openNotifications"
-          >
+          <q-item clickable :active="isRouteActive('DriverNotifications')" active-class="active-menu"
+            @click="openNotifications">
             <q-item-section avatar>
               <q-icon name="notifications" />
             </q-item-section>
@@ -450,11 +400,7 @@
               </q-badge>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Notifications
             </q-tooltip>
           </q-item>
@@ -468,12 +414,8 @@
           </div>
 
           <!-- FAQ -->
-          <q-item
-            clickable
-            :active="isRouteActive('driver-faq')"
-            active-class="active-menu"
-            @click="navigate('driver-faq')"
-          >
+          <q-item clickable :active="isRouteActive('driver-faq')" active-class="active-menu"
+            @click="navigate('driver-faq')">
             <q-item-section avatar>
               <q-icon name="help_outline" />
             </q-item-section>
@@ -482,22 +424,14 @@
               <q-item-label> FAQ </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               FAQ
             </q-tooltip>
           </q-item>
 
           <!-- TERMS & CONDITIONS -->
-          <q-item
-            clickable
-            :active="isRouteActive('driver-terms')"
-            active-class="active-menu"
-            @click="navigate('driver-terms')"
-          >
+          <q-item clickable :active="isRouteActive('driver-terms')" active-class="active-menu"
+            @click="navigate('driver-terms')">
             <q-item-section avatar>
               <q-icon name="description" />
             </q-item-section>
@@ -506,22 +440,14 @@
               <q-item-label> Terms & Conditions </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Terms & Conditions
             </q-tooltip>
           </q-item>
 
           <!-- PRIVACY POLICY -->
-          <q-item
-            clickable
-            :active="isRouteActive('driver-privacy-policy')"
-            active-class="active-menu"
-            @click="navigate('driver-privacy-policy')"
-          >
+          <q-item clickable :active="isRouteActive('driver-privacy-policy')" active-class="active-menu"
+            @click="navigate('driver-privacy-policy')">
             <q-item-section avatar>
               <q-icon name="privacy_tip" />
             </q-item-section>
@@ -530,22 +456,14 @@
               <q-item-label> Privacy Policy </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Privacy Policy
             </q-tooltip>
           </q-item>
 
           <!-- CANCELLATION POLICY -->
-          <q-item
-            clickable
-            :active="isRouteActive('DriverCancellationPolicy')"
-            active-class="active-menu"
-            @click="navigate('DriverCancellationPolicy')"
-          >
+          <q-item clickable :active="isRouteActive('DriverCancellationPolicy')" active-class="active-menu"
+            @click="navigate('DriverCancellationPolicy')">
             <q-item-section avatar>
               <q-icon name="event_busy" />
             </q-item-section>
@@ -554,22 +472,14 @@
               <q-item-label> Cancellation Policy </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Cancellation Policy
             </q-tooltip>
           </q-item>
 
           <!-- REFUND POLICY -->
-          <q-item
-            clickable
-            :active="isRouteActive('DriverRefundPolicy')"
-            active-class="active-menu"
-            @click="navigate('DriverRefundPolicy')"
-          >
+          <q-item clickable :active="isRouteActive('DriverRefundPolicy')" active-class="active-menu"
+            @click="navigate('DriverRefundPolicy')">
             <q-item-section avatar>
               <q-icon name="currency_exchange" />
             </q-item-section>
@@ -578,22 +488,14 @@
               <q-item-label> Refund Policy </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               Refund Policy
             </q-tooltip>
           </q-item>
 
           <!-- ABOUT US -->
-          <q-item
-            clickable
-            :active="isRouteActive('DriverAboutUs')"
-            active-class="active-menu"
-            @click="navigate('DriverAboutUs')"
-          >
+          <q-item clickable :active="isRouteActive('DriverAboutUs')" active-class="active-menu"
+            @click="navigate('DriverAboutUs')">
             <q-item-section avatar>
               <q-icon name="info_outline" />
             </q-item-section>
@@ -602,11 +504,7 @@
               <q-item-label> About Us </q-item-label>
             </q-item-section>
 
-            <q-tooltip
-              v-if="miniState"
-              anchor="center right"
-              self="center left"
-            >
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
               About Us
             </q-tooltip>
           </q-item>
@@ -664,24 +562,11 @@
         <!-- ACTIONS -->
         <q-card-actions align="right" class="q-pa-md">
           <!-- CANCEL -->
-          <q-btn
-            flat
-            label="Cancel"
-            color="grey-7"
-            no-caps
-            @click="logoutDialog = false"
-          />
+          <q-btn flat label="Cancel" color="grey-7" no-caps @click="logoutDialog = false" />
 
           <!-- CONFIRM LOGOUT -->
-          <q-btn
-            unelevated
-            color="negative"
-            icon="logout"
-            label="Logout"
-            no-caps
-            :loading="loggingOut"
-            @click="confirmLogout"
-          />
+          <q-btn unelevated color="negative" icon="logout" label="Logout" no-caps :loading="loggingOut"
+            @click="confirmLogout" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -694,6 +579,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 import { useQuasar } from 'quasar'
+import VehicleType from '@/pages/customer/VehicleType.vue'
 
 /* =========================================================
    QUASAR
@@ -1007,7 +893,7 @@ onMounted(() => {
   line-height: 1.2;
 }
 
-.header-title > div:first-child {
+.header-title>div:first-child {
   font-size: 17px;
 }
 

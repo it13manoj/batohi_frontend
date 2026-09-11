@@ -12,14 +12,35 @@ const clearAuthData = () => {
   profile.value = null
 }
 
+const decodeJwt = token => {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload)
+  } catch (e) {
+    console.error('Error decoding JWT token:', e)
+    return null
+  }
+}
+
 const getProfile = async () => {
   // Retrieve token from either LocalStorage or SessionStorage
   const token = LocalStorage.getItem('token') || SessionStorage.getItem('token')
+
+  console.log(decodeJwt(token))
 
   if (!token) {
     clearAuthData()
     return null
   }
+
+  if (decodeJwt(token)?.type != 'USERS') return
 
   try {
     loading.value = true
@@ -52,6 +73,7 @@ export const useAuth = () => {
     profile,
     loading,
     getProfile,
-    logout
+    logout,
+    decodeJwt
   }
 }
