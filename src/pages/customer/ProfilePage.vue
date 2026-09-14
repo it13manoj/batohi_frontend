@@ -40,13 +40,11 @@
             <!-- PROFILE PHOTO -->
 
             <div class="profile-image-wrapper">
-              <img
-                :src="profileImage"
-                alt="Profile Photo"
-                class="profile-image"
-                @error="(e) => e.target.src = ''"
-              />
-
+            <img
+                  :src="imagesBaseUrl + '/images/USERS/' + form.userId + '/profile/' + form.profileImages"
+                  alt="Profile Photo"
+                  class="profile-image"
+                />
               <q-btn
                 round
                 unelevated
@@ -744,6 +742,7 @@ const profileImage = computed(() => {
 
   return ''
 })
+console.log(form.value)
 
 // Fetch Profile from API
 const fetchProfile = async () => {
@@ -771,11 +770,14 @@ const fetchProfile = async () => {
         preferredLanguage: data.preferred_language || form.value.preferredLanguage || 'English',
         profileImages: data.profile_image || ''
       }
+
     }
   } catch (error) {
     console.error('Error fetching profile:', error)
   }
 }
+
+console.log(  form);
 
   onMounted(()=>{
     fetchProfile()
