@@ -182,18 +182,22 @@
               @click="goToRegister"
             />
           </q-card-section>
+
+
         </q-card>
       </div>
     </div>
+
   </q-page>
+
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import api from '@/config/api'
-
+import { requestNotificationPermission } from '@/boot/firebase'
 // Router & Quasar
 const router = useRouter()
 const $q = useQuasar()
@@ -320,10 +324,13 @@ const handleLogin = async () => {
     } else {
       router.push('/customer/dashboard')
     }
+
+    enableNotifications();
   } catch (error) {
     console.error('Login Error:', error)
     // ... error handling
   } finally {
+
     loading.value = false
   }
 }
@@ -336,6 +343,27 @@ const goToRegister = () => {
 const goToForgotPassword = () => {
   router.push('/forgot-password')
 }
+
+  async function enableNotifications() {
+    try {
+      const deviceToken = await requestNotificationPermission()
+      if (deviceToken) {
+      try {
+          await api.post('/users/device/token', {
+            deviceToken: deviceToken
+          })
+          console.log('Token successfully synced with backend!')
+        } catch (err) {
+          console.error('Failed to sync token with backend:', err)
+        }
+      }
+    } catch (error) {
+      console.error('Permission denied or error obtaining token', error)
+    }
+  }
+onMounted(()=>{
+// enableNotifications()
+})
 </script>
 
 <style scoped>

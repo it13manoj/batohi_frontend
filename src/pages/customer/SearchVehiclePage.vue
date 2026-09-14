@@ -538,13 +538,60 @@ const searchVehicles = async () => {
   }
 }
 
-const bookRide = (driver) => {
-  Notify.create({
-    type: 'positive',
-    message: `Booking request sent to ${driver.first_name} ${driver.last_name}!`
-  })
-}
+const bookRide = async (driver) => {
+  // 1. Resolve location strings
+  const fromText = typeof searchForm.value.from === 'object' ? searchForm.value.from?.label : searchForm.value.from
+  const toText = typeof searchForm.value.to === 'object' ? searchForm.value.to?.label : searchForm.value.to
 
+  if (!fromText || !toText) {
+    Notify.create({
+      type: 'warning',
+      message: 'Both pickup and drop locations are required.'
+    })
+    return
+  }
+
+  // 2. Format distance & fare
+  const fareAmount = calculateFare(driver)
+  const distanceVal = driver.trip_details?.distance_km
+    ? `${driver.trip_details.distance_km.toFixed(2)} km`
+    : formatDistance(driver.distance_km)
+
+  // 3. Match payload keys to your new Booked model schema
+  const payload = {
+    from: fromText,
+    to: toText,
+    latitude_from: searchForm.value.fromLat,
+    longitude_from: searchForm.value.fromLng,
+    latitude_to: searchForm.value.toLat,
+    longitude_to: searchForm.value.toLng,
+    fare: fareAmount,
+    distance: distanceVal,
+    passengers: searchForm.value.passengers
+  }
+
+  try {
+    searching.value = true
+
+    // 4. Send request to backend driver endpoint
+    const response = await api.post(`/driver/${driver.id}/find-ride`, payload)
+
+    if (response.data?.success || response.status === 200) {
+      Notify.create({
+        type: 'positive',
+        message: `Booking request sent to ${driver.first_name} ${driver.last_name || ''}!`
+      })
+    }
+  } catch (error) {
+    console.error('Error sending ride request:', error)
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.message || 'Failed to send ride request.'
+    })
+  } finally {
+    searching.value = false
+  }
+}
 onMounted(async () => {
   if (!searchForm.value.from) {
     await detectAndSetCurrentLocation()

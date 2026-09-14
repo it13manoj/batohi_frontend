@@ -15,11 +15,17 @@
       http-equiv="Content-Security-Policy"
       content="
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com;
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: blob: http://localhost:3300;
     font-src 'self' data:;
-    connect-src 'self' http://localhost:3300 ws://localhost:* https://nominatim.openstreetmap.org;
+    connect-src 'self' 
+      http://localhost:3300 
+      ws://localhost:* 
+      https://nominatim.openstreetmap.org 
+      https://firebaseinstallations.googleapis.com 
+      https://fcmregistrations.googleapis.com 
+      https://fcm.googleapis.com;
     media-src 'self' blob:;
     object-src 'none';
     base-uri 'self';

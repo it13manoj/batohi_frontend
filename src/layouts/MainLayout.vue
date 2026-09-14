@@ -42,6 +42,7 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+
   </q-layout>
 </template>
 
@@ -49,7 +50,7 @@
 <script setup>
 import { ref } from 'vue'
 import EssentialLink from '@/components/EssentialLink.vue'
-
+import { requestNotificationPermission } from '@/boot/firebase'
 const linksList = [
   {
     label: 'Docs',
@@ -99,5 +100,15 @@ const leftDrawerOpen = ref(false)
 
 function toggleLeftDrawer () {
   leftDrawerOpen.value = !leftDrawerOpen.value
+}
+async function enableNotifications() {
+  try {
+    const token = await requestNotificationPermission()
+    if (token) {
+      // Token obtained successfully
+    }
+  } catch (error) {
+    console.error('Permission denied or error obtaining token', error)
+  }
 }
 </script>

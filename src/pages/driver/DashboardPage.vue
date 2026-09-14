@@ -593,196 +593,120 @@
         <!-- =====================================================
              UPCOMING TRIP
         ====================================================== -->
-        <q-card
-          flat
-          bordered
-          class="dashboard-card q-mb-lg"
-        >
 
-          <q-card-section>
-
+        <q-card class="q-mb-md rounded-borders shadow-1">
+          <!-- Header -->
+          <q-card-section class="bg-primary text-white">
             <div class="row items-center justify-between">
-
               <div>
-
-                <div class="text-h6 text-weight-bold">
-                  Upcoming Trip
+                <div class="text-h6 text-weight-bold">Pending Ride Requests</div>
+                <div class="text-caption">
+                  {{ upcomingTrips.length }} request(s) waiting for response
                 </div>
-
-                <div class="text-caption text-grey-7">
-                  Your next assigned booking
-                </div>
-
               </div>
-
               <q-btn
                 flat
                 dense
-                color="primary"
+                color="white"
                 label="View All"
                 @click="goToAssignedTrips"
               />
-
             </div>
-
           </q-card-section>
 
+          <!-- Loading State -->
+          <q-card-section v-if="loading" class="text-center q-pa-md">
+            <q-spinner color="primary" size="2em" />
+            <div class="text-caption text-grey-6 q-mt-sm">Loading requests...</div>
+          </q-card-section>
 
-          <q-separator />
+          <!-- Empty State -->
+          <q-card-section v-else-if="upcomingTrips.length === 0" class="text-center q-pa-md">
+            <q-icon name="event_busy" size="3em" color="grey-5" />
+            <div class="text-subtitle2 text-grey-7 q-mt-sm">No pending ride requests</div>
+          </q-card-section>
 
-
-          <q-card-section v-if="upcomingTrip">
-
-            <div class="upcoming-trip">
-
-              <!-- DATE -->
-              <div class="date-box">
-
-                <div class="text-caption text-primary">
-                  {{ getDayName(upcomingTrip.tripDate) }}
+          <!-- Dynamic Trip List -->
+          <q-list v-else separator class="q-pa-none">
+            <q-item
+              v-for="trip in upcomingTrips"
+              :key="trip.id"
+              class="q-pa-md flex-column"
+            >
+              <!-- Rider Header -->
+              <div class="row items-center justify-between full-width q-mb-sm">
+                <div class="row items-center q-gutter-x-sm">
+                  <q-avatar color="primary" text-color="white" icon="person" size="36px" />
+                  <div>
+                    <div class="text-subtitle2 text-weight-bold">
+                      {{ trip.rider?.username || 'Rider' }}
+                    </div>
+                    <div class="text-caption text-grey-7">
+                      <q-icon name="phone" size="12px" class="q-mr-xs" />
+                      {{ trip.rider?.mobile_no || 'N/A' }}
+                    </div>
+                  </div>
                 </div>
 
-                <div class="text-h5 text-weight-bold text-primary">
-                  {{ getDay(upcomingTrip.tripDate) }}
-                </div>
-
-                <div class="text-caption text-grey-7">
-                  {{ getMonthName(upcomingTrip.tripDate) }}
-                </div>
-
+                <q-chip
+                  color="warning"
+                  text-color="dark"
+                  size="xs"
+                  class="text-weight-bold text-uppercase"
+                >
+                  {{ trip.status }}
+                </q-chip>
               </div>
 
-
-              <!-- DETAILS -->
-              <div class="q-ml-md col">
-
-                <div class="row items-center justify-between">
-
-                  <div class="text-weight-bold">
-                    Booking #{{ upcomingTrip.bookingId || upcomingTrip.id }}
+              <!-- Route Information -->
+              <div class="q-gutter-y-xs full-width q-mb-sm">
+                <div class="row items-start no-wrap">
+                  <q-icon name="my_location" color="positive" size="18px" class="q-mr-xs q-mt-xs" />
+                  <div class="text-body2 text-grey-9 ellipsis-2-lines">
+                    <span class="text-weight-bold">Pickup:</span> {{ trip.from }}
                   </div>
+                </div>
 
-                  <q-chip
+                <div class="row items-start no-wrap">
+                  <q-icon name="place" color="negative" size="18px" class="q-mr-xs q-mt-xs" />
+                  <div class="text-body2 text-grey-9 ellipsis-2-lines">
+                    <span class="text-weight-bold">Drop:</span> {{ trip.to }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Trip Specs & Actions -->
+              <div class="row items-center justify-between full-width bg-grey-2 q-pa-xs rounded-borders">
+                <div>
+                  <span class="text-caption text-grey-7">Fare: </span>
+                  <span class="text-subtitle2 text-weight-bolder text-primary">₹{{ trip.fare }}</span>
+                  <span class="text-caption text-grey-6 q-ml-sm">({{ trip.distance }})</span>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row q-gutter-x-xs">
+                  <q-btn
                     dense
-                    color="blue-1"
-                    text-color="primary"
-                  >
-                    {{ upcomingTrip.status || 'Assigned' }}
-                  </q-chip>
-
+                    flat
+                    color="negative"
+                    icon="close"
+                    label="Reject"
+                    size="sm"
+                    @click="rejectRide(trip.id)"
+                  />
+                  <q-btn
+                    dense
+                    unelevated
+                    color="positive"
+                    icon="check"
+                    label="Accept"
+                    size="sm"
+                    @click="acceptRide(trip.id)"
+                  />
                 </div>
-
-
-                <div class="row q-mt-md">
-
-                  <div class="col-12 col-md-6">
-
-                    <div class="trip-info-label">
-                      Pickup
-                    </div>
-
-                    <div class="row no-wrap q-mt-xs">
-
-                      <q-icon
-                        name="radio_button_checked"
-                        color="positive"
-                        size="17px"
-                      />
-
-                      <div class="q-ml-sm trip-location">
-                        {{ upcomingTrip.pickupLocation || '-' }}
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  <div class="col-12 col-md-6 q-mt-sm q-mt-md-none">
-
-                    <div class="trip-info-label">
-                      Drop
-                    </div>
-
-                    <div class="row no-wrap q-mt-xs">
-
-                      <q-icon
-                        name="location_on"
-                        color="negative"
-                        size="17px"
-                      />
-
-                      <div class="q-ml-sm trip-location">
-                        {{ upcomingTrip.dropLocation || '-' }}
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-
-                <div class="row items-center q-mt-md">
-
-                  <div class="row items-center q-mr-lg">
-
-                    <q-icon
-                      name="schedule"
-                      color="grey-6"
-                    />
-
-                    <span class="q-ml-xs text-caption">
-                      {{ upcomingTrip.pickupTime || '-' }}
-                    </span>
-
-                  </div>
-
-
-                  <div class="row items-center">
-
-                    <q-icon
-                      name="person"
-                      color="grey-6"
-                    />
-
-                    <span class="q-ml-xs text-caption">
-                      {{ upcomingTrip.customerName || 'Customer' }}
-                    </span>
-
-                  </div>
-
-                </div>
-
               </div>
-
-            </div>
-
-          </q-card-section>
-
-
-          <!-- NO UPCOMING -->
-          <q-card-section
-            v-else
-            class="empty-state"
-          >
-
-            <q-icon
-              name="event_available"
-              size="50px"
-              color="grey-5"
-            />
-
-            <div class="text-grey-7 q-mt-sm">
-              No upcoming trips
-            </div>
-
-            <div class="text-caption text-grey-5">
-              You currently have no upcoming assigned trips.
-            </div>
-
-          </q-card-section>
-
+            </q-item>
+          </q-list>
         </q-card>
 
 
@@ -1465,10 +1389,9 @@ import {
   useRouter
 } from 'vue-router'
 
-import axios from 'axios'
 import { useLocationTracker } from '@/composables/useLocationTracker'
 import api from '@/config/api'
-
+import { Notify } from 'quasar'
 const { startTracking } = useLocationTracker()
 
 /* =========================================================
@@ -1787,6 +1710,80 @@ const normalizeTrip = trip => {
       trip.amount ||
       0
     )
+  }
+}
+
+
+const upcomingTrips = ref([])
+
+const fetchUpcoming = async () => {
+  try {
+    loading.value = true
+    const response = await api.get('/driver/find/pending/ride')
+
+    const data = response.data?.data || response.data || []
+    if (Array.isArray(data)) {
+      upcomingTrips.value = data
+    } else {
+      upcomingTrips.value = []
+    }
+  } catch (error) {
+    console.error('Error fetching upcoming trips:', error)
+    Notify.create({
+      type: 'negative',
+      message: 'Failed to load upcoming trip details.'
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchUpcoming()
+})
+
+const acceptRide = async (bookingId) => {
+  try {
+    const response = await api.put(`/driver/accept-ride/${bookingId}`)
+
+    if (response.data?.success) {
+      Notify.create({
+        type: 'positive',
+        message: 'Ride accepted successfully!'
+      })
+
+      // Remove accepted trip from the pending list locally
+      upcomingTrips.value = upcomingTrips.value.filter((trip) => trip.id !== bookingId)
+    }
+  } catch (error) {
+    console.error('Error accepting ride:', error)
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.message || 'Failed to accept ride.'
+    })
+  }
+}
+
+// REJECT RIDE HANDLER
+const rejectRide = async (bookingId) => {
+  try {
+    const response = await api.put(`/driver/reject-ride/${bookingId}`)
+
+    if (response.data?.success) {
+      Notify.create({
+        type: 'info',
+        message: 'Ride request declined.'
+      })
+
+      // Remove rejected trip from the pending list locally
+      upcomingTrips.value = upcomingTrips.value.filter((trip) => trip.id !== bookingId)
+    }
+  } catch (error) {
+    console.error('Error rejecting ride:', error)
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.message || 'Failed to reject ride.'
+    })
   }
 }
 
