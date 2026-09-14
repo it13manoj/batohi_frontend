@@ -17,6 +17,7 @@
     "@capacitor/geolocation": "^8.2.2",
     "@quasar/extras": "^2.0.3",
     "axios": "^1.19.0",
+    "firebase": "^12.19.0",
     "jwt-decode": "^4.0.0",
     "pinia": "^4.0.3",
     "quasar": "^2.24.0",
