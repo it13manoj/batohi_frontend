@@ -1078,9 +1078,24 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import api from '@/config/api'
-
+ const token = localStorage.getItem('token') || sessionStorage.getItem('token')
 const $q = useQuasar()
-
+const decodeJwt = token => {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload)
+  } catch (e) {
+    console.error('Error decoding JWT token:', e)
+    return null
+  }
+}
 // Configuration / Constants
 const imagesBaseUrl = ref('https://your-domain.com/uploads/')
 const editMode = ref(false)
@@ -1091,9 +1106,11 @@ const genderOptions = ['Male', 'Female', 'Other']
 const agencyTypeOptions = ['Individual / Freelance', 'Fleet Partner', 'Corporate Agency']
 const stateOptions = ['Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Telangana', 'Uttar Pradesh']
 
+
+  console.log(decodeJwt(token))
 // Profile State Model
 const profile = reactive({
-  driverId: 'DRV-98421',
+  driverId: `DRV-${decodeJwt(token).id}`,
   name: 'John Doe',
   phone: '+91 9876543210',
   email: 'john.doe@example.com',
