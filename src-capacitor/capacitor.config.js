@@ -10,6 +10,9 @@ module.exports = defineCapacitorConfig({
   plugins: {
     CapacitorHttp: {
       enabled: true // Bypasses browser WebView CORS restrictions on native Android
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert']
     }
   }
 });
