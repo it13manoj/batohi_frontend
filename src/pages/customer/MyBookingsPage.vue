@@ -654,645 +654,272 @@
 
 
 <script setup>
-
-import {
-  ref,
-  computed,
-  onMounted
-} from 'vue'
-
-import {
-  useRouter
-} from 'vue-router'
-
-import {
-  useQuasar
-} from 'quasar'
-
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useQuasar, Notify } from 'quasar'
+import api from '@/config/api'
 
 // =====================================================
-// ROUTER
+// ROUTER & QUASAR
 // =====================================================
-
 const router = useRouter()
-
 const $q = useQuasar()
-
 
 // =====================================================
 // FILTERS
 // =====================================================
-
 const search = ref('')
-
 const statusFilter = ref('all')
-
 const dateFilter = ref('all')
-
 
 // =====================================================
 // FILTER OPTIONS
 // =====================================================
-
 const statusOptions = [
-
-  {
-    label: 'All Status',
-    value: 'all'
-  },
-
-  {
-    label: 'Pending',
-    value: 'Pending'
-  },
-
-  {
-    label: 'Confirmed',
-    value: 'Confirmed'
-  },
-
-  {
-    label: 'Completed',
-    value: 'Completed'
-  },
-
-  {
-    label: 'Cancelled',
-    value: 'Cancelled'
-  },
-
-  {
-    label: 'Rejected',
-    value: 'Rejected'
-  }
-
+  { label: 'All Status', value: 'all' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Confirmed', value: 'confirmed' },
+  { label: 'Completed', value: 'completed' },
+  { label: 'Cancelled', value: 'cancelled' },
+  { label: 'Rejected', value: 'rejected' }
 ]
-
 
 const dateOptions = [
-
-  {
-    label: 'All Dates',
-    value: 'all'
-  },
-
-  {
-    label: 'Upcoming',
-    value: 'upcoming'
-  },
-
-  {
-    label: 'Past',
-    value: 'past'
-  }
-
+  { label: 'All Dates', value: 'all' },
+  { label: 'Upcoming', value: 'upcoming' },
+  { label: 'Past', value: 'past' }
 ]
 
-
 // =====================================================
-// BOOKING DATA
+// DATA & API INTEGRATION
 // =====================================================
-//
-// This is temporary frontend data.
-//
-// Later replace this with:
-// booking.service.js
-// or
-// booking.store.js
-//
-// =====================================================
+const bookings = ref([])
+const isLoading = ref(false)
 
-const bookings = ref([
+// Helper function to map single API booking item to UI schema
+const mapBookingItem = (item) => {
+  const createdDate = item.created_at ? item.created_at.split('T')[0] : ''
+  const createdTime = item.created_at
+    ? new Date(item.created_at).toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      })
+    : ''
 
-  {
-    id: 1,
-    bookingNumber: 'BK-10001',
+  // Normalize and map 'accepted' or 'accept' directly to 'Confirmed'
+  const rawStatus = (item.status || '').toLowerCase().trim()
+  let formattedStatus = 'Unknown'
 
-    vehicleId: 1,
-    vehicleName: 'Toyota Innova Crysta',
-    vehicleType: 'MPV',
-
-    bookingDate: '2026-08-25',
-    bookingTime: '09:00 AM',
-
-    pickupLocation: 'Patna Airport',
-    dropLocation: 'Muzaffarpur',
-
-    passengers: 5,
-
-    totalAmount: 2625,
-
-    status: 'Confirmed'
-  },
-
-
-  {
-    id: 2,
-    bookingNumber: 'BK-10002',
-
-    vehicleId: 2,
-    vehicleName: 'Mahindra Scorpio',
-    vehicleType: 'SUV',
-
-    bookingDate: '2026-08-28',
-    bookingTime: '08:30 AM',
-
-    pickupLocation: 'Patna Railway Station',
-    dropLocation: 'Gaya',
-
-    passengers: 4,
-
-    totalAmount: 2940,
-
-    status: 'Pending'
-  },
-
-
-  {
-    id: 3,
-    bookingNumber: 'BK-10003',
-
-    vehicleId: 3,
-    vehicleName: 'Maruti Ertiga',
-    vehicleType: 'MPV',
-
-    bookingDate: '2026-08-10',
-    bookingTime: '10:00 AM',
-
-    pickupLocation: 'Muzaffarpur',
-    dropLocation: 'Patna',
-
-    passengers: 4,
-
-    totalAmount: 2100,
-
-    status: 'Completed'
-  },
-
-
-  {
-    id: 4,
-    bookingNumber: 'BK-10004',
-
-    vehicleId: 4,
-    vehicleName: 'Hyundai Aura',
-    vehicleType: 'Sedan',
-
-    bookingDate: '2026-08-05',
-    bookingTime: '07:30 AM',
-
-    pickupLocation: 'Patna',
-    dropLocation: 'Nalanda',
-
-    passengers: 3,
-
-    totalAmount: 1575,
-
-    status: 'Cancelled'
+  if (rawStatus === 'accepted' || rawStatus === 'accept' || rawStatus === 'confirmed') {
+    formattedStatus = 'Confirmed'
+  } else if (rawStatus) {
+    formattedStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1)
   }
 
-])
+  return {
+    id: item.id,
+    bookingNumber: `BK-${10000 + item.id}`,
+    vehicleId: item.driver?.driver?.vehicle?.id || null,
+    vehicleName: item.driver?.driver?.vehicle?.vehicle_name || 'N/A',
+    vehicleType: item.driver?.driver?.vehicle?.manufacturer || 'Standard',
+    bookingDate: createdDate,
+    bookingTime: createdTime,
+    pickupLocation: item.from || 'N/A',
+    dropLocation: item.to || 'N/A',
+    passengers: item.driver?.driver?.vehicle?.seating_capacity || 0,
+    totalAmount: parseFloat(item.fare) || 0,
+    status: formattedStatus,
+    driverName: item.driver?.username || 'Unassigned',
+    driverMobile: item.driver?.mobile_no || 'N/A',
+    riderName: item.rider?.username || 'N/A',
+    distance: item.distance || '0 m'
+  }
+}
 
+// =====================================================
+// UTILITY FUNCTIONS
+// =====================================================
+const canCancel = (booking) => {
+  const status = booking.status?.toLowerCase()
+  return status === 'pending' || status === 'confirmed' || status === 'accepted'
+}
+
+// API Call to fetch rides
+const fetchUpcoming = async () => {
+  isLoading.value = true
+  try {
+    const response = await api.get('/driver/find/all/ride')
+
+    // Handle both single object or array responses gracefully
+    let rawData = response.data?.data || response.data || []
+    if (!Array.isArray(rawData) && typeof rawData === 'object') {
+      rawData = [rawData]
+    }
+
+    if (Array.isArray(rawData)) {
+      bookings.value = rawData.map(mapBookingItem)
+    } else {
+      bookings.value = []
+    }
+  } catch (error) {
+    console.error('Error fetching upcoming trips:', error)
+    Notify.create({
+      type: 'negative',
+      message: 'Failed to load trip details.'
+    })
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchUpcoming()
+})
 
 // =====================================================
 // STATISTICS
 // =====================================================
-
-const totalBookings = computed(() => {
-
-  return bookings.value.length
-
-})
-
+const totalBookings = computed(() => bookings.value.length)
 
 const confirmedBookings = computed(() => {
-
-  return bookings.value.filter(
-    booking =>
-      booking.status === 'Confirmed'
-  ).length
-
+  return bookings.value.filter(b => b.status.toLowerCase() === 'confirmed').length
 })
-
 
 const pendingBookings = computed(() => {
-
-  return bookings.value.filter(
-    booking =>
-      booking.status === 'Pending'
-  ).length
-
+  return bookings.value.filter(b => b.status.toLowerCase() === 'pending').length
 })
-
 
 const completedBookings = computed(() => {
-
-  return bookings.value.filter(
-    booking =>
-      booking.status === 'Completed'
-  ).length
-
+  return bookings.value.filter(b => b.status.toLowerCase() === 'completed').length
 })
-
 
 // =====================================================
 // FILTERED BOOKINGS
 // =====================================================
-
 const filteredBookings = computed(() => {
+  let result = [...bookings.value]
 
-  let result = [
-    ...bookings.value
-  ]
-
-
-  // ===================================================
-  // SEARCH
-  // ===================================================
-
-  const searchText =
-    search.value
-      .trim()
-      .toLowerCase()
-
-
+  // Search filter
+  const searchText = search.value.trim().toLowerCase()
   if (searchText) {
-
-    result =
-      result.filter(booking => {
-
-        return (
-
-          booking.bookingNumber
-            .toLowerCase()
-            .includes(searchText)
-
-          ||
-
-          booking.vehicleName
-            .toLowerCase()
-            .includes(searchText)
-
-          ||
-
-          booking.vehicleType
-            .toLowerCase()
-            .includes(searchText)
-
-          ||
-
-          booking.pickupLocation
-            .toLowerCase()
-            .includes(searchText)
-
-          ||
-
-          booking.dropLocation
-            .toLowerCase()
-            .includes(searchText)
-
-        )
-
-      })
-
-  }
-
-
-  // ===================================================
-  // STATUS
-  // ===================================================
-
-  if (
-    statusFilter.value !== 'all'
-  ) {
-
-    result =
-      result.filter(
-        booking =>
-          booking.status ===
-          statusFilter.value
+    result = result.filter(booking => {
+      return (
+        booking.bookingNumber.toLowerCase().includes(searchText) ||
+        booking.vehicleName.toLowerCase().includes(searchText) ||
+        booking.vehicleType.toLowerCase().includes(searchText) ||
+        booking.pickupLocation.toLowerCase().includes(searchText) ||
+        booking.dropLocation.toLowerCase().includes(searchText)
       )
-
+    })
   }
 
-
-  // ===================================================
-  // DATE
-  // ===================================================
-
-  if (
-    dateFilter.value !== 'all'
-  ) {
-
-    const today =
-      new Date()
-
-    today.setHours(
-      0,
-      0,
-      0,
-      0
+  // Status filter
+  if (statusFilter.value !== 'all') {
+    result = result.filter(
+      booking => booking.status.toLowerCase() === statusFilter.value.toLowerCase()
     )
-
-
-    result =
-      result.filter(
-        booking => {
-
-          const bookingDate =
-            new Date(
-              booking.bookingDate
-            )
-
-          if (
-            dateFilter.value ===
-            'upcoming'
-          ) {
-
-            return bookingDate >= today
-
-          }
-
-
-          if (
-            dateFilter.value ===
-            'past'
-          ) {
-
-            return bookingDate < today
-
-          }
-
-
-          return true
-
-        }
-      )
-
   }
 
+  // Date filter
+  if (dateFilter.value !== 'all') {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    result = result.filter(booking => {
+      if (!booking.bookingDate) return true
+      const bookingDate = new Date(booking.bookingDate)
+
+      if (dateFilter.value === 'upcoming') {
+        return bookingDate >= today
+      }
+      if (dateFilter.value === 'past') {
+        return bookingDate < today
+      }
+      return true
+    })
+  }
 
   return result
-
 })
 
-
 // =====================================================
-// STATUS COLOR
+// UTILITY FUNCTIONS
 // =====================================================
-
 const getStatusColor = (status) => {
-
-  switch (status) {
-
-    case 'Confirmed':
+  switch (status?.toLowerCase()) {
+    case 'confirmed':
       return 'positive'
-
-    case 'Pending':
+    case 'pending':
       return 'orange'
-
-    case 'Completed':
+    case 'completed':
       return 'teal'
-
-    case 'Cancelled':
+    case 'cancelled':
+    case 'rejected':
       return 'negative'
-
-    case 'Rejected':
-      return 'negative'
-
     default:
       return 'grey'
-
   }
-
 }
 
-
-// =====================================================
-// CAN CANCEL
-// =====================================================
-
-const canCancel = (booking) => {
-
-  return (
-
-    booking.status === 'Pending' ||
-
-    booking.status === 'Confirmed'
-
-  )
-
-}
-
-
-// =====================================================
-// VIEW BOOKING
-// =====================================================
 
 const viewBooking = (booking) => {
-
   router.push({
-
     name: 'customer-booking-details',
-
-    query: {
-      bookingId: booking.id
-    }
-
+    query: { bookingId: booking.id }
   })
-
 }
 
-
-// =====================================================
-// CANCEL DIALOG
-// =====================================================
-
-const showCancelDialog =
-  ref(false)
-
-const selectedBooking =
-  ref(null)
-
+// Dialogue & Cancellation Handler
+const showCancelDialog = ref(false)
+const selectedBooking = ref(null)
 
 const openCancelDialog = (booking) => {
-
-  selectedBooking.value =
-    booking
-
-  showCancelDialog.value =
-    true
-
+  selectedBooking.value = booking
+  showCancelDialog.value = true
 }
-
-
-// =====================================================
-// CANCEL BOOKING
-// =====================================================
 
 const cancelBooking = () => {
+  if (!selectedBooking.value) return
 
-  if (
-    !selectedBooking.value
-  ) {
-
-    return
-
+  const target = bookings.value.find(item => item.id === selectedBooking.value.id)
+  if (target) {
+    target.status = 'Cancelled'
   }
 
-
-  /*
-   * Temporary frontend implementation.
-   *
-   * Later replace this with:
-   *
-   * await bookingService.cancelBooking(
-   *   selectedBooking.value.id
-   * )
-   */
-
-
-  const booking =
-    bookings.value.find(
-      item =>
-        item.id ===
-        selectedBooking.value.id
-    )
-
-
-  if (booking) {
-
-    booking.status =
-      'Cancelled'
-
-  }
-
-
-  showCancelDialog.value =
-    false
-
-
+  showCancelDialog.value = false
   $q.notify({
-
     type: 'positive',
-
-    message:
-      'Booking cancelled successfully',
-
+    message: 'Booking cancelled successfully',
     position: 'top'
-
   })
-
-
-  selectedBooking.value =
-    null
-
+  selectedBooking.value = null
 }
-
-
-// =====================================================
-// RESET FILTERS
-// =====================================================
 
 const resetFilters = () => {
-
   search.value = ''
-
   statusFilter.value = 'all'
-
   dateFilter.value = 'all'
-
 }
-
-
-// =====================================================
-// GO TO SEARCH
-// =====================================================
 
 const goToSearch = () => {
-
-  router.push(
-    '/customer/search-vehicle'
-  )
-
+  router.push('/customer/search-vehicle')
 }
-
-
-// =====================================================
-// FORMAT DATE
-// =====================================================
 
 const formatDate = (date) => {
-
-  if (!date) {
-    return '-'
-  }
-
-
-  const dateObject =
-    new Date(date)
-
-
-  return dateObject.toLocaleDateString(
-    'en-IN',
-    {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    }
-  )
-
+  if (!date) return '-'
+  const dateObject = new Date(date)
+  return dateObject.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
 }
-
-
-// =====================================================
-// FORMAT AMOUNT
-// =====================================================
 
 const formatAmount = (amount) => {
-
-  return Number(
-    amount || 0
-  ).toLocaleString(
-    'en-IN'
-  )
-
+  return Number(amount || 0).toLocaleString('en-IN')
 }
-
-
-// =====================================================
-// LOAD BOOKINGS
-// =====================================================
-
-const loadBookings = async () => {
-
-  /*
-   * Later connect your API here.
-   *
-   * Example:
-   *
-   * const response =
-   *   await bookingService.getMyBookings()
-   *
-   * bookings.value =
-   *   response.data
-   */
-
-}
-
-
-// =====================================================
-// ON MOUNT
-// =====================================================
-
-onMounted(() => {
-
-  loadBookings()
-
-})
-
 </script>
-
 
 <style scoped>
 

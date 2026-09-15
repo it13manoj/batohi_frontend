@@ -576,10 +576,17 @@ const bookRide = async (driver) => {
     // 4. Send request to backend driver endpoint
     const response = await api.post(`/driver/${driver.id}/find-ride`, payload)
 
+    console.log(response)
+
     if (response.data?.success || response.status === 200) {
       Notify.create({
         type: 'positive',
         message: `Booking request sent to ${driver.first_name} ${driver.last_name || ''}!`
+      })
+
+      router.push({
+        name: 'ride-tracking',
+        params: { bookingId: response.data.data.id }
       })
     }
   } catch (error) {

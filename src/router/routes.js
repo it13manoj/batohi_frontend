@@ -115,7 +115,11 @@ const routes = [
         name: 'customer-search-vehicle',
         component: () => import('@/pages/customer/SearchVehiclePage.vue')
       },
-
+      {
+        path: '/ride-tracking/:bookingId',
+        name: 'ride-tracking',
+        component: () => import('@/pages/customer/RideTrackingPage.vue')
+      },
       // -------------------------------------------------
       // Vehicle Details
       // /customer/vehicle-details

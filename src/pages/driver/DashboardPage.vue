@@ -594,122 +594,182 @@
              UPCOMING TRIP
         ====================================================== -->
 
-        <q-card class="q-mb-md rounded-borders shadow-1">
-          <!-- Header -->
-          <q-card-section class="bg-primary text-white">
-            <div class="row items-center justify-between">
-              <div>
-                <div class="text-h6 text-weight-bold">Pending Ride Requests</div>
-                <div class="text-caption">
-                  {{ upcomingTrips.length }} request(s) waiting for response
-                </div>
+     <q-card class="q-mb-md rounded-borders shadow-1">
+    <!-- Header -->
+    <q-card-section class="bg-primary text-white">
+      <div class="row items-center justify-between">
+        <div>
+          <div class="text-h6 text-weight-bold">Ride Requests</div>
+          <div class="text-caption">
+            {{ upcomingTrips.length }} request(s) waiting for response
+          </div>
+        </div>
+        <q-btn
+          flat
+          dense
+          color="white"
+          label="View All"
+          @click="goToAssignedTrips"
+        />
+      </div>
+    </q-card-section>
+
+    <!-- Loading State -->
+    <q-card-section v-if="loading" class="text-center q-pa-md">
+      <q-spinner color="primary" size="2em" />
+      <div class="text-caption text-grey-6 q-mt-sm">Loading requests...</div>
+    </q-card-section>
+
+    <!-- Empty State -->
+    <q-card-section v-else-if="upcomingTrips.length === 0" class="text-center q-pa-md">
+      <q-icon name="event_busy" size="3em" color="grey-5" />
+      <div class="text-subtitle2 text-grey-7 q-mt-sm">No pending ride requests</div>
+    </q-card-section>
+
+    <!-- Dynamic Trip List -->
+    <q-list v-else separator class="q-pa-none">
+      <q-item
+        v-for="trip in upcomingTrips"
+        :key="trip.id"
+        class="q-pa-md flex-column"
+      >
+        <!-- Rider Header -->
+        <div class="row items-center justify-between full-width q-mb-sm">
+          <div class="row items-center q-gutter-x-sm">
+            <q-avatar color="primary" text-color="white" icon="person" size="36px" />
+            <div>
+              <div class="text-subtitle2 text-weight-bold">
+                {{ trip.rider?.username || 'Rider' }}
               </div>
-              <q-btn
-                flat
-                dense
-                color="white"
-                label="View All"
-                @click="goToAssignedTrips"
-              />
+              <div class="text-caption text-grey-7">
+                <q-icon name="phone" size="12px" class="q-mr-xs" />
+                {{ trip.rider?.mobile_no || 'N/A' }}
+              </div>
             </div>
-          </q-card-section>
+          </div>
 
-          <!-- Loading State -->
-          <q-card-section v-if="loading" class="text-center q-pa-md">
-            <q-spinner color="primary" size="2em" />
-            <div class="text-caption text-grey-6 q-mt-sm">Loading requests...</div>
-          </q-card-section>
+          <q-chip
+            :color="trip.status?.toLowerCase() === 'accepted' ? 'positive' : 'warning'"
+            :text-color="trip.status?.toLowerCase() === 'accepted' ? 'white' : 'dark'"
+            size="xs"
+            class="text-weight-bold text-uppercase"
+          >
+            {{ trip.status }}
+          </q-chip>
+        </div>
 
-          <!-- Empty State -->
-          <q-card-section v-else-if="upcomingTrips.length === 0" class="text-center q-pa-md">
-            <q-icon name="event_busy" size="3em" color="grey-5" />
-            <div class="text-subtitle2 text-grey-7 q-mt-sm">No pending ride requests</div>
-          </q-card-section>
+        <!-- Route Information -->
+        <div class="q-gutter-y-xs full-width q-mb-sm">
+          <div class="row items-start no-wrap">
+            <q-icon name="my_location" color="positive" size="18px" class="q-mr-xs q-mt-xs" />
+            <div class="text-body2 text-grey-9 ellipsis-2-lines">
+              <span class="text-weight-bold">Pickup:</span> {{ trip.from }}
+            </div>
+          </div>
 
-          <!-- Dynamic Trip List -->
-          <q-list v-else separator class="q-pa-none">
-            <q-item
-              v-for="trip in upcomingTrips"
-              :key="trip.id"
-              class="q-pa-md flex-column"
-            >
-              <!-- Rider Header -->
-              <div class="row items-center justify-between full-width q-mb-sm">
-                <div class="row items-center q-gutter-x-sm">
-                  <q-avatar color="primary" text-color="white" icon="person" size="36px" />
-                  <div>
-                    <div class="text-subtitle2 text-weight-bold">
-                      {{ trip.rider?.username || 'Rider' }}
-                    </div>
-                    <div class="text-caption text-grey-7">
-                      <q-icon name="phone" size="12px" class="q-mr-xs" />
-                      {{ trip.rider?.mobile_no || 'N/A' }}
-                    </div>
-                  </div>
-                </div>
+          <div class="row items-start no-wrap">
+            <q-icon name="place" color="negative" size="18px" class="q-mr-xs q-mt-xs" />
+            <div class="text-body2 text-grey-9 ellipsis-2-lines">
+              <span class="text-weight-bold">Drop:</span> {{ trip.to }}
+            </div>
+          </div>
+        </div>
 
-                <q-chip
-                  color="warning"
-                  text-color="dark"
-                  size="xs"
-                  class="text-weight-bold text-uppercase"
-                >
-                  {{ trip.status }}
-                </q-chip>
-              </div>
+        <!-- Trip Specs & Actions -->
+        <div class="row items-center justify-between full-width bg-grey-2 q-pa-xs rounded-borders">
+          <div>
+            <span class="text-caption text-grey-7">Fare: </span>
+            <span class="text-subtitle2 text-weight-bolder text-primary">₹{{ trip.fare }}</span>
+            <span class="text-caption text-grey-6 q-ml-sm">({{ trip.distance }})</span>
+          </div>
 
-              <!-- Route Information -->
-              <div class="q-gutter-y-xs full-width q-mb-sm">
-                <div class="row items-start no-wrap">
-                  <q-icon name="my_location" color="positive" size="18px" class="q-mr-xs q-mt-xs" />
-                  <div class="text-body2 text-grey-9 ellipsis-2-lines">
-                    <span class="text-weight-bold">Pickup:</span> {{ trip.from }}
-                  </div>
-                </div>
+          <!-- Dynamic Action Buttons Based on Ride Status -->
+          <div class="row q-gutter-x-xs">
+            <!-- Initial State: Show Reject & Accept -->
+            <template v-if="trip.status?.toLowerCase() !== 'accepted'">
+              <q-btn
+                dense
+                flat
+                color="negative"
+                icon="close"
+                label="Reject"
+                size="sm"
+                @click="rejectRide(trip.id)"
+              />
+              <q-btn
+                dense
+                unelevated
+                color="positive"
+                icon="check"
+                label="Accept"
+                size="sm"
+                :loading="acceptingId === trip.id"
+                @click="acceptRide(trip)"
+              />
+            </template>
 
-                <div class="row items-start no-wrap">
-                  <q-icon name="place" color="negative" size="18px" class="q-mr-xs q-mt-xs" />
-                  <div class="text-body2 text-grey-9 ellipsis-2-lines">
-                    <span class="text-weight-bold">Drop:</span> {{ trip.to }}
-                  </div>
-                </div>
-              </div>
+            <!-- Accepted State: Show Start Ride Button -->
+            <template v-else>
+              <q-btn
+                dense
+                unelevated
+                color="primary"
+                icon="play_arrow"
+                label="Start Ride"
+                size="sm"
+                @click="openOtpModal(trip)"
+              />
+            </template>
+          </div>
+        </div>
+      </q-item>
+    </q-list>
+  </q-card>
 
-              <!-- Trip Specs & Actions -->
-              <div class="row items-center justify-between full-width bg-grey-2 q-pa-xs rounded-borders">
-                <div>
-                  <span class="text-caption text-grey-7">Fare: </span>
-                  <span class="text-subtitle2 text-weight-bolder text-primary">₹{{ trip.fare }}</span>
-                  <span class="text-caption text-grey-6 q-ml-sm">({{ trip.distance }})</span>
-                </div>
+  <!-- OTP Verification Modal -->
+  <q-dialog v-model="showOtpModal" persistent>
+    <q-card style="min-width: 320px; max-width: 400px;" class="rounded-borders q-pa-sm">
+      <q-card-section class="row items-center justify-between q-pb-none">
+        <div class="text-h6 text-weight-bold">Enter Start OTP</div>
+        <q-btn icon="close" flat round dense v-close-popup />
+      </q-card-section>
 
-                <!-- Action Buttons -->
-                <div class="row q-gutter-x-xs">
-                  <q-btn
-                    dense
-                    flat
-                    color="negative"
-                    icon="close"
-                    label="Reject"
-                    size="sm"
-                    @click="rejectRide(trip.id)"
-                  />
-                  <q-btn
-                    dense
-                    unelevated
-                    color="positive"
-                    icon="check"
-                    label="Accept"
-                    size="sm"
-                    @click="acceptRide(trip.id)"
-                  />
-                </div>
-              </div>
-            </q-item>
-          </q-list>
-        </q-card>
+      <q-card-section class="q-pt-md">
+        <p class="text-body2 text-grey-8">
+          Ask the rider for the start-ride OTP to confirm and begin the trip.
+        </p>
 
+        <q-input
+          v-model="otpInput"
+          outlined
+          dense
+          mask="######"
+          label="Enter OTP"
+          placeholder="e.g. 1234"
+          maxlength="6"
+          class="q-mt-sm"
+          autofocus
+          @keydown.enter="verifyOtpAndStart"
+        >
+          <template v-slot:prepend>
+            <q-icon name="lock" color="primary" />
+          </template>
+        </q-input>
+      </q-card-section>
 
+      <q-card-actions align="right" class="q-px-md q-pb-md">
+        <q-btn flat label="Cancel" color="grey-7" v-close-popup />
+        <q-btn
+          unelevated
+          label="Verify & Start"
+          color="positive"
+          :loading="isVerifying"
+          :disable="!otpInput || otpInput.length < 4"
+          @click="verifyOtpAndStart"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
         <!-- =====================================================
              RECENT TRIPS
         ====================================================== -->
@@ -1742,27 +1802,27 @@ onMounted(() => {
   fetchUpcoming()
 })
 
-const acceptRide = async (bookingId) => {
-  try {
-    const response = await api.put(`/driver/accept-ride/${bookingId}`)
+// const acceptRide = async (bookingId) => {
+//   try {
+//     const response = await api.put(`/driver/accept-ride/${bookingId}`)
 
-    if (response.data?.success) {
-      Notify.create({
-        type: 'positive',
-        message: 'Ride accepted successfully!'
-      })
+//     if (response.data?.success) {
+//       Notify.create({
+//         type: 'positive',
+//         message: 'Ride accepted successfully!'
+//       })
 
-      // Remove accepted trip from the pending list locally
-      upcomingTrips.value = upcomingTrips.value.filter((trip) => trip.id !== bookingId)
-    }
-  } catch (error) {
-    console.error('Error accepting ride:', error)
-    Notify.create({
-      type: 'negative',
-      message: error.response?.data?.message || 'Failed to accept ride.'
-    })
-  }
-}
+//       // Remove accepted trip from the pending list locally
+//       upcomingTrips.value = upcomingTrips.value.filter((trip) => trip.id !== bookingId)
+//     }
+//   } catch (error) {
+//     console.error('Error accepting ride:', error)
+//     Notify.create({
+//       type: 'negative',
+//       message: error.response?.data?.message || 'Failed to accept ride.'
+//     })
+//   }
+// }
 
 // REJECT RIDE HANDLER
 const rejectRide = async (bookingId) => {
@@ -1912,6 +1972,103 @@ onMounted(() => {
   startTracking()
   loadDashboard()
 })
+
+const acceptingId = ref(null)
+const showOtpModal = ref(false)
+const otpInput = ref('')
+const isVerifying = ref(false)
+const selectedTrip = ref(null)
+
+// Step 1: Accept the ride (Updates state & UI to show "Start Ride")
+const acceptRide = async (trip) => {
+  acceptingId.value = trip.id
+  try {
+    const response = await api.put(`/driver/accept-ride/${trip.id}`)
+
+    if (response.data?.success || response.status === 200) {
+      // Update local state to show 'accepted' status
+      trip.status = 'accepted'
+
+      Notify.create({
+        type: 'positive',
+        message: 'Ride accepted! Tap "Start Ride" when rider enters vehicle.'
+      })
+    } else {
+      Notify.create({
+        type: 'negative',
+        message: response.data?.message || 'Failed to accept ride.'
+      })
+    }
+  } catch (error) {
+    console.error('Error accepting ride:', error)
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.message || 'Failed to accept ride.'
+    })
+  } finally {
+    acceptingId.value = null
+  }
+}
+
+// Step 2: Open OTP Modal when "Start Ride" is clicked
+const openOtpModal = (trip) => {
+  selectedTrip.value = trip
+  otpInput.value = ''
+  showOtpModal.value = true
+}
+
+// Step 3: Verify OTP and start the trip
+const verifyOtpAndStart = async () => {
+  if (!otpInput.value || otpInput.value.trim().length < 4) {
+    Notify.create({
+      type: 'warning',
+      message: 'Please enter a valid OTP'
+    })
+    return
+  }
+
+  isVerifying.value = true
+
+  try {
+    const payload = {
+      booking_id: selectedTrip.value.id,
+      otp: otpInput.value.trim()
+    }
+
+    const response = await api.post('/driver/start/ride', payload)
+
+    if (response.data?.success || response.status === 200) {
+      Notify.create({
+        type: 'positive',
+        message: 'OTP verified! Ride started successfully.'
+      })
+
+      showOtpModal.value = false
+
+      // Refresh list or remove trip from pending queue
+      if (typeof fetchUpcoming === 'function') {
+        fetchUpcoming()
+      } else if (typeof upcomingTrips !== 'undefined') {
+        upcomingTrips.value = upcomingTrips.value.filter(
+          (t) => t.id !== selectedTrip.value.id
+        )
+      }
+    } else {
+      Notify.create({
+        type: 'negative',
+        message: response.data?.message || 'Invalid OTP. Please check and try again.'
+      })
+    }
+  } catch (error) {
+    console.error('Error starting ride:', error)
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.message || 'Invalid OTP verification failed.'
+    })
+  } finally {
+    isVerifying.value = false
+  }
+}
 </script>
 <style scoped>
 
