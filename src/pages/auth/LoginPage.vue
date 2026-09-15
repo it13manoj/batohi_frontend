@@ -196,6 +196,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { Capacitor } from '@capacitor/core'
+import { PushNotifications } from '@capacitor/push-notifications'
 import api from '@/config/api'
 import { requestNotificationPermission } from '@/boot/firebase'
 // Router & Quasar
@@ -345,22 +347,58 @@ const goToForgotPassword = () => {
 }
 
   async function enableNotifications() {
-    try {
-      const deviceToken = await requestNotificationPermission()
-      if (deviceToken) {
-      try {
-          await api.post('/users/device/token', {
-            deviceToken: deviceToken
-          })
-          console.log('Token successfully synced with backend!')
-        } catch (err) {
-          console.error('Failed to sync token with backend:', err)
-        }
+  try {
+    let deviceToken = null
+
+    // 1. NATIVE ANDROID / IOS FLOW
+    if (Capacitor.isNativePlatform()) {
+      let permStatus = await PushNotifications.checkPermissions()
+
+      if (permStatus.receive === 'prompt') {
+        permStatus = await PushNotifications.requestPermissions()
       }
-    } catch (error) {
-      console.error('Permission denied or error obtaining token', error)
+
+      if (permStatus.receive === 'granted') {
+        // Listen for the native FCM registration token event
+        PushNotifications.addListener('registration', async (token) => {
+          console.log('📱 Native FCM Token:', token.value)
+          await syncTokenWithBackend(token.value)
+        })
+
+        PushNotifications.addListener('registrationError', (err) => {
+          console.error('❌ Native Push Registration Error:', err)
+        })
+
+        // Request token from FCM natively
+        await PushNotifications.register()
+      } else {
+        console.warn('⚠️ Native push notification permission denied by user.')
+      }
+      return
     }
+
+    // 2. WEB BROWSER FLOW
+    deviceToken = await requestNotificationPermission()
+    if (deviceToken) {
+      await syncTokenWithBackend(deviceToken)
+    }
+
+  } catch (error) {
+    console.error('❌ Error enabling notifications:', error)
   }
+}
+
+// Helper function to send token to your API
+async function syncTokenWithBackend(token) {
+  try {
+    await api.post('/users/device/token', {
+      deviceToken: token
+    })
+    console.log('✅ Token successfully synced with backend!')
+  } catch (err) {
+    console.error('❌ Failed to sync token with backend:', err.response?.data || err.message)
+  }
+}
 onMounted(()=>{
 // enableNotifications()
 })

@@ -1,5 +1,11 @@
 import { initializeApp } from 'firebase/app'
-import { getMessaging, getToken, onMessage } from 'firebase/messaging'
+import {
+  getMessaging,
+  getToken,
+  onMessage,
+  isSupported
+} from 'firebase/messaging'
+import { Capacitor } from '@capacitor/core'
 import { Notify } from 'quasar'
 
 const firebaseConfig = {
@@ -12,32 +18,77 @@ const firebaseConfig = {
 }
 
 const app = initializeApp(firebaseConfig)
-const messaging = getMessaging(app)
 
-export async function requestNotificationPermission() {
-  const permission = await Notification.requestPermission()
-  if (permission === 'granted') {
-    const token = await getToken(messaging, {
-      vapidKey:
-        'BJm2bYo-OoP3HfUaF9ICjD-ZxoAQqDdWc4ogznMvcKh3uhPGXjtMwMexh2uk52R735P7NbxGlWC6q24djMzSH7Y' // Found in Firebase Console -> Project Settings -> Cloud Messaging
-    })
-    console.log('FCM Device Token:', token)
-    // Send this token to your backend database to target this device
-    return token
-  }
-}
+// 2. Safely initialize Web Messaging only if supported and NOT on native Android/iOS
+let messaging = null
 
-// Handle incoming messages when the app is active in the foreground
-onMessage(messaging, payload => {
-  console.log('Foreground notification received: ', payload)
+// Use an IIFE or async setup to verify browser support before initializing
+isSupported()
+  .then(supported => {
+    if (
+      supported &&
+      !Capacitor.isNativePlatform() &&
+      typeof window !== 'undefined' &&
+      'Notification' in window
+    ) {
+      messaging = getMessaging(app)
 
-  // Show a Quasar toast notification
-  Notify.create({
-    message: payload.notification.title,
-    caption: payload.notification.body,
-    color: 'primary',
-    position: 'top-right'
+      // Listen for foreground messages on web
+      onMessage(messaging, payload => {
+        console.log('Foreground notification received: ', payload)
+
+        Notify.create({
+          message: payload.notification?.title || 'Notification',
+          caption: payload.notification?.body || '',
+          color: 'primary',
+          position: 'top-right'
+        })
+      })
+    } else {
+      console.warn(
+        'Firebase Web Messaging is not supported or running on native mobile.'
+      )
+    }
   })
-})
+  .catch(err => {
+    console.error('Error checking messaging support:', err)
+  })
+
+// 3. Platform-safe request notification function
+export async function requestNotificationPermission() {
+  // Return early if running on Native Android/iOS (WebView doesn't support Web Notification API)
+  if (Capacitor.isNativePlatform()) {
+    console.log(
+      'Native mobile platform detected. Skipping Web Push permission.'
+    )
+    return null
+  }
+
+  // Safety check for browser environments missing Notification API
+  if (
+    typeof window === 'undefined' ||
+    !('Notification' in window) ||
+    !messaging
+  ) {
+    console.warn('Web Notifications are not supported in this environment.')
+    return null
+  }
+
+  try {
+    const permission = await Notification.requestPermission()
+    if (permission === 'granted') {
+      const token = await getToken(messaging, {
+        vapidKey:
+          'BJm2bYo-OoP3HfUaF9ICjD-ZxoAQqDdWc4ogznMvcKh3uhPGXjtMwMexh2uk52R735P7NbxGlWC6q24djMzSH7Y'
+      })
+      console.log('FCM Device Token:', token)
+      return token
+    }
+  } catch (error) {
+    console.error('Error requesting notification permission:', error)
+  }
+
+  return null
+}
 
 export { messaging }

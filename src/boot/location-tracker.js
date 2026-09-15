@@ -1,5 +1,5 @@
 import { boot } from 'quasar/wrappers'
-import api from '@/config/api'
+import api from '../config/api'
 
 export default boot(() => {
   let watchId = null
@@ -25,7 +25,9 @@ export default boot(() => {
 
         // Increased threshold from 150 to 500 meters so 381m (and similar) won't be skipped
         if (accuracy > 500) {
-          console.warn(`⚠️ Skipping very coarse location. Accuracy radius: ${Math.round(accuracy)}m`)
+          console.warn(
+            `⚠️ Skipping very coarse location. Accuracy radius: ${Math.round(accuracy)}m`
+          )
           return
         }
 
@@ -34,13 +36,20 @@ export default boot(() => {
             latitude,
             longitude
           })
-          console.log(`🌐 Background Location Auto-Synced -> Lat: ${latitude}, Lng: ${longitude} (Accuracy: ${Math.round(accuracy)}m)`)
+          console.log(
+            `🌐 Background Location Auto-Synced -> Lat: ${latitude}, Lng: ${longitude} (Accuracy: ${Math.round(accuracy)}m)`
+          )
         } catch (err) {
-          console.error('❌ Background Location API Error:', err.response?.data || err.message)
+          console.error(
+            '❌ Background Location API Error:',
+            err.response?.data || err.message
+          )
         }
       },
       error => {
-        console.error(`❌ Geolocation Hardware Error Code ${error.code}: ${error.message}`)
+        console.error(
+          `❌ Geolocation Hardware Error Code ${error.code}: ${error.message}`
+        )
       },
       {
         enableHighAccuracy: true,
