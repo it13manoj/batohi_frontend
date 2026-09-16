@@ -678,7 +678,9 @@ const dateFilter = ref('all')
 const statusOptions = [
   { label: 'All Status', value: 'all' },
   { label: 'Pending', value: 'pending' },
+  { label: 'Accepted', value: 'accepted' },
   { label: 'Confirmed', value: 'confirmed' },
+  { label: 'Started', value: 'started' },
   { label: 'Completed', value: 'completed' },
   { label: 'Cancelled', value: 'cancelled' },
   { label: 'Rejected', value: 'rejected' }
@@ -707,15 +709,7 @@ const mapBookingItem = (item) => {
       })
     : ''
 
-  // Normalize and map 'accepted' or 'accept' directly to 'Confirmed'
-  const rawStatus = (item.status || '').toLowerCase().trim()
-  let formattedStatus = 'Unknown'
-
-  if (rawStatus === 'accepted' || rawStatus === 'accept' || rawStatus === 'confirmed') {
-    formattedStatus = 'Confirmed'
-  } else if (rawStatus) {
-    formattedStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1)
-  }
+  const normalizedStatus = normalizeBookingStatus(item.status)
 
   return {
     id: item.id,
@@ -729,12 +723,25 @@ const mapBookingItem = (item) => {
     dropLocation: item.to || 'N/A',
     passengers: item.driver?.driver?.vehicle?.seating_capacity || 0,
     totalAmount: parseFloat(item.fare) || 0,
-    status: formattedStatus,
+    status: normalizedStatus,
     driverName: item.driver?.username || 'Unassigned',
     driverMobile: item.driver?.mobile_no || 'N/A',
     riderName: item.rider?.username || 'N/A',
     distance: item.distance || '0 m'
   }
+}
+
+const normalizeBookingStatus = status => {
+  const normalizedStatus = String(status || 'pending').trim().toLowerCase()
+
+  if (['accept', 'accepted', 'driver_accepted'].includes(normalizedStatus)) return 'Accepted'
+  if (['confirm', 'confirmed'].includes(normalizedStatus)) return 'Confirmed'
+  if (['start', 'started', 'in_progress', 'ongoing', 'on_trip'].includes(normalizedStatus)) return 'Started'
+  if (['cancel', 'cancelled', 'canceled'].includes(normalizedStatus)) return 'Cancelled'
+  if (normalizedStatus === 'rejected') return 'Rejected'
+  if (normalizedStatus === 'completed') return 'Completed'
+  if (normalizedStatus === 'pending') return 'Pending'
+  return normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1)
 }
 
 // =====================================================
@@ -848,8 +855,13 @@ const filteredBookings = computed(() => {
 // =====================================================
 const getStatusColor = (status) => {
   switch (status?.toLowerCase()) {
+    case 'accepted':
+      return 'info'
     case 'confirmed':
       return 'positive'
+    case 'started':
+    case 'in_progress':
+      return 'primary'
     case 'pending':
       return 'orange'
     case 'completed':

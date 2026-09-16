@@ -164,10 +164,20 @@
 
         <q-list separator>
 
+          <q-item v-if="bookingsLoading">
+            <q-item-section class="text-center q-pa-lg">
+              <q-spinner-dots color="primary" size="32px" />
+              <div class="text-grey q-mt-sm">Loading recent bookings...</div>
+            </q-item-section>
+          </q-item>
+
           <q-item
+            v-else
             v-for="booking in recentBookings"
             :key="booking.id"
             class="booking-item"
+            clickable
+            @click="openBooking(booking)"
           >
 
             <!-- VEHICLE ICON -->
@@ -213,13 +223,24 @@
                 ₹{{ booking.amount }}
               </div>
 
+              <q-btn
+                v-if="isActiveBooking(booking)"
+                flat
+                dense
+                color="primary"
+                label="Track"
+                icon="location_on"
+                class="q-mt-xs"
+                @click.stop="trackBooking(booking)"
+              />
+
             </q-item-section>
 
           </q-item>
 
 
           <!-- EMPTY -->
-          <q-item v-if="recentBookings.length === 0">
+          <q-item v-if="!bookingsLoading && recentBookings.length === 0">
             <q-item-section class="text-center q-pa-lg">
 
               <q-icon
@@ -289,9 +310,10 @@
 
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Notify } from 'quasar'
+import api from '@/config/api'
 
 const router = useRouter()
 import { useAuth } from "../../composables/useAuth";
@@ -334,38 +356,64 @@ const statistics = ref({
 // RECENT BOOKINGS
 // =====================================================
 
-const recentBookings = ref([
-  {
-    id: 1,
-    vehicle: 'Toyota Innova Crysta',
-    from: 'Patna',
-    to: 'Gaya',
-    date: '21 Aug 2026',
-    amount: '2,500',
-    status: 'Confirmed',
-    statusColor: 'positive'
-  },
-  {
-    id: 2,
-    vehicle: 'Mahindra Scorpio',
-    from: 'Patna',
-    to: 'Nalanda',
-    date: '18 Aug 2026',
-    amount: '1,800',
-    status: 'Completed',
-    statusColor: 'primary'
-  },
-  {
-    id: 3,
-    vehicle: 'Maruti Ertiga',
-    from: 'Gaya',
-    to: 'Patna',
-    date: '12 Aug 2026',
-    amount: '2,000',
-    status: 'Completed',
-    statusColor: 'primary'
+const recentBookings = ref([])
+const bookingsLoading = ref(false)
+
+const statusColor = status => {
+  const normalizedStatus = String(status || '').toLowerCase()
+  if (['completed'].includes(normalizedStatus)) return 'positive'
+  if (['cancelled', 'canceled', 'rejected'].includes(normalizedStatus)) return 'negative'
+  if (['accepted', 'confirmed', 'started', 'in_progress', 'ongoing'].includes(normalizedStatus)) return 'primary'
+  return 'warning'
+}
+
+const mapBooking = booking => {
+  const status = String(booking.status || 'pending').trim()
+  return {
+    id: booking.id,
+    vehicle: booking.driver?.driver?.vehicle?.vehicle_name || booking.vehicle?.vehicle_name || 'Vehicle',
+    from: booking.from || booking.pickup_location || 'Pickup location unavailable',
+    to: booking.to || booking.drop_location || 'Drop location unavailable',
+    date: booking.created_at ? formatBookingDate(booking.created_at) : 'Date unavailable',
+    amount: Number(booking.fare || booking.amount || 0).toLocaleString('en-IN'),
+    status: status.charAt(0).toUpperCase() + status.slice(1),
+    statusValue: status.toLowerCase(),
+    statusColor: statusColor(status),
+    bookingNumber: booking.bookingNumber || booking.booking_number || `BK-${10000 + booking.id}`
   }
-])
+}
+
+const formatBookingDate = date => new Date(date).toLocaleDateString('en-IN', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric'
+})
+
+const isActiveBooking = booking => {
+  return ['pending', 'accepted', 'confirmed', 'started', 'in_progress', 'ongoing', 'on_trip']
+    .includes(booking.statusValue)
+}
+
+const fetchRecentBookings = async () => {
+  bookingsLoading.value = true
+  try {
+    const response = await api.get('/driver/find/all/ride')
+    let data = response.data?.data || response.data || []
+    if (!Array.isArray(data) && data && typeof data === 'object') data = [data]
+
+    recentBookings.value = Array.isArray(data)
+      ? data.map(mapBooking).slice(0, 5)
+      : []
+  } catch (error) {
+    console.error('Error loading recent bookings:', error)
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.message || 'Failed to load recent bookings.'
+    })
+  } finally {
+    bookingsLoading.value = false
+  }
+}
 
 
 // =====================================================
@@ -417,6 +465,29 @@ const goToProfile = () => {
 const goToPayments = () => {
   router.push('/customer/payments')
 }
+
+const trackBooking = booking => {
+  router.push({
+    name: 'ride-tracking',
+    params: { bookingId: booking.id }
+  })
+}
+
+const openBooking = booking => {
+  if (isActiveBooking(booking)) {
+    trackBooking(booking)
+    return
+  }
+
+  router.push({
+    name: 'customer-booking-details',
+    query: { bookingId: booking.id }
+  })
+}
+
+onMounted(() => {
+  fetchRecentBookings()
+})
 </script>
 
 

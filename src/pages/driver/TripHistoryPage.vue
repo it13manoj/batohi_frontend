@@ -881,65 +881,46 @@
 
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import api from '@/config/api'
 
 const $q = useQuasar()
 
-
 // =====================================================
+// STATE & LOADING
+// =====================================================
+const loading = ref(false)
+const trips = ref([])
+
 // FILTER STATE
-// =====================================================
-
 const search = ref('')
 const statusFilter = ref('all')
-
 const fromDate = ref('')
 const toDate = ref('')
 
-
-// =====================================================
 // DIALOG STATE
-// =====================================================
-
 const showDetails = ref(false)
 const selectedTrip = ref(null)
 
-
-// =====================================================
 // PAGINATION
-// =====================================================
-
 const pagination = ref({
   page: 1,
   rowsPerPage: 10
 })
 
-
-// =====================================================
 // STATUS OPTIONS
-// =====================================================
-
 const statusOptions = [
-  {
-    label: 'All',
-    value: 'all'
-  },
-  {
-    label: 'Completed',
-    value: 'completed'
-  },
-  {
-    label: 'Cancelled',
-    value: 'cancelled'
-  }
+  { label: 'All', value: 'all' },
+  { label: 'Accepted', value: 'accepted' },
+  { label: 'Confirmed', value: 'confirmed' },
+  { label: 'Started', value: 'started' },
+  { label: 'Completed', value: 'completed' },
+  { label: 'Cancelled', value: 'cancelled' },
+  { label: 'Rejected', value: 'rejected' }
 ]
 
-
-// =====================================================
 // TABLE COLUMNS
-// =====================================================
-
 const columns = [
   {
     name: 'booking',
@@ -948,7 +929,6 @@ const columns = [
     align: 'left',
     sortable: true
   },
-
   {
     name: 'customer',
     label: 'Customer',
@@ -956,21 +936,18 @@ const columns = [
     align: 'left',
     sortable: true
   },
-
   {
     name: 'route',
     label: 'Route',
     field: 'pickup',
     align: 'left'
   },
-
   {
     name: 'vehicle',
     label: 'Vehicle',
     field: row => row.vehicle.name,
     align: 'left'
   },
-
   {
     name: 'distance',
     label: 'Distance',
@@ -978,7 +955,6 @@ const columns = [
     align: 'center',
     sortable: true
   },
-
   {
     name: 'fare',
     label: 'Earnings',
@@ -986,7 +962,6 @@ const columns = [
     align: 'right',
     sortable: true
   },
-
   {
     name: 'status',
     label: 'Status',
@@ -994,7 +969,6 @@ const columns = [
     align: 'center',
     sortable: true
   },
-
   {
     name: 'actions',
     label: 'Action',
@@ -1003,442 +977,214 @@ const columns = [
   }
 ]
 
-
 // =====================================================
-// TRIP DATA
-// Replace this with API data
+// API TRANSFORMER FUNCTION
+// Maps dynamic API response to UI component data structure
 // =====================================================
+function mapApiTripToTable(item) {
+  const createdAt = item.created_at ? new Date(item.created_at) : new Date()
 
-const trips = ref([
-  {
-    id: 1,
+  // Extract date string (YYYY-MM-DD) for date filtering
+  const isoDateStr = createdAt.toISOString().split('T')[0]
 
-    bookingNumber: 'BK-1001',
+  // Extract time string (HH:MM AM/PM)
+  const timeStr = createdAt.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  })
 
-    date: '2026-08-25',
-    time: '09:30 AM',
+  // Safely extract vehicle data nested inside driver object
+  const vehicleObj = item.driver?.driver?.vehicle || {}
 
-    pickup: 'Patna Junction, Patna',
-    drop: 'Airport Road, Patna',
+  const status = normalizeTripStatus(item.status)
 
+  return {
+    id: item.id,
+    bookingNumber: `BK-${item.id}`,
+    date: isoDateStr,
+    time: timeStr,
+    pickup: item.from || 'N/A',
+    drop: item.to || 'N/A',
     customer: {
-      name: 'Rahul Kumar',
-      phone: '+91 98765 43210',
-      email: 'rahul@example.com'
+      name: item.rider?.username || 'Guest Rider',
+      phone: item.rider?.mobile_no || 'N/A',
+      email: item.rider?.email || 'N/A'
     },
-
     vehicle: {
-      name: 'Swift Dzire',
-      number: 'BR01AB1234'
+      name: vehicleObj.vehicle_name || 'N/A',
+      number: vehicleObj.registration_no || 'N/A'
     },
-
-    distance: '18 KM',
-    fare: 850,
-
-    paymentMethod: 'Cash',
-    paymentStatus: 'Paid',
-
-    status: 'completed'
-  },
-
-
-  {
-    id: 2,
-
-    bookingNumber: 'BK-1002',
-
-    date: '2026-08-23',
-    time: '01:00 PM',
-
-    pickup: 'Boring Road, Patna',
-    drop: 'Danapur Railway Station',
-
-    customer: {
-      name: 'Amit Singh',
-      phone: '+91 91234 56789',
-      email: 'amit@example.com'
-    },
-
-    vehicle: {
-      name: 'Toyota Etios',
-      number: 'BR01CD5678'
-    },
-
-    distance: '24 KM',
-    fare: 1200,
-
-    paymentMethod: 'UPI',
-    paymentStatus: 'Paid',
-
-    status: 'completed'
-  },
-
-
-  {
-    id: 3,
-
-    bookingNumber: 'BK-1003',
-
-    date: '2026-08-20',
-    time: '08:00 AM',
-
-    pickup: 'Kankarbagh, Patna',
-    drop: 'Rajendra Nagar',
-
-    customer: {
-      name: 'Priya Sharma',
-      phone: '+91 99887 66554',
-      email: 'priya@example.com'
-    },
-
-    vehicle: {
-      name: 'Hyundai Aura',
-      number: 'BR01EF7890'
-    },
-
-    distance: '12 KM',
-    fare: 650,
-
-    paymentMethod: 'Cash',
-    paymentStatus: 'Paid',
-
-    status: 'completed'
-  },
-
-
-  {
-    id: 4,
-
-    bookingNumber: 'BK-1004',
-
-    date: '2026-08-18',
-    time: '10:00 AM',
-
-    pickup: 'Gandhi Maidan, Patna',
-    drop: 'Bihta',
-
-    customer: {
-      name: 'Suresh Kumar',
-      phone: '+91 98761 23456',
-      email: 'suresh@example.com'
-    },
-
-    vehicle: {
-      name: 'Maruti Ertiga',
-      number: 'BR01GH3456'
-    },
-
-    distance: '38 KM',
-    fare: 1800,
-
-    paymentMethod: 'UPI',
-    paymentStatus: 'Paid',
-
-    status: 'completed'
-  },
-
-
-  {
-    id: 5,
-
-    bookingNumber: 'BK-1005',
-
-    date: '2026-08-15',
-    time: '06:30 PM',
-
-    pickup: 'Patna City',
-    drop: 'Phulwari Sharif',
-
-    customer: {
-      name: 'Vikash Kumar',
-      phone: '+91 98123 45678',
-      email: 'vikash@example.com'
-    },
-
-    vehicle: {
-      name: 'WagonR',
-      number: 'BR01JK6789'
-    },
-
-    distance: '15 KM',
-    fare: 700,
-
-    paymentMethod: 'Cash',
-    paymentStatus: 'Refunded',
-
-    status: 'cancelled'
-  },
-
-
-  {
-    id: 6,
-
-    bookingNumber: 'BK-1006',
-
-    date: '2026-08-12',
-    time: '11:30 AM',
-
-    pickup: 'Rajendra Nagar',
-    drop: 'Patna Airport',
-
-    customer: {
-      name: 'Neha Singh',
-      phone: '+91 97654 32109',
-      email: 'neha@example.com'
-    },
-
-    vehicle: {
-      name: 'Honda Amaze',
-      number: 'BR01LM1234'
-    },
-
-    distance: '16 KM',
-    fare: 900,
-
-    paymentMethod: 'UPI',
-    paymentStatus: 'Paid',
-
-    status: 'completed'
+    distance: item.distance || '0 KM',
+    fare: parseFloat(item.fare || 0),
+    paymentMethod: 'UPI / Cash',
+    paymentStatus: status === 'completed' ? 'Paid' : 'N/A',
+    status,
+    raw: item // Keep reference to raw backend payload if needed for details dialog
   }
-])
+}
 
+function normalizeTripStatus(status) {
+  const normalizedStatus = String(status || 'pending').trim().toLowerCase()
+
+  if (['accept', 'accepted', 'driver_accepted'].includes(normalizedStatus)) {
+    return 'accepted'
+  }
+  if (['confirm', 'confirmed'].includes(normalizedStatus)) return 'confirmed'
+  if (['start', 'started', 'in_progress', 'ongoing', 'on_trip'].includes(normalizedStatus)) {
+    return 'started'
+  }
+  if (['cancel', 'cancelled', 'canceled'].includes(normalizedStatus)) return 'cancelled'
+  return normalizedStatus
+}
 
 // =====================================================
 // COMPUTED STATISTICS
 // =====================================================
-
 const completedTrips = computed(() => {
-
-  return trips.value.filter(
-    trip => trip.status === 'completed'
-  ).length
-
+  return trips.value.filter(trip => trip.status === 'completed').length
 })
-
 
 const cancelledTrips = computed(() => {
-
-  return trips.value.filter(
-    trip => trip.status === 'cancelled'
-  ).length
-
+  return trips.value.filter(trip => trip.status === 'cancelled').length
 })
-
 
 const totalEarnings = computed(() => {
-
   return trips.value
     .filter(trip => trip.status === 'completed')
-    .reduce(
-      (total, trip) => total + Number(trip.fare || 0),
-      0
-    )
-
+    .reduce((total, trip) => total + Number(trip.fare || 0), 0)
 })
-
 
 // =====================================================
 // FILTERED TRIPS
 // =====================================================
-
 const filteredTrips = computed(() => {
-
   let result = [...trips.value]
 
-
-  // Status
+  // Status Filter
   if (statusFilter.value !== 'all') {
-
-    result = result.filter(
-      trip => trip.status === statusFilter.value
-    )
-
+    result = result.filter(trip => trip.status === statusFilter.value)
   }
 
-
-  // Search
+  // Search Filter
   if (search.value.trim()) {
-
-    const keyword = search.value
-      .toLowerCase()
-      .trim()
-
+    const keyword = search.value.toLowerCase().trim()
     result = result.filter(trip => {
-
       return (
-
-        trip.bookingNumber
-          .toLowerCase()
-          .includes(keyword) ||
-
-        trip.customer.name
-          .toLowerCase()
-          .includes(keyword) ||
-
-        trip.customer.phone
-          .toLowerCase()
-          .includes(keyword) ||
-
-        trip.pickup
-          .toLowerCase()
-          .includes(keyword) ||
-
-        trip.drop
-          .toLowerCase()
-          .includes(keyword) ||
-
-        trip.vehicle.name
-          .toLowerCase()
-          .includes(keyword) ||
-
-        trip.vehicle.number
-          .toLowerCase()
-          .includes(keyword)
-
+        trip.bookingNumber.toLowerCase().includes(keyword) ||
+        trip.customer.name.toLowerCase().includes(keyword) ||
+        trip.customer.phone.toLowerCase().includes(keyword) ||
+        trip.pickup.toLowerCase().includes(keyword) ||
+        trip.drop.toLowerCase().includes(keyword) ||
+        trip.vehicle.name.toLowerCase().includes(keyword) ||
+        trip.vehicle.number.toLowerCase().includes(keyword)
       )
-
     })
-
   }
 
-
-  // From Date
+  // From Date Filter
   if (fromDate.value) {
-
-    result = result.filter(
-      trip => trip.date >= fromDate.value
-    )
-
+    result = result.filter(trip => trip.date >= fromDate.value)
   }
 
-
-  // To Date
+  // To Date Filter
   if (toDate.value) {
-
-    result = result.filter(
-      trip => trip.date <= toDate.value
-    )
-
+    result = result.filter(trip => trip.date <= toDate.value)
   }
-
 
   return result
-
 })
 
-
 // =====================================================
-// FORMAT DATE
+// UTILITY HELPERS
 // =====================================================
-
 function formatDate(date) {
-
   if (!date) return ''
-
-  return new Date(date).toLocaleDateString(
-    'en-IN',
-    {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    }
-  )
-
+  return new Date(date).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
 }
-
-
-// =====================================================
-// FORMAT STATUS
-// =====================================================
 
 function formatStatus(status) {
-
   const statusMap = {
-
     completed: 'Completed',
-
-    cancelled: 'Cancelled'
-
+    cancelled: 'Cancelled',
+    rejected: 'Rejected',
+    pending: 'Pending',
+    accepted: 'Accepted',
+    confirmed: 'Confirmed',
+    started: 'Started'
   }
-
   return statusMap[status] || status
-
 }
-
-
-// =====================================================
-// STATUS COLOR
-// =====================================================
 
 function statusColor(status) {
-
   const colors = {
-
     completed: 'positive',
-
-    cancelled: 'negative'
-
+    cancelled: 'negative',
+    rejected: 'negative',
+    pending: 'warning',
+    accepted: 'info',
+    confirmed: 'primary',
+    started: 'positive'
   }
-
   return colors[status] || 'grey'
-
 }
-
-
-// =====================================================
-// VIEW TRIP
-// =====================================================
 
 function viewTrip(trip) {
-
   selectedTrip.value = trip
-
   showDetails.value = true
-
 }
-
-
-// =====================================================
-// REFRESH
-// =====================================================
-
-function refreshHistory() {
-
-  $q.notify({
-
-    type: 'positive',
-
-    message: 'Trip history refreshed',
-
-    position: 'top-right'
-
-  })
-
-  // Later:
-  // fetchTripHistory()
-
-}
-
-
-// =====================================================
-// RESET FILTERS
-// =====================================================
 
 function resetFilters() {
-
   search.value = ''
-
   statusFilter.value = 'all'
-
   fromDate.value = ''
-
   toDate.value = ''
-
 }
 
+// =====================================================
+// API INTEGRATION
+// =====================================================
+const fetchTripHistory = async () => {
+  loading.value = true
+  try {
+    const response = await api.get('/driver/find/all/ride')
+
+    // Check array structure & transform dynamic payload
+    const rawData = Array.isArray(response.data)
+      ? response.data
+      : (response.data?.data || [])
+
+    trips.value = rawData.map(mapApiTripToTable)
+  } catch (error) {
+    console.error('Error loading ride history:', error)
+    $q.notify({
+      type: 'negative',
+      message: error.response?.data?.message || 'Failed to fetch ride history',
+      position: 'top-right'
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
+function refreshHistory() {
+  fetchTripHistory().then(() => {
+    $q.notify({
+      type: 'positive',
+      message: 'Trip history refreshed',
+      position: 'top-right'
+    })
+  })
+}
+
+onMounted(() => {
+  fetchTripHistory()
+})
 </script>
-
-
 <style scoped>
 
 /* =====================================================

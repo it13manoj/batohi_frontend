@@ -594,7 +594,112 @@
              UPCOMING TRIP
         ====================================================== -->
 
-     <q-card class="q-mb-md rounded-borders shadow-1">
+  <q-card
+    v-if="acceptedRide"
+    class="active-ride-card q-mb-lg"
+  >
+    <q-card-section class="active-ride-header">
+      <div class="row items-center justify-between">
+        <div class="row items-center no-wrap">
+          <q-avatar color="green-1" text-color="positive" icon="navigation" size="42px" />
+          <div class="q-ml-md">
+            <div class="text-h6 text-weight-bold">Current Accepted Ride</div>
+            <div class="text-caption text-grey-7">
+              Navigate to {{ acceptedRide.rider?.username || 'your rider' }}
+            </div>
+          </div>
+        </div>
+        <q-chip color="positive" text-color="white" dense>
+          <q-icon name="check_circle" size="15px" class="q-mr-xs" />
+          Accepted
+        </q-chip>
+      </div>
+    </q-card-section>
+
+    <div
+      id="map-current-accepted"
+      class="active-ride-map"
+    ></div>
+
+    <q-card-section class="active-ride-details">
+      <div class="row q-col-gutter-md items-center">
+        <div class="col-12 col-sm-7">
+          <div class="text-caption text-grey-6 text-uppercase text-weight-medium">
+            Pickup location
+          </div>
+          <div class="text-body2 text-weight-medium ellipsis-2-lines q-mt-xs">
+            <q-icon name="my_location" color="positive" size="17px" class="q-mr-xs" />
+            {{ acceptedRide.riderAddress || acceptedRide.from || acceptedRide.pickupLocation || formatCoordinates(acceptedRide.rider) }}
+          </div>
+        </div>
+        <div class="col-6 col-sm-2">
+          <div class="text-caption text-grey-6">Distance</div>
+          <div class="text-subtitle2 text-weight-bold text-primary q-mt-xs">
+            {{ acceptedRide.pickupMetrics?.distance || 'Calculating...' }}
+          </div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="text-caption text-grey-6">Estimated time</div>
+          <div class="text-subtitle2 text-weight-bold text-positive q-mt-xs">
+            {{ acceptedRide.pickupMetrics?.duration || 'Calculating...' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="row q-col-gutter-md q-mt-sm">
+        <div class="col-12 col-sm-6">
+          <div class="location-pill">
+            <q-icon name="directions_car" color="primary" size="16px" />
+            <div class="q-ml-sm">
+              <div class="text-caption text-grey-6">Driver location</div>
+              <div class="text-caption text-weight-medium">
+                {{ acceptedRide.driverAddress || formatCoordinates(acceptedRide.driver) }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6">
+          <div class="location-pill">
+            <q-icon name="person_pin_circle" color="negative" size="16px" />
+            <div class="q-ml-sm">
+              <div class="text-caption text-grey-6">Rider location</div>
+              <div class="text-caption text-weight-medium">
+                {{ acceptedRide.riderAddress || formatCoordinates(acceptedRide.rider) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="acceptedRide.routeError" class="route-help text-caption text-negative q-mt-sm">
+        <q-icon name="location_off" size="14px" class="q-mr-xs" />
+        {{ acceptedRide.routeError }}
+      </div>
+      <div v-else-if="!acceptedRide.pickupMetrics" class="route-help text-caption text-grey-7 q-mt-sm">
+        <q-spinner-dots color="primary" size="16px" class="q-mr-xs" />
+        Calculating the best route from your location to the rider...
+      </div>
+    </q-card-section>
+
+    <q-card-actions align="right" class="active-ride-actions">
+      <q-btn
+        flat
+        color="primary"
+        icon="near_me"
+        label="Open in Google Maps"
+        @click="openExternalNavigation(acceptedRide)"
+      />
+      <q-btn
+        unelevated
+        :color="isRideReadyToComplete(acceptedRide) ? 'positive' : 'primary'"
+        :icon="isRideReadyToComplete(acceptedRide) ? 'flag' : 'play_arrow'"
+        :label="isRideReadyToComplete(acceptedRide) ? 'Complete Ride' : 'Start Ride'"
+        @click="isRideReadyToComplete(acceptedRide) ? completeRide(acceptedRide) : openOtpModal(acceptedRide)"
+      />
+    </q-card-actions>
+  </q-card>
+
+  <q-card class="ride-requests-card q-mb-lg">
     <!-- Header -->
     <q-card-section class="bg-primary text-white">
       <div class="row items-center justify-between">
@@ -627,11 +732,11 @@
     </q-card-section>
 
     <!-- Dynamic Trip List -->
-    <q-list v-else separator class="q-pa-none">
+    <q-list v-else separator class="ride-request-list q-pa-none">
       <q-item
         v-for="trip in upcomingTrips"
         :key="trip.id"
-        class="q-pa-md flex-column"
+        class="ride-request q-pa-md flex-column"
       >
         <!-- Rider Header -->
         <div class="row items-center justify-between full-width q-mb-sm">
@@ -676,17 +781,16 @@
         </div>
 
         <!-- Trip Specs & Actions -->
-        <div class="row items-center justify-between full-width bg-grey-2 q-pa-xs rounded-borders">
+        <div class="trip-actions row items-center justify-between full-width q-pa-sm">
           <div>
             <span class="text-caption text-grey-7">Fare: </span>
             <span class="text-subtitle2 text-weight-bolder text-primary">₹{{ trip.fare }}</span>
             <span class="text-caption text-grey-6 q-ml-sm">({{ trip.distance }})</span>
           </div>
 
-          <!-- Dynamic Action Buttons Based on Ride Status -->
+          <!-- Dynamic Action Buttons -->
           <div class="row q-gutter-x-xs">
-            <!-- Initial State: Show Reject & Accept -->
-            <template v-if="trip.status?.toLowerCase() !== 'accepted'">
+            <template v-if="!isActiveRide(trip)">
               <q-btn
                 dense
                 flat
@@ -708,16 +812,15 @@
               />
             </template>
 
-            <!-- Accepted State: Show Start Ride Button -->
             <template v-else>
               <q-btn
                 dense
                 unelevated
-                color="primary"
-                icon="play_arrow"
-                label="Start Ride"
+                :color="isRideReadyToComplete(trip) ? 'positive' : 'primary'"
+                :icon="isRideReadyToComplete(trip) ? 'flag' : 'play_arrow'"
+                :label="isRideReadyToComplete(trip) ? 'Complete Ride' : 'Start Ride'"
                 size="sm"
-                @click="openOtpModal(trip)"
+                @click="isRideReadyToComplete(trip) ? completeRide(trip) : openOtpModal(trip)"
               />
             </template>
           </div>
@@ -813,8 +916,13 @@
 
           <q-card-section class="q-pa-none">
 
+            <div v-if="loading" class="empty-state">
+              <q-spinner-dots color="primary" size="32px" />
+              <div class="text-grey-7 q-mt-sm">Loading completed trips...</div>
+            </div>
+
             <q-list
-              v-if="recentTrips.length"
+              v-else-if="recentTrips.length"
               separator
             >
 
@@ -877,10 +985,7 @@
             </q-list>
 
 
-            <div
-              v-else
-              class="empty-state"
-            >
+            <div v-else class="empty-state">
 
               <q-icon
                 name="history"
@@ -1435,40 +1540,68 @@
 
 
 <script setup>
-import {
-  ref,
-  computed,
-  onMounted
-} from 'vue'
-
-import {
-  useQuasar
-} from 'quasar'
-
-import {
-  useRouter
-} from 'vue-router'
-
+import { ref, computed, onMounted, nextTick, onUnmounted } from 'vue'
+import { useQuasar, Notify } from 'quasar'
+import { useRouter } from 'vue-router'
 import { useLocationTracker } from '@/composables/useLocationTracker'
 import api from '@/config/api'
-import { Notify } from 'quasar'
-const { startTracking } = useLocationTracker()
+
+// 1. Leaflet & Plugins Setup
+import * as L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
+
+// Attach L globally so leaflet-routing-machine can extend it safely
+if (typeof window !== 'undefined') {
+  window.L = L
+}
 
 /* =========================================================
-   QUASAR / ROUTER
+   CUSTOM INLINE SVG ICONS (CORS-Safe & Render Reliable)
 ========================================================= */
+// Modern SVG Driver Vehicle Icon (Primary Blue Pin with Vehicle)
+const driverSvg = `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="36" height="36">
+  <path fill="#1976D2" d="M172.268 501.67C26.97 291.03 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.03-172.268 309.67a24 24 0 0 1-37.464 0z"/>
+  <circle cx="192" cy="192" r="120" fill="#FFFFFF"/>
+  <path fill="#1976D2" d="M135 155c-6.6 0-12 5.4-12 12v35c0 6.6 5.4 12 12 12h122c6.6 0 12-5.4 12-12v-35c0-6.6-5.4-12-12-12H135zm12 16h98v20h-98v-20zm-20 62c-7.7 0-14 6.3-14 14s6.3 14 14 14 14-6.3 14-14-6.3-14-14-14zm130 0c-7.7 0-14 6.3-14 14s6.3 14 14 14 14-6.3 14-14-6.3-14-14-14z"/>
+</svg>
+`)}`
+
+// Modern SVG Rider Location Pin (Red Target Pointer)
+const riderSvg = `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="36" height="36">
+  <path fill="#D32F2F" d="M172.268 501.67C26.97 291.03 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.03-172.268 309.67a24 24 0 0 1-37.464 0z"/>
+  <circle cx="192" cy="192" r="110" fill="#FFFFFF"/>
+  <circle cx="192" cy="192" r="60" fill="#D32F2F"/>
+  <circle cx="192" cy="192" r="25" fill="#FFFFFF"/>
+</svg>
+`)}`
+
+/* =========================================================
+   COMPOSABLES & ROUTER
+========================================================= */
+const { startTracking } = useLocationTracker()
 const $q = useQuasar()
 const router = useRouter()
 
 /* =========================================================
-   LOADING
+   REACTIVE STATES
 ========================================================= */
 const loading = ref(false)
 const statusUpdating = ref(false)
+const acceptingId = ref(null)
 
-/* =========================================================
-   DRIVER
-========================================================= */
+// OTP Modal & Start Ride States
+const showOtpModal = ref(false)
+const otpInput = ref('')
+const isVerifying = ref(false)
+const selectedTrip = ref(null)
+
+// Leaflet Map Active Instances Dictionary
+const mapInstances = {}
+
+// Driver Profile State
 const driver = ref({
   id: null,
   name: '',
@@ -1483,114 +1616,101 @@ const driver = ref({
   vehicleRegistration: ''
 })
 
-/* =========================================================
-   STATISTICS
-========================================================= */
-const stats = ref({
-  todayTrips: 0,
-  completedTrips: 0,
-  todayEarnings: 0,
-  totalEarnings: 0
-})
+// Analytics & Dashboard States
+const stats = ref({ todayTrips: 0, completedTrips: 0, todayEarnings: 0, totalEarnings: 0 })
+const earnings = ref({ monthly: 0, paid: 0, pending: 0 })
+const performance = ref({ completionRate: 0, rating: 0, totalTrips: 0 })
 
-/* =========================================================
-   EARNINGS
-========================================================= */
-const earnings = ref({
-  monthly: 0,
-  paid: 0,
-  pending: 0
-})
-
-/* =========================================================
-   PERFORMANCE
-========================================================= */
-const performance = ref({
-  completionRate: 0,
-  rating: 0,
-  totalTrips: 0
-})
-
-/* =========================================================
-   TRIPS
-========================================================= */
+// Trips & Notifications
 const currentTrip = ref(null)
 const upcomingTrip = ref(null)
+const upcomingTrips = ref([])
 const recentTrips = ref([])
-
-/* =========================================================
-   NOTIFICATIONS
-========================================================= */
 const notifications = ref([])
 const notificationDialog = ref(false)
 
+/* =========================================================
+   COMPUTED PROPERTIES
+========================================================= */
 const notificationCount = computed(() => {
-  return notifications.value.filter(
-    notification => !notification.read
-  ).length
+  return notifications.value.filter(notification => !notification.read).length
 })
 
-/* =========================================================
-   LICENSE WARNING
-========================================================= */
+const isAcceptedRide = (trip) => {
+  const status = String(trip?.status || trip?.ride_status || trip?.booking_status || '').toLowerCase()
+  return ['accepted', 'accept', 'driver_accepted', 'confirmed'].includes(status)
+}
+
+const isRideStarted = (trip) => {
+  const status = String(trip?.status || trip?.ride_status || trip?.booking_status || '').toLowerCase()
+  return ['started', 'start', 'in_progress', 'ongoing', 'on_trip','confirmed'].includes(status)
+}
+
+const isActiveRide = trip => isAcceptedRide(trip) || isRideStarted(trip)
+const isRideReadyToComplete = trip => isRideStarted(trip)
+
+const acceptedRide = computed(() => {
+  const dashboardRides = [currentTrip.value, upcomingTrip.value]
+  const requestRide = upcomingTrips.value.find(isActiveRide)
+  return requestRide || dashboardRides.find(isActiveRide) || currentTrip.value || null
+})
+
 const licenseWarning = computed(() => {
-  if (!driver.value.licenseExpiry) {
-    return false
-  }
-
+  if (!driver.value.licenseExpiry) return false
   const expiry = new Date(driver.value.licenseExpiry)
-
-  if (Number.isNaN(expiry.getTime())) {
-    return false
-  }
+  if (Number.isNaN(expiry.getTime())) return false
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-
   const difference = expiry.getTime() - today.getTime()
-  const days = Math.ceil(difference / (1000 * 60 * 60 * 24))
-
-  return days <= 30
+  return Math.ceil(difference / (1000 * 60 * 60 * 24)) <= 30
 })
 
 /* =========================================================
-   LOAD DASHBOARD
+   API DATA FETCHERS
 ========================================================= */
 const loadDashboard = async () => {
   try {
     loading.value = true
-
     const response = await api.get('/driver/dashboard')
-
-    // Handle nested or top-level API payload structure
     const data = response.data?.data || response.data || {}
 
-    /* DRIVER & VEHICLE MAPPING */
-    // If the top-level response is the driver object itself, pass 'data'
     const driverRawData = data.driver || (data.id ? data : null)
     if (driverRawData) {
       driver.value = normalizeDriver(driverRawData)
       driver.value.isOnline = driverRawData.status
     }
 
-    /* STATISTICS */
     const statsData = data.stats || {}
+    const earningsData = data.earnings || data.earning || {}
+    const todayEarnings = toNumber(
+      statsData.todayEarnings,
+      statsData.today_earnings,
+      earningsData.today,
+      earningsData.todayEarnings,
+      earningsData.today_earnings
+    )
+    const totalEarnings = toNumber(
+      statsData.totalEarnings,
+      statsData.total_earnings,
+      earningsData.total,
+      earningsData.totalEarnings,
+      earningsData.total_earnings,
+      earningsData.lifetime
+    )
     stats.value = {
       todayTrips: Number(statsData.todayTrips || 0),
       completedTrips: Number(statsData.completedTrips || 0),
-      todayEarnings: Number(statsData.todayEarnings || 0),
-      totalEarnings: Number(statsData.totalEarnings || 0)
+      todayEarnings,
+      totalEarnings
     }
 
-    /* EARNINGS */
-    const earningsData = data.earnings || {}
     earnings.value = {
-      monthly: Number(earningsData.monthly || 0),
-      paid: Number(earningsData.paid || 0),
-      pending: Number(earningsData.pending || 0)
+      monthly: toNumber(earningsData.monthly, earningsData.monthlyEarnings, earningsData.monthly_earnings),
+      paid: toNumber(earningsData.paid, earningsData.paidAmount, earningsData.paid_amount),
+      pending: toNumber(earningsData.pending, earningsData.pendingAmount, earningsData.pending_amount)
     }
 
-    /* PERFORMANCE (Mapped directly from API driver object if nested stats aren't present) */
     const performanceData = data.performance || {}
     performance.value = {
       completionRate: Number(performanceData.completionRate || 0),
@@ -1598,25 +1718,38 @@ const loadDashboard = async () => {
       totalTrips: Number(performanceData.totalTrips || driverRawData?.total_rides || 0)
     }
 
-    /* CURRENT TRIP */
     currentTrip.value = normalizeTrip(data.currentTrip)
-
-    /* UPCOMING */
     upcomingTrip.value = normalizeTrip(data.upcomingTrip)
 
-    /* RECENT */
-    recentTrips.value = Array.isArray(data.recentTrips)
-      ? data.recentTrips.map(normalizeTrip)
-      : []
+    const dashboardAcceptedRide = normalizeTrip(
+      data.currentAcceptedRide
+      || data.acceptedRide
+      || data.activeRide
+      || (isAcceptedRide(currentTrip.value) ? currentTrip.value : null)
+      || (isAcceptedRide(upcomingTrip.value) ? upcomingTrip.value : null)
+    )
 
-    /* NOTIFICATIONS */
-    notifications.value = Array.isArray(data.notifications)
-      ? data.notifications
+    if (dashboardAcceptedRide && !upcomingTrips.value.some(trip => trip.id === dashboardAcceptedRide.id)) {
+      upcomingTrips.value = [dashboardAcceptedRide, ...upcomingTrips.value]
+    }
+    const dashboardRecentTrips = Array.isArray(data.recentTrips)
+      ? data.recentTrips
       : []
+    recentTrips.value = getCompletedTrips(dashboardRecentTrips)
+    notifications.value = Array.isArray(data.notifications) ? data.notifications : []
 
+    if (!recentTrips.value.length) await fetchCompletedTrips()
+    if (!earnings.value.monthly && !earnings.value.paid && !earnings.value.pending) {
+      await fetchEarningsFallback()
+    }
+
+    await nextTick()
+    if (acceptedRide.value) {
+      await trackRide()
+      initPickupMap(acceptedRide.value, 'current-accepted')
+    }
   } catch (error) {
     console.error('Driver Dashboard Error:', error)
-
     $q.notify({
       type: 'negative',
       message: error.response?.data?.message || 'Unable to load driver dashboard.'
@@ -1626,166 +1759,78 @@ const loadDashboard = async () => {
   }
 }
 
-/* =========================================================
-   NORMALIZE DRIVER
-========================================================= */
-const normalizeDriver = driverData => {
-  if (!driverData) {
-    return {
-      id: null,
-      name: '',
-      mobile: '',
-      email: '',
-      image: '',
-      isOnline: false,
-      licenseExpiry: '',
-      vehicleId: null,
-      vehicleName: '',
-      vehicleType: '',
-      vehicleRegistration: ''
+const getCompletedTrips = trips => trips
+  .map(normalizeTrip)
+  .filter(trip => String(trip?.status || '').toLowerCase() === 'completed')
+  .sort((firstTrip, secondTrip) => {
+    const firstDate = new Date(firstTrip.tripDate || 0).getTime()
+    const secondDate = new Date(secondTrip.tripDate || 0).getTime()
+    return secondDate - firstDate
+  })
+  .slice(0, 5)
+
+const fetchCompletedTrips = async () => {
+  try {
+    const response = await api.get('/driver/find/all/ride')
+    let data = response.data?.data || response.data || []
+    if (!Array.isArray(data) && data && typeof data === 'object') data = [data]
+    recentTrips.value = getCompletedTrips(Array.isArray(data) ? data : [])
+  } catch (error) {
+    console.error('Error loading completed trips:', error)
+  }
+}
+
+const fetchEarningsFallback = async () => {
+  try {
+    const response = await api.get('/driver/find/all/ride')
+    let data = response.data?.data || response.data || []
+    if (!Array.isArray(data) && data && typeof data === 'object') data = [data]
+    if (!Array.isArray(data)) return
+
+    const rides = data.map(normalizeTrip)
+    const paid = rides
+      .filter(trip => String(trip.status).toLowerCase() === 'completed')
+      .reduce((total, trip) => total + trip.earning, 0)
+    const pending = rides
+      .filter(trip => !['completed', 'cancelled', 'canceled', 'rejected'].includes(String(trip.status).toLowerCase()))
+      .reduce((total, trip) => total + trip.earning, 0)
+
+    earnings.value = {
+      monthly: paid + pending,
+      paid,
+      pending
     }
-  }
 
-  // Construct full name if first_name / last_name exist
-  const fullName = [driverData.first_name, driverData.last_name]
-    .filter(Boolean)
-    .join(' ')
-
-  return {
-    id: driverData.id,
-
-    name:
-      fullName ||
-      driverData.name ||
-      driverData.user?.username ||
-      'Driver',
-
-    mobile:
-      driverData.mobile_number ||
-      driverData.mobile ||
-      driverData.user?.mobile_no ||
-      '',
-
-    email:
-      driverData.email ||
-      driverData.user?.email ||
-      '',
-
-    image:
-      driverData.profile_image ||
-      driverData.image ||
-      '',
-
-    isOnline:
-      driverData.availability_status === 'online' ||
-      driverData.isOnline === true ||
-      driverData.is_online === true,
-
-    licenseExpiry:
-      driverData.license_expiry_date ||
-      driverData.licenseExpiry ||
-      '',
-
-    vehicleId:
-      driverData.vehicle?.id ||
-      driverData.vehicleId ||
-      null,
-
-    vehicleName:
-      driverData.vehicle?.vehicle_name ||
-      driverData.vehicleName ||
-      '',
-
-    vehicleType:
-      driverData.vehicle?.fuel_type ||
-      driverData.vehicleType ||
-      '',
-
-    vehicleRegistration:
-      driverData.vehicle?.registration_no ||
-      driverData.vehicleRegistration ||
-      ''
+    if (!stats.value.totalEarnings) stats.value.totalEarnings = paid
+  } catch (error) {
+    console.error('Error loading earnings fallback:', error)
   }
 }
-
-/* =========================================================
-   NORMALIZE TRIP
-========================================================= */
-const normalizeTrip = trip => {
-  if (!trip) {
-    return null
-  }
-
-  return {
-    id: trip.id,
-
-    bookingId:
-      trip.bookingId ||
-      trip.booking_id ||
-      trip.booking?.id ||
-      trip.id,
-
-    customerName:
-      trip.customerName ||
-      trip.customer?.name ||
-      trip.user?.name ||
-      '',
-
-    pickupLocation:
-      trip.pickupLocation ||
-      trip.pickup_location ||
-      trip.pickupAddress ||
-      trip.pickup_address ||
-      trip.from ||
-      '',
-
-    dropLocation:
-      trip.dropLocation ||
-      trip.drop_location ||
-      trip.dropAddress ||
-      trip.drop_address ||
-      trip.to ||
-      '',
-
-    tripDate:
-      trip.tripDate ||
-      trip.trip_date ||
-      trip.date ||
-      '',
-
-    pickupTime:
-      trip.pickupTime ||
-      trip.pickup_time ||
-      trip.time ||
-      '',
-
-    status:
-      trip.status ||
-      'Assigned',
-
-    earning: Number(
-      trip.earning ||
-      trip.driverEarning ||
-      trip.driver_earning ||
-      trip.amount ||
-      0
-    )
-  }
-}
-
-
-const upcomingTrips = ref([])
 
 const fetchUpcoming = async () => {
   try {
     loading.value = true
+    const existingAcceptedRide = acceptedRide.value
     const response = await api.get('/driver/find/pending/ride')
-
     const data = response.data?.data || response.data || []
-    if (Array.isArray(data)) {
-      upcomingTrips.value = data
-    } else {
-      upcomingTrips.value = []
+    upcomingTrips.value = Array.isArray(data) ? data.map(normalizeTrip) : []
+
+    if (existingAcceptedRide) {
+      const refreshedRide = upcomingTrips.value.find(trip => trip.id === existingAcceptedRide.id)
+      if (refreshedRide && isRideStarted(existingAcceptedRide) && !isRideStarted(refreshedRide)) {
+        Object.assign(refreshedRide, existingAcceptedRide)
+      }
+    }
+
+    if (existingAcceptedRide && !upcomingTrips.value.some(trip => trip.id === existingAcceptedRide.id)) {
+      upcomingTrips.value = [existingAcceptedRide, ...upcomingTrips.value]
+    }
+
+    // Refresh live coordinates before rendering the active map.
+    await nextTick()
+    if (acceptedRide.value) {
+      await trackRide()
+      initPickupMap(acceptedRide.value, 'current-accepted')
     }
   } catch (error) {
     console.error('Error fetching upcoming trips:', error)
@@ -1798,201 +1843,77 @@ const fetchUpcoming = async () => {
   }
 }
 
-onMounted(() => {
-  fetchUpcoming()
-})
 
-// const acceptRide = async (bookingId) => {
-//   try {
-//     const response = await api.put(`/driver/accept-ride/${bookingId}`)
+/* =========================================================
+   RIDE ACTIONS & MAP LOGIC
+========================================================= */
 
-//     if (response.data?.success) {
-//       Notify.create({
-//         type: 'positive',
-//         message: 'Ride accepted successfully!'
-//       })
+const trackRide = async () => {
+  const trip = acceptedRide.value
+  if (!trip) return null
 
-//       // Remove accepted trip from the pending list locally
-//       upcomingTrips.value = upcomingTrips.value.filter((trip) => trip.id !== bookingId)
-//     }
-//   } catch (error) {
-//     console.error('Error accepting ride:', error)
-//     Notify.create({
-//       type: 'negative',
-//       message: error.response?.data?.message || 'Failed to accept ride.'
-//     })
-//   }
-// }
-
-// REJECT RIDE HANDLER
-const rejectRide = async (bookingId) => {
   try {
-    const response = await api.put(`/driver/reject-ride/${bookingId}`)
+    const pickLocationRes = await api.get(`/driver/pick/location`)
+    const locationData = pickLocationRes.data?.data || pickLocationRes.data || {}
+    const riderLocation = locationData.rider || locationData.pickup || locationData.customer
+    const driverLocation = locationData.driver || locationData.vehicle
 
-    if (response.data?.success) {
-      Notify.create({
-        type: 'info',
-        message: 'Ride request declined.'
-      })
 
-      // Remove rejected trip from the pending list locally
-      upcomingTrips.value = upcomingTrips.value.filter((trip) => trip.id !== bookingId)
+    if (locationData.status =="accepted") {
+      trip.rider = { ...trip.rider, ...riderLocation }
+      trip.rider.latitude = riderLocation.latitude
+      trip.rider.longitude = riderLocation.longitude
     }
+
+    if (!locationData.status=="confirmed" && (locationData.rider_latitude || locationData.latitude_from)) {
+      trip.rider = {
+        ...trip.rider,
+        latitude: locationData.rider_latitude ?? locationData.latitude_from ?? locationData.pickup_latitude,
+        longitude: locationData.rider_longitude ?? locationData.longitude_from ?? locationData.pickup_longitude
+      }
+    }
+
+    if (locationData.status =="accepted") {
+      trip.driver = { ...trip.driver, ...driverLocation }
+      trip.driver.latitude = driverLocation.latitude
+      trip.driver.longitude = driverLocation.longitude
+    }
+
+    if (!locationData.status=="confirmed" && (locationData.driver_latitude || locationData.latitude_driver)) {
+      trip.driver = {
+        ...trip.driver,
+        latitude: locationData.driver_latitude ?? locationData.latitude_driver,
+        longitude: locationData.driver_longitude ?? locationData.longitude_driver
+      }
+    }
+
+    return trip
   } catch (error) {
-    console.error('Error rejecting ride:', error)
-    Notify.create({
-      type: 'negative',
-      message: error.response?.data?.message || 'Failed to reject ride.'
-    })
+    console.warn('Using dashboard coordinates for pickup map.', error)
+    return trip
   }
 }
 
-/* =========================================================
-   CHANGE DRIVER ONLINE STATUS
-========================================================= */
-const changeDriverStatus = async status => {
-  try {
-    statusUpdating.value = true
-
-    await api.post(`/driver/${driver.value.id}/status`, {
-      availability_status: status ? 'online' : 'offline',
-      isOnline: status
-    })
-
-    driver.value.isOnline = status
-
-    $q.notify({
-      type: 'positive',
-      message: status ? 'You are now online.' : 'You are now offline.'
-    })
-  } catch (error) {
-    console.error('Driver Status Error:', error)
-
-    // Revert switch on API failure
-    driver.value.isOnline = !status
-
-    $q.notify({
-      type: 'negative',
-      message: error.response?.data?.message || 'Unable to update driver status.'
-    })
-  } finally {
-    statusUpdating.value = false
-  }
-}
-
-/* =========================================================
-   NAVIGATION HANDLERS
-========================================================= */
-const viewTrip = trip => {
-  if (!trip?.id) return
-  router.push({ name: 'DriverTripDetails', params: { id: trip.id } })
-}
-
-const goToAssignedTrips = () => router.push({ name: 'DriverAssignedTrips' })
-const goToEarnings = () => router.push({ name: 'DriverEarnings' })
-const goToTripHistory = () => router.push({ name: 'DriverTripHistory' })
-const goToProfile = () => router.push({ name: 'DriverProfile' })
-
-const openNotifications = () => {
-  notificationDialog.value = true
-}
-
-/* =========================================================
-   UTILITY & FORMATTING FUNCTIONS
-========================================================= */
-const getInitials = name => {
-  if (!name) return 'D'
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .map(word => word.charAt(0))
-    .join('')
-    .substring(0, 2)
-    .toUpperCase()
-}
-
-const formatCurrency = amount => {
-  const value = Number(amount || 0)
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0
-  }).format(value)
-}
-
-const formatDate = date => {
-  if (!date) return '-'
-  const parsed = new Date(date)
-  if (Number.isNaN(parsed.getTime())) return date
-  return parsed.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  })
-}
-
-const formatDateTime = date => {
-  if (!date) return '-'
-  const parsed = new Date(date)
-  if (Number.isNaN(parsed.getTime())) return date
-  return parsed.toLocaleString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-const getDay = date => {
-  if (!date) return '-'
-  const parsed = new Date(date)
-  if (Number.isNaN(parsed.getTime())) return '-'
-  return parsed.getDate()
-}
-
-const getDayName = date => {
-  if (!date) return ''
-  const parsed = new Date(date)
-  if (Number.isNaN(parsed.getTime())) return ''
-  return parsed.toLocaleDateString('en-IN', { weekday: 'short' })
-}
-
-const getMonthName = date => {
-  if (!date) return ''
-  const parsed = new Date(date)
-  if (Number.isNaN(parsed.getTime())) return ''
-  return parsed.toLocaleDateString('en-IN', { month: 'short' })
-}
-
-/* =========================================================
-   MOUNT LIFECYCLE
-========================================================= */
-onMounted(() => {
-  startTracking()
-  loadDashboard()
-})
-
-const acceptingId = ref(null)
-const showOtpModal = ref(false)
-const otpInput = ref('')
-const isVerifying = ref(false)
-const selectedTrip = ref(null)
-
-// Step 1: Accept the ride (Updates state & UI to show "Start Ride")
+// 1. Accept Ride Action
 const acceptRide = async (trip) => {
   acceptingId.value = trip.id
   try {
     const response = await api.put(`/driver/accept-ride/${trip.id}`)
 
     if (response.data?.success || response.status === 200) {
-      // Update local state to show 'accepted' status
       trip.status = 'accepted'
+
+      // Attempt to retrieve accurate pickup coordinates from API
+      await trackRide()
 
       Notify.create({
         type: 'positive',
         message: 'Ride accepted! Tap "Start Ride" when rider enters vehicle.'
       })
+
+      // Wait for DOM to render map container div
+      await nextTick()
+      initPickupMap(acceptedRide.value || trip, 'current-accepted')
     } else {
       Notify.create({
         type: 'negative',
@@ -2010,49 +1931,132 @@ const acceptRide = async (trip) => {
   }
 }
 
-// Step 2: Open OTP Modal when "Start Ride" is clicked
+// 2. Initialize Leaflet Routing Map safely
+const initPickupMap = (trip, mapKey = trip.id) => {
+  const containerId = mapKey === 'current-accepted' ? 'map-current-accepted' : `map-${trip.id}`
+  const mapContainer = document.getElementById(containerId)
+  if (!mapContainer) return
+
+  // Cleanup existing map instance before re-initializing
+  if (mapInstances[mapKey]) {
+    mapInstances[mapKey].remove()
+    delete mapInstances[mapKey]
+  }
+
+  const routePoints = getRideRoutePoints(trip)
+  const driverPoint = routePoints.from
+  const riderPoint = routePoints.to
+
+  if (!driverPoint || !riderPoint) {
+    trip.routeError = 'Location data is not available yet.'
+    console.warn('Missing valid coordinates for route calculation.')
+    return
+  }
+
+  trip.routeError = ''
+  trip.pickupMetrics = createFallbackMetrics(driverPoint, riderPoint)
+  loadAddressDetails(trip, driverPoint, riderPoint)
+
+  const map = L.map(containerId).setView([driverPoint.lat, driverPoint.lng], 14)
+  mapInstances[mapKey] = map
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map)
+
+  // Custom SVG Leaflet Icons
+  const driverIcon = L.icon({
+    iconUrl: driverSvg,
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+    popupAnchor: [0, -32]
+  })
+
+  const riderIcon = L.icon({
+    iconUrl: riderSvg,
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+    popupAnchor: [0, -32]
+  })
+
+  L.marker([driverPoint.lat, driverPoint.lng], { icon: driverIcon })
+    .addTo(map)
+    .bindPopup(routePoints.fromLabel)
+  L.marker([riderPoint.lat, riderPoint.lng], { icon: riderIcon })
+    .addTo(map)
+    .bindPopup(routePoints.toLabel)
+
+  // OSRM supplies the actual road geometry, including turns and bends.
+  renderRealRoute(map, trip, driverPoint, riderPoint)
+
+}
+
+// 3. Decline/Reject Ride
+const rejectRide = async (bookingId) => {
+  try {
+    const response = await api.put(`/driver/reject-ride/${bookingId}`)
+    if (response.data?.success) {
+      Notify.create({ type: 'info', message: 'Ride request declined.' })
+
+      // Destroy map instance if created
+      if (mapInstances[bookingId]) {
+        mapInstances[bookingId].remove()
+        delete mapInstances[bookingId]
+      }
+      if (acceptedRide.value?.id === bookingId && mapInstances['current-accepted']) {
+        mapInstances['current-accepted'].remove()
+        delete mapInstances['current-accepted']
+      }
+
+      upcomingTrips.value = upcomingTrips.value.filter(trip => trip.id !== bookingId)
+    }
+  } catch (error) {
+    console.error('Error rejecting ride:', error)
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.message || 'Failed to reject ride.'
+    })
+  }
+}
+
+// 4. Open External Google Maps Application
+const openExternalNavigation = (trip) => {
+  console.log(trip)
+  const rLat = trip.rider?.latitude || trip.latitude_to
+  const rLng = trip.rider?.longitude || trip.longitude_to
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${rLat},${rLng}&travelmode=driving`, '_blank')
+}
+
+// 5. OTP Handlers & Ride Start
 const openOtpModal = (trip) => {
   selectedTrip.value = trip
   otpInput.value = ''
   showOtpModal.value = true
 }
 
-// Step 3: Verify OTP and start the trip
 const verifyOtpAndStart = async () => {
   if (!otpInput.value || otpInput.value.trim().length < 4) {
-    Notify.create({
-      type: 'warning',
-      message: 'Please enter a valid OTP'
-    })
+    Notify.create({ type: 'warning', message: 'Please enter a valid OTP' })
     return
   }
 
   isVerifying.value = true
-
   try {
     const payload = {
       booking_id: selectedTrip.value.id,
       otp: otpInput.value.trim()
     }
-
     const response = await api.post('/driver/start/ride', payload)
 
     if (response.data?.success || response.status === 200) {
-      Notify.create({
-        type: 'positive',
-        message: 'OTP verified! Ride started successfully.'
-      })
-
+      const apiStatus = response.data?.data?.status || response.data?.status
+      selectedTrip.value.status = isRideStarted({ status: apiStatus }) ? apiStatus : 'started'
+      Notify.create({ type: 'positive', message: 'OTP verified! Ride started successfully.' })
       showOtpModal.value = false
-
-      // Refresh list or remove trip from pending queue
-      if (typeof fetchUpcoming === 'function') {
-        fetchUpcoming()
-      } else if (typeof upcomingTrips !== 'undefined') {
-        upcomingTrips.value = upcomingTrips.value.filter(
-          (t) => t.id !== selectedTrip.value.id
-        )
-      }
+      await trackRide()
+      await nextTick()
+      initPickupMap(selectedTrip.value, 'current-accepted')
+      await fetchUpcoming()
     } else {
       Notify.create({
         type: 'negative',
@@ -2063,12 +2067,282 @@ const verifyOtpAndStart = async () => {
     console.error('Error starting ride:', error)
     Notify.create({
       type: 'negative',
-      message: error.response?.data?.message || 'Invalid OTP verification failed.'
+      message: error.response?.data?.message || 'Verification failed.'
     })
   } finally {
     isVerifying.value = false
   }
 }
+
+const completeRide = async (trip) => {
+  if (!trip?.id) return
+
+  try {
+    const response = await api.put(`/driver/complete-ride/${trip.id}`, {
+      booking_id: trip.id
+    })
+
+    if (response.data?.success || response.status === 200) {
+      trip.status = response.data?.data?.status || response.data?.status || 'completed'
+      Notify.create({ type: 'positive', message: 'Ride completed successfully.' })
+      await fetchUpcoming()
+    } else {
+      Notify.create({
+        type: 'negative',
+        message: response.data?.message || 'Unable to complete ride.'
+      })
+    }
+  } catch (error) {
+    console.error('Error completing ride:', error)
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.message || 'Unable to complete ride.'
+    })
+  }
+}
+
+/* =========================================================
+   DRIVER ONLINE STATUS TOGGLE
+========================================================= */
+const changeDriverStatus = async (status) => {
+  try {
+    statusUpdating.value = true
+    await api.post(`/driver/${driver.value.id}/status`, {
+      availability_status: status ? 'online' : 'offline',
+      isOnline: status
+    })
+
+    driver.value.isOnline = status
+    $q.notify({
+      type: 'positive',
+      message: status ? 'You are now online.' : 'You are now offline.'
+    })
+  } catch (error) {
+    console.error('Driver Status Error:', error)
+    driver.value.isOnline = !status
+    $q.notify({
+      type: 'negative',
+      message: error.response?.data?.message || 'Unable to update driver status.'
+    })
+  } finally {
+    statusUpdating.value = false
+  }
+}
+
+/* =========================================================
+   NORMALIZATION UTILITIES
+========================================================= */
+const normalizeDriver = (driverData) => {
+  if (!driverData) return {}
+  const fullName = [driverData.first_name, driverData.last_name].filter(Boolean).join(' ')
+  return {
+    id: driverData.id,
+    name: fullName || driverData.name || driverData.user?.username || 'Driver',
+    mobile: driverData.mobile_number || driverData.mobile || driverData.user?.mobile_no || '',
+    email: driverData.email || driverData.user?.email || '',
+    image: driverData.profile_image || driverData.image || '',
+    isOnline: driverData.availability_status === 'online' || driverData.isOnline === true || driverData.is_online === true,
+    licenseExpiry: driverData.license_expiry_date || driverData.licenseExpiry || '',
+    vehicleId: driverData.vehicle?.id || driverData.vehicleId || null,
+    vehicleName: driverData.vehicle?.vehicle_name || driverData.vehicleName || '',
+    vehicleType: driverData.vehicle?.fuel_type || driverData.vehicleType || '',
+    vehicleRegistration: driverData.vehicle?.registration_no || driverData.vehicleRegistration || ''
+  }
+}
+
+const normalizeTrip = (trip) => {
+  if (!trip) return null
+  return {
+    ...trip,
+    id: trip.id,
+    bookingId: trip.bookingId || trip.booking_id || trip.booking?.id || trip.id,
+    customerName: trip.customerName || trip.customer?.name || trip.user?.name || '',
+    pickupLocation: trip.pickupLocation || trip.pickup_location || trip.pickupAddress || trip.from || '',
+    dropLocation: trip.dropLocation || trip.drop_location || trip.dropAddress || trip.to || '',
+    tripDate: trip.tripDate || trip.trip_date || trip.date || '',
+    pickupTime: trip.pickupTime || trip.pickup_time || trip.time || '',
+    status: trip.status || 'Assigned',
+    earning: toNumber(trip.earning, trip.driverEarning, trip.driver_earning, trip.amount, trip.fare),
+    fare: toNumber(trip.fare, trip.price, trip.amount, trip.total_amount),
+    distance: trip.distance || trip.trip_distance || '',
+    latitude_from: trip.latitude_from ?? trip.pickup_latitude ?? trip.from_latitude,
+    longitude_from: trip.longitude_from ?? trip.pickup_longitude ?? trip.from_longitude,
+    latitude_to: trip.latitude_to ?? trip.drop_latitude ?? trip.to_latitude,
+    longitude_to: trip.longitude_to ?? trip.drop_longitude ?? trip.to_longitude,
+    pickupMetrics: trip.pickupMetrics || null,
+    driver: trip.driver || null,
+    rider: trip.rider || trip.customer || null
+  }
+}
+
+const toNumber = (...values) => {
+  const value = values.find(item => item !== undefined && item !== null && item !== '')
+  const number = Number(value)
+  return Number.isFinite(number) ? number : 0
+}
+
+const getCoordinates = (point, fallbackLatitude, fallbackLongitude) => {
+  const latitude = Number(point?.latitude ?? point?.lat ?? fallbackLatitude)
+  const longitude = Number(point?.longitude ?? point?.lng ?? fallbackLongitude)
+
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null
+  return { lat: latitude, lng: longitude }
+}
+
+const getRideRoutePoints = (trip) => {
+
+
+  const driverPoint = getCoordinates(
+    trip.driver,
+    trip.driver_latitude ?? trip.driver_lat ?? trip.latitude_driver ?? trip.driverLatitude,
+    trip.driver_longitude ?? trip.driver_lng ?? trip.longitude_driver ?? trip.driverLongitude
+  )
+  const pickupPoint = getCoordinates(
+    trip.rider,
+    trip.latitude_from ?? trip.rider_latitude ?? trip.pickup_latitude ?? trip.riderLatitude,
+    trip.longitude_from ?? trip.rider_longitude ?? trip.pickup_longitude ?? trip.riderLongitude
+  )
+  const dropPoint = getCoordinates(
+    trip.drop || trip.destination,
+    trip.latitude_to ?? trip.drop_latitude ?? trip.to_latitude,
+    trip.longitude_to ?? trip.drop_longitude ?? trip.to_longitude
+  )
+
+  if (isActiveRide(trip) && trip.status =="confirmed" && pickupPoint && dropPoint) {
+    return {
+      from: pickupPoint,
+      to: dropPoint,
+      fromLabel: 'Pickup Location',
+      toLabel: 'Destination'
+    }
+  }
+
+  return {
+    from: driverPoint,
+    to: pickupPoint,
+    fromLabel: 'Your Location (Driver)',
+    toLabel: 'Rider Pickup Location'
+  }
+}
+
+const createFallbackMetrics = (from, to) => {
+  const distance = haversineDistance(from, to)
+  const duration = Math.max(1, Math.round((distance / 30) * 60))
+  return {
+    distance: `${distance.toFixed(2)} km approx.`,
+    duration: `${duration} mins approx.`
+  }
+}
+
+const haversineDistance = (from, to) => {
+  const earthRadius = 6371
+  const latitudeDifference = ((to.lat - from.lat) * Math.PI) / 180
+  const longitudeDifference = ((to.lng - from.lng) * Math.PI) / 180
+  const latitudeOne = (from.lat * Math.PI) / 180
+  const latitudeTwo = (to.lat * Math.PI) / 180
+  const value = Math.sin(latitudeDifference / 2) ** 2
+    + Math.cos(latitudeOne) * Math.cos(latitudeTwo) * Math.sin(longitudeDifference / 2) ** 2
+  return earthRadius * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value))
+}
+
+const renderRealRoute = async (map, trip, from, to) => {
+  try {
+    const response = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson`
+    )
+    const data = await response.json()
+    const route = data.routes?.[0]
+
+    if (!route?.geometry?.coordinates?.length) {
+      throw new Error('OSRM returned no route geometry')
+    }
+
+    const routeCoordinates = route.geometry.coordinates.map(([longitude, latitude]) => [latitude, longitude])
+    const routeLine = L.polyline(routeCoordinates, {
+      color: '#1565C0',
+      weight: 6,
+      opacity: 0.9,
+      lineCap: 'round',
+      lineJoin: 'round'
+    }).addTo(map)
+
+    map.fitBounds(routeLine.getBounds(), { padding: [36, 36] })
+    trip.pickupMetrics = {
+      distance: `${(route.distance / 1000).toFixed(2)} km`,
+      duration: `${Math.max(1, Math.round(route.duration / 60))} mins`
+    }
+    trip.routeError = ''
+  } catch (error) {
+    console.warn('Unable to render the real road route.', error)
+    trip.routeError = 'Road route unavailable. Check your map connection.'
+  }
+}
+
+const loadAddressDetails = async (trip, driverPoint, riderPoint) => {
+  const [driverAddress, riderAddress] = await Promise.all([
+    reverseGeocode(driverPoint),
+    reverseGeocode(riderPoint)
+  ])
+
+  trip.driverAddress = driverAddress
+  trip.riderAddress = riderAddress
+}
+
+const reverseGeocode = async (point) => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${point.lat}&lon=${point.lng}`
+    )
+    const data = await response.json()
+    return data.display_name || ''
+  } catch (error) {
+    console.warn('Unable to reverse geocode location.', error)
+    return ''
+  }
+}
+
+/* =========================================================
+   NAVIGATION & FORMATTERS
+========================================================= */
+const viewTrip = trip => trip?.id && router.push({ name: 'DriverTripDetails', params: { id: trip.id } })
+const goToAssignedTrips = () => router.push({ name: 'DriverAssignedTrips' })
+const goToEarnings = () => router.push({ name: 'DriverEarnings' })
+const goToTripHistory = () => router.push({ name: 'DriverTripHistory' })
+const goToProfile = () => router.push({ name: 'DriverProfile' })
+const openNotifications = () => { notificationDialog.value = true }
+
+const formatCoordinates = (point) => {
+  const coordinates = getCoordinates(point)
+  return coordinates ? `${coordinates.lat.toFixed(5)}, ${coordinates.lng.toFixed(5)}` : 'Location unavailable'
+}
+
+const getInitials = (name) => name ? name.split(' ').filter(Boolean).map(w => w.charAt(0)).join('').substring(0, 2).toUpperCase() : 'D'
+const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(amount || 0))
+const formatDate = (date) => date && !Number.isNaN(new Date(date).getTime()) ? new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'
+const formatDateTime = (date) => date && !Number.isNaN(new Date(date).getTime()) ? new Date(date).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'
+
+/* =========================================================
+   LIFECYCLE HOOKS
+========================================================= */
+onMounted(async () => {
+  if (typeof window !== 'undefined') {
+    window.L = L
+    await import('leaflet-routing-machine')
+  }
+  startTracking()
+  loadDashboard()
+  fetchUpcoming()
+})
+
+// Memory leak prevention: Clean up active Leaflet map instances on unmount
+onUnmounted(() => {
+  Object.keys(mapInstances).forEach((key) => {
+    if (mapInstances[key]) {
+      mapInstances[key].remove()
+      delete mapInstances[key]
+    }
+  })
+})
 </script>
 <style scoped>
 
@@ -2078,9 +2352,11 @@ const verifyOtpAndStart = async () => {
 
 .driver-dashboard {
 
-  background: #f5f7fb;
+  background: #f4f7fb;
 
   min-height: 100%;
+
+  color: #172033;
 
 }
 
@@ -2159,6 +2435,175 @@ const verifyOtpAndStart = async () => {
   background: #ffffff;
 
   border-radius: 14px;
+
+}
+
+
+/* =========================================================
+   RIDE REQUESTS
+========================================================= */
+
+.active-ride-card {
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  border: 1px solid #cfe2d7;
+
+  border-radius: 16px;
+
+  box-shadow: 0 14px 32px rgba(26, 93, 56, 0.1);
+
+}
+
+
+.active-ride-header {
+
+  background: linear-gradient(135deg, #f2fbf5 0%, #ffffff 72%);
+
+}
+
+
+.active-ride-map {
+
+  width: 100%;
+
+  height: 330px;
+
+  background: #e7eef5;
+
+  border-top: 1px solid #e2ebe5;
+
+  border-bottom: 1px solid #e2ebe5;
+
+}
+
+
+.active-ride-details {
+
+  background: #fbfdfb;
+
+}
+
+
+.location-pill {
+
+  display: flex;
+
+  align-items: center;
+
+  min-height: 52px;
+
+  padding: 8px 10px;
+
+  background: #ffffff;
+
+  border: 1px solid #e4ebe6;
+
+  border-radius: 9px;
+
+}
+
+
+.active-ride-actions {
+
+  padding: 12px 16px 16px;
+
+}
+
+.ride-requests-card {
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  border: 1px solid #e5eaf2;
+
+  border-radius: 16px;
+
+  box-shadow: 0 12px 30px rgba(26, 43, 72, 0.06);
+
+}
+
+
+.ride-request {
+
+  background: #ffffff;
+
+  transition: background 0.2s ease;
+
+}
+
+
+.ride-request:hover {
+
+  background: #fbfcfe;
+
+}
+
+
+.accepted-route {
+
+  overflow: hidden;
+
+  padding: 10px;
+
+  background: #f7faff;
+
+  border: 1px solid #dbe8fa;
+
+  border-radius: 12px;
+
+}
+
+
+.route-summary {
+
+  min-height: 38px;
+
+  background: #eaf3ff;
+
+  border-radius: 8px;
+
+}
+
+
+.pickup-map {
+
+  width: 100%;
+
+  height: 260px;
+
+  overflow: hidden;
+
+  background: #e7eef5;
+
+  border: 1px solid #d9e1eb;
+
+  border-radius: 10px;
+
+}
+
+
+.route-help {
+
+  display: flex;
+
+  align-items: center;
+
+}
+
+
+.trip-actions {
+
+  gap: 12px;
+
+  background: #f7f9fc;
+
+  border: 1px solid #e7ebf1;
+
+  border-radius: 10px;
 
 }
 
@@ -2427,6 +2872,38 @@ const verifyOtpAndStart = async () => {
     margin-left: 0 !important;
 
     margin-top: 16px;
+
+  }
+
+
+  .pickup-map {
+
+    height: 220px;
+
+  }
+
+
+  .active-ride-map {
+
+    height: 250px;
+
+  }
+
+
+  .trip-actions {
+
+    align-items: stretch;
+
+    flex-direction: column;
+
+  }
+
+
+  .trip-actions > div {
+
+    justify-content: flex-end;
+
+    width: 100%;
 
   }
 

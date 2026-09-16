@@ -208,6 +208,8 @@
                   color="primary"
                   label="Book Ride"
                   class="q-mt-sm full-width"
+                  :disable="bookingInProgress"
+                  :loading="bookingInProgress && bookingDriverId === driver.id"
                   @click="bookRide(driver)"
                 />
               </div>
@@ -243,6 +245,8 @@ const hasSearched = ref(false)
 const loadingFrom = ref(false)
 const loadingTo = ref(false)
 const detectingLocation = ref(false)
+const bookingInProgress = ref(false)
+const bookingDriverId = ref(null)
 
 const fromOptions = ref([])
 const toOptions = ref([])
@@ -551,6 +555,9 @@ const bookRide = async (driver) => {
     return
   }
 
+  const hasActiveBooking = await checkForActiveBooking()
+  if (hasActiveBooking) return
+
   // 2. Format distance & fare
   const fareAmount = calculateFare(driver)
   const distanceVal = driver.trip_details?.distance_km
@@ -571,7 +578,8 @@ const bookRide = async (driver) => {
   }
 
   try {
-    searching.value = true
+    bookingInProgress.value = true
+    bookingDriverId.value = driver.id
 
     // 4. Send request to backend driver endpoint
     const response = await api.post(`/driver/${driver.id}/find-ride`, payload)
@@ -596,7 +604,39 @@ const bookRide = async (driver) => {
       message: error.response?.data?.message || 'Failed to send ride request.'
     })
   } finally {
-    searching.value = false
+    bookingInProgress.value = false
+    bookingDriverId.value = null
+  }
+}
+
+const checkForActiveBooking = async () => {
+  try {
+    const response = await api.get('/driver/find/all/ride')
+    let rides = response.data?.data || response.data || []
+    if (!Array.isArray(rides) && rides && typeof rides === 'object') rides = [rides]
+
+    const terminalStatuses = new Set(['completed', 'cancelled', 'canceled', 'rejected'])
+    const activeRide = rides.find(ride => {
+      const status = String(ride?.status || '').trim().toLowerCase()
+      return !terminalStatuses.has(status)
+    })
+
+    if (activeRide) {
+      Notify.create({
+        type: 'warning',
+        message: 'You already have an active ride. Complete or cancel it before booking another ride.'
+      })
+      return true
+    }
+
+    return false
+  } catch (error) {
+    console.error('Error checking active bookings:', error)
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.message || 'Unable to verify your current rides.'
+    })
+    return true
   }
 }
 onMounted(async () => {

@@ -466,33 +466,36 @@
 
             <!-- Pending -->
             <q-btn
-              v-if="trip.status === 'pending'"
+              v-if="isPendingTrip(trip)"
               unelevated
               color="primary"
               icon="check"
               label="Accept"
+                :loading="actionTripId === trip.id"
               @click="acceptTrip(trip)"
             />
 
 
             <!-- Accepted -->
             <q-btn
-              v-if="trip.status === 'accepted'"
+              v-if="isAcceptedTrip(trip)"
               unelevated
               color="positive"
               icon="play_arrow"
               label="Start Trip"
+                :loading="actionTripId === trip.id"
               @click="startTrip(trip)"
             />
 
 
             <!-- Started -->
             <q-btn
-              v-if="trip.status === 'started'"
+              v-if="isStartedTrip(trip)"
               unelevated
               color="positive"
               icon="check_circle"
               label="Complete"
+                :loading="actionTripId === trip.id"
               @click="completeTrip(trip)"
             />
 
@@ -835,29 +838,32 @@
           />
 
           <q-btn
-            v-if="selectedTrip?.status === 'pending'"
+            v-if="isPendingTrip(selectedTrip)"
             unelevated
             color="primary"
             label="Accept Trip"
             icon="check"
+            :loading="actionTripId === selectedTrip?.id"
             @click="acceptTrip(selectedTrip)"
           />
 
           <q-btn
-            v-if="selectedTrip?.status === 'accepted'"
+            v-if="isAcceptedTrip(selectedTrip)"
             unelevated
             color="positive"
             label="Start Trip"
             icon="play_arrow"
+            :loading="actionTripId === selectedTrip?.id"
             @click="startTrip(selectedTrip)"
           />
 
           <q-btn
-            v-if="selectedTrip?.status === 'started'"
+            v-if="isStartedTrip(selectedTrip)"
             unelevated
             color="positive"
             label="Complete Trip"
             icon="check_circle"
+            :loading="actionTripId === selectedTrip?.id"
             @click="completeTrip(selectedTrip)"
           />
 
@@ -867,13 +873,57 @@
 
     </q-dialog>
 
+    <q-dialog v-model="showOtpDialog" persistent>
+      <q-card class="otp-dialog">
+        <q-card-section class="row items-center justify-between">
+          <div>
+            <div class="text-h6 text-weight-bold">Start Trip</div>
+            <div class="text-caption text-grey-7">
+              Enter the OTP provided by the rider.
+            </div>
+          </div>
+          <q-btn flat round dense icon="close" :disable="isVerifyingOtp" v-close-popup />
+        </q-card-section>
+
+        <q-card-section>
+          <q-input
+            v-model="otpInput"
+            outlined
+            autofocus
+            maxlength="6"
+            mask="######"
+            label="Start OTP"
+            hint="Enter 4 to 6 digits"
+            @keydown.enter="verifyOtpAndStart"
+          >
+            <template #prepend>
+              <q-icon name="lock" color="primary" />
+            </template>
+          </q-input>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="grey-7" :disable="isVerifyingOtp" v-close-popup />
+          <q-btn
+            unelevated
+            color="positive"
+            label="Verify & Start"
+            :loading="isVerifyingOtp"
+            :disable="otpInput.length < 4"
+            @click="verifyOtpAndStart"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import api from '@/config/api'
 
 const $q = useQuasar()
 
@@ -888,6 +938,11 @@ const dateFilter = ref('')
 
 const showDetails = ref(false)
 const selectedTrip = ref(null)
+const loadingTrips = ref(false)
+const actionTripId = ref(null)
+const showOtpDialog = ref(false)
+const otpInput = ref('')
+const isVerifyingOtp = ref(false)
 
 
 // =====================================================
@@ -919,111 +974,7 @@ const statusOptions = [
 
 
 // =====================================================
-// SAMPLE TRIPS
-// Replace this with API response
-// =====================================================
-
-const trips = ref([
-  {
-    id: 1,
-    bookingNumber: 'BK-1001',
-    date: '2026-08-27',
-    time: '09:30 AM',
-
-    pickup: 'Patna Junction, Patna',
-    drop: 'Airport Road, Patna',
-
-    customer: {
-      name: 'Rahul Kumar',
-      phone: '+91 98765 43210'
-    },
-
-    vehicle: {
-      name: 'Swift Dzire',
-      number: 'BR01AB1234'
-    },
-
-    distance: '18 KM',
-    fare: 850,
-
-    status: 'pending'
-  },
-
-  {
-    id: 2,
-    bookingNumber: 'BK-1002',
-    date: '2026-08-27',
-    time: '01:00 PM',
-
-    pickup: 'Boring Road, Patna',
-    drop: 'Danapur Railway Station',
-
-    customer: {
-      name: 'Amit Singh',
-      phone: '+91 91234 56789'
-    },
-
-    vehicle: {
-      name: 'Toyota Etios',
-      number: 'BR01CD5678'
-    },
-
-    distance: '24 KM',
-    fare: 1200,
-
-    status: 'accepted'
-  },
-
-  {
-    id: 3,
-    bookingNumber: 'BK-1003',
-    date: '2026-08-28',
-    time: '08:00 AM',
-
-    pickup: 'Kankarbagh, Patna',
-    drop: 'Rajendra Nagar',
-
-    customer: {
-      name: 'Priya Sharma',
-      phone: '+91 99887 66554'
-    },
-
-    vehicle: {
-      name: 'Hyundai Aura',
-      number: 'BR01EF7890'
-    },
-
-    distance: '12 KM',
-    fare: 650,
-
-    status: 'started'
-  },
-
-  {
-    id: 4,
-    bookingNumber: 'BK-1004',
-    date: '2026-08-25',
-    time: '10:00 AM',
-
-    pickup: 'Gandhi Maidan, Patna',
-    drop: 'Bihta',
-
-    customer: {
-      name: 'Suresh Kumar',
-      phone: '+91 98761 23456'
-    },
-
-    vehicle: {
-      name: 'Maruti Ertiga',
-      number: 'BR01GH3456'
-    },
-
-    distance: '38 KM',
-    fare: 1800,
-
-    status: 'completed'
-  }
-])
+const trips = ref([])
 
 
 // =====================================================
@@ -1039,9 +990,7 @@ const pendingTrips = computed(() => {
 
 const activeTrips = computed(() => {
   return trips.value.filter(
-    trip =>
-      trip.status === 'accepted' ||
-      trip.status === 'started'
+    trip => isAcceptedTrip(trip) || isStartedTrip(trip)
   ).length
 })
 
@@ -1150,7 +1099,9 @@ function formatStatus(status) {
   const statusMap = {
     pending: 'Pending',
     accepted: 'Accepted',
+    confirmed: 'Accepted',
     started: 'In Progress',
+    in_progress: 'In Progress',
     completed: 'Completed'
   }
 
@@ -1163,7 +1114,9 @@ function statusColor(status) {
   const colors = {
     pending: 'orange',
     accepted: 'primary',
+    confirmed: 'primary',
     started: 'positive',
+    in_progress: 'positive',
     completed: 'purple'
   }
 
@@ -1183,29 +1136,77 @@ function viewTrip(trip) {
 
 
 // =====================================================
-// ACCEPT TRIP
+// API INTEGRATION
 // =====================================================
 
-function acceptTrip(trip) {
+const normalizeStatus = status => {
+  const value = String(status || 'pending').toLowerCase().trim()
+  if (['accept', 'accepted', 'driver_accepted', 'confirmed'].includes(value)) return 'accepted'
+  if (['start', 'started', 'in_progress', 'ongoing', 'on_trip'].includes(value)) return 'started'
+  if (['cancel', 'cancelled', 'canceled'].includes(value)) return 'cancelled'
+  return value
+}
 
-  if (!trip) return
+const mapTrip = item => {
+  const vehicle = item.driver?.driver?.vehicle || item.vehicle || {}
+  const createdAt = item.created_at || item.date
+  return {
+    id: item.id,
+    bookingNumber: item.booking_number || item.bookingNumber || `BK-${item.id}`,
+    date: createdAt ? new Date(createdAt).toISOString().slice(0, 10) : '',
+    time: createdAt ? new Date(createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '-',
+    pickup: item.from || item.pickup_location || 'N/A',
+    drop: item.to || item.drop_location || 'N/A',
+    customer: {
+      name: item.rider?.username || item.customer?.name || 'Rider',
+      phone: item.rider?.mobile_no || item.customer?.phone || 'N/A'
+    },
+    vehicle: {
+      name: vehicle.vehicle_name || 'Vehicle',
+      number: vehicle.registration_no || 'N/A'
+    },
+    distance: item.distance || '0 KM',
+    fare: Number(item.fare || item.amount || 0),
+    status: normalizeStatus(item.status),
+    raw: item
+  }
+}
 
-  $q.dialog({
-    title: 'Accept Trip',
-    message: `Do you want to accept booking ${trip.bookingNumber}?`,
-    cancel: true,
-    persistent: true
-  }).onOk(() => {
+const fetchTrips = async () => {
+  loadingTrips.value = true
+  try {
+    const response = await api.get('/driver/find/all/ride')
+    let data = response.data?.data || response.data || []
+    if (!Array.isArray(data) && data && typeof data === 'object') data = [data]
+    trips.value = Array.isArray(data) ? data.map(mapTrip) : []
+  } catch (error) {
+    console.error('Error loading assigned trips:', error)
+    $q.notify({ type: 'negative', message: error.response?.data?.message || 'Failed to load assigned trips.' })
+  } finally {
+    loadingTrips.value = false
+  }
+}
 
-    trip.status = 'accepted'
+const isPendingTrip = trip => trip?.status === 'pending'
+const isAcceptedTrip = trip => trip?.status === 'accepted'
+const isStartedTrip = trip => trip?.status === 'started'
 
-    $q.notify({
-      type: 'positive',
-      message: 'Trip accepted successfully',
-      position: 'top-right'
-    })
-
-  })
+async function acceptTrip(trip) {
+  if (!trip?.id) return
+  actionTripId.value = trip.id
+  try {
+    const response = await api.put(`/driver/accept-ride/${trip.id}`)
+    if (response.data?.success || response.status === 200) {
+      trip.status = normalizeStatus(response.data?.data?.status || response.data?.status || 'accepted')
+      $q.notify({ type: 'positive', message: 'Trip accepted successfully', position: 'top-right' })
+    } else {
+      throw new Error(response.data?.message || 'Unable to accept trip')
+    }
+  } catch (error) {
+    $q.notify({ type: 'negative', message: error.response?.data?.message || error.message || 'Unable to accept trip' })
+  } finally {
+    actionTripId.value = null
+  }
 }
 
 
@@ -1214,27 +1215,33 @@ function acceptTrip(trip) {
 // =====================================================
 
 function startTrip(trip) {
-
   if (!trip) return
+  selectedTrip.value = trip
+  otpInput.value = ''
+  showOtpDialog.value = true
+}
 
-  $q.dialog({
-    title: 'Start Trip',
-    message: `Start trip ${trip.bookingNumber}?`,
-    cancel: true,
-    persistent: true
-  }).onOk(() => {
-
-    trip.status = 'started'
-
-    showDetails.value = false
-
-    $q.notify({
-      type: 'positive',
-      message: 'Trip started successfully',
-      position: 'top-right'
+const verifyOtpAndStart = async () => {
+  if (otpInput.value.trim().length < 4 || !selectedTrip.value?.id) return
+  isVerifyingOtp.value = true
+  try {
+    const response = await api.post('/driver/start/ride', {
+      booking_id: selectedTrip.value.id,
+      otp: otpInput.value.trim()
     })
-
-  })
+    if (response.data?.success || response.status === 200) {
+      selectedTrip.value.status = 'started'
+      showOtpDialog.value = false
+      showDetails.value = false
+      $q.notify({ type: 'positive', message: 'OTP verified. Trip started successfully.' })
+    } else {
+      throw new Error(response.data?.message || 'Invalid OTP')
+    }
+  } catch (error) {
+    $q.notify({ type: 'negative', message: error.response?.data?.message || error.message || 'OTP verification failed.' })
+  } finally {
+    isVerifyingOtp.value = false
+  }
 }
 
 
@@ -1242,28 +1249,23 @@ function startTrip(trip) {
 // COMPLETE TRIP
 // =====================================================
 
-function completeTrip(trip) {
-
-  if (!trip) return
-
-  $q.dialog({
-    title: 'Complete Trip',
-    message: `Mark ${trip.bookingNumber} as completed?`,
-    cancel: true,
-    persistent: true
-  }).onOk(() => {
-
-    trip.status = 'completed'
-
-    showDetails.value = false
-
-    $q.notify({
-      type: 'positive',
-      message: 'Trip completed successfully',
-      position: 'top-right'
-    })
-
-  })
+async function completeTrip(trip) {
+  if (!trip?.id) return
+  actionTripId.value = trip.id
+  try {
+    const response = await api.put(`/driver/complete-ride/${trip.id}`, { booking_id: trip.id })
+    if (response.data?.success || response.status === 200) {
+      trip.status = 'completed'
+      showDetails.value = false
+      $q.notify({ type: 'positive', message: 'Trip completed successfully', position: 'top-right' })
+    } else {
+      throw new Error(response.data?.message || 'Unable to complete trip')
+    }
+  } catch (error) {
+    $q.notify({ type: 'negative', message: error.response?.data?.message || error.message || 'Unable to complete trip' })
+  } finally {
+    actionTripId.value = null
+  }
 }
 
 
@@ -1271,17 +1273,14 @@ function completeTrip(trip) {
 // REFRESH
 // =====================================================
 
-function refreshTrips() {
-
-  $q.notify({
-    type: 'positive',
-    message: 'Trips refreshed',
-    position: 'top-right'
-  })
-
-  // Later:
-  // fetchTrips()
+async function refreshTrips() {
+  await fetchTrips()
+  $q.notify({ type: 'positive', message: 'Trips refreshed', position: 'top-right' })
 }
+
+onMounted(() => {
+  fetchTrips()
+})
 
 
 // =====================================================

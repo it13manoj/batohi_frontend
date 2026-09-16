@@ -51,6 +51,10 @@
                 <div class="text-subtitle1 text-weight-bold line-height-tight">
                   {{ driverFullName }}
                 </div>
+                <div class="row items-center text-caption text-grey-8 q-mt-xs">
+                  <q-icon name="phone" size="15px" class="q-mr-xs" />
+                  <span>{{ driverMobile || 'Phone number unavailable' }}</span>
+                </div>
                 <div class="row items-center text-caption text-grey-8">
                   <q-icon name="star" color="amber" size="16px" class="q-mr-xs" />
                   <span class="text-weight-bold">{{ driverDetails?.rating || '0.00' }}</span>
@@ -64,7 +68,8 @@
               round
               color="positive"
               icon="call"
-              :href="`tel:${driverDetails?.mobile_number || rideDetails?.driver?.mobile_no}`"
+              :disable="!driverMobile"
+              :href="driverMobile ? `tel:${driverMobile}` : undefined"
             />
           </div>
 
@@ -82,11 +87,15 @@
           </div>
         </div>
 
-        <!-- Status: Rejected -->
-        <div v-else-if="bookingStatus === 'rejected'" class="text-center q-py-sm">
+        <!-- Status: Rejected or Cancelled -->
+        <div v-else-if="bookingStatus === 'rejected' || bookingStatus === 'cancelled'" class="text-center q-py-sm">
           <q-icon name="cancel" color="negative" size="40px" />
-          <div class="text-h6 text-negative q-mt-sm">Ride Declined</div>
-          <div class="text-body2 text-grey-8 q-mb-md">The driver is unavailable. Please try another ride.</div>
+          <div class="text-h6 text-negative q-mt-sm">
+            {{ bookingStatus === 'cancelled' ? 'Ride Cancelled' : 'Ride Declined' }}
+          </div>
+          <div class="text-body2 text-grey-8 q-mb-md">
+            {{ bookingStatus === 'cancelled' ? 'You have cancelled this ride.' : 'The driver is unavailable. Please try another ride.' }}
+          </div>
           <q-btn color="primary" label="Back to Search" @click="goBack" class="full-width" />
         </div>
 
@@ -107,6 +116,19 @@
             <span class="text-h6 text-weight-bold text-primary">₹{{ rideDetails.fare }}</span>
           </div>
         </div>
+
+        <!-- Cancel Ride Button Action -->
+        <div v-if="canCancelRide" class="q-mt-md">
+          <q-btn
+            outline
+            color="negative"
+            label="Cancel Ride"
+            icon="cancel"
+            class="full-width"
+            :loading="cancelling"
+            @click="confirmCancelRide"
+          />
+        </div>
       </q-card-section>
     </q-card>
   </q-page>
@@ -115,16 +137,19 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useQuasar, Notify, Dialog } from 'quasar'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import api from '@/config/api'
 
+const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
 const bookingId = route.params.bookingId
 
 const bookingStatus = ref('pending')
 const rideDetails = ref(null)
+const cancelling = ref(false)
 
 let map = null
 let pollTimer = null
@@ -182,10 +207,27 @@ const dropPinIcon = L.divIcon({
   popupAnchor: [0, -20]
 })
 
-// Computed Helpers for Driver, Vehicle & OTP
+// Computed Helpers for Driver, Vehicle & Cancel Option
+const canCancelRide = computed(() => {
+  return ['pending', 'accepted'].includes(String(bookingStatus.value).toLowerCase())
+})
+
 const otpCode = computed(() => rideDetails.value?.otp?.otp || null)
 const driverDetails = computed(() => rideDetails.value?.driver?.driver || null)
 const vehicleDetails = computed(() => driverDetails.value?.vehicle || null)
+
+const driverMobile = computed(() => {
+  const details = driverDetails.value || {}
+  const rideDriver = rideDetails.value?.driver || {}
+  return details.mobile_number
+    || details.mobile
+    || details.phone
+    || rideDriver.mobile_no
+    || rideDriver.mobile_number
+    || rideDriver.mobile
+    || rideDriver.phone
+    || ''
+})
 
 const driverFullName = computed(() => {
   if (driverDetails.value?.first_name) {
@@ -303,12 +345,53 @@ const checkBookingStatus = async () => {
         updateMapRoute()
       }
 
-      if (bookingStatus.value !== 'pending') {
+      if (bookingStatus.value !== 'pending' && bookingStatus.value !== 'accepted' && bookingStatus.value !== 'confirmed') {
         clearInterval(pollTimer)
       }
     }
   } catch (err) {
     console.error('Error fetching ride status:', err)
+  }
+}
+
+// Cancel Ride Handlers
+const confirmCancelRide = () => {
+  Dialog.create({
+    title: 'Cancel Ride',
+    message: 'Are you sure you want to cancel this booking?',
+    cancel: true,
+    persistent: true
+  }).onOk(() => {
+    cancelRide()
+  })
+}
+
+const cancelRide = async () => {
+  cancelling.value = true
+  try {
+    const res = await api.put(`/driver/cancel/${bookingId}`)
+    if (res.data.success || res.status === 200) {
+      bookingStatus.value = 'cancelled'
+      if (pollTimer) clearInterval(pollTimer)
+
+      Notify.create({
+        type: 'positive',
+        message: 'Your ride has been cancelled.'
+      })
+    } else {
+      Notify.create({
+        type: 'negative',
+        message: res.data?.message || 'Failed to cancel ride.'
+      })
+    }
+  } catch (err) {
+    console.error('Error cancelling ride:', err)
+    Notify.create({
+      type: 'negative',
+      message: err.response?.data?.message || 'Failed to cancel ride.'
+    })
+  } finally {
+    cancelling.value = false
   }
 }
 
@@ -324,7 +407,7 @@ onUnmounted(() => {
 })
 
 const goBack = () => {
-  router.push('/search-vehicle')
+  router.push('/customer/vehicle-type')
 }
 </script>
 
