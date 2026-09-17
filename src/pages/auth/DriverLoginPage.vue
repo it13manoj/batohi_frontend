@@ -295,9 +295,8 @@ const handleLogin = async () => {
       message: data.message || 'Login successful'
     })
 
-    // Redirect
-
-    router.push('/driver/dashboard')
+    // Redirect to driver profile panel to complete profile step-wise
+    router.push('/driver/profile')
   } catch (error) {
     console.error('Login Error:', error)
 

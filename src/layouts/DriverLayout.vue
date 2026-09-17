@@ -361,6 +361,50 @@
             </q-tooltip>
           </q-item>
 
+          <!-- SUBSCRIPTION -->
+          <q-item clickable :active="isRouteActive('DriverSubscription')" active-class="active-menu"
+            @click="navigate('DriverSubscription')">
+            <q-item-section avatar>
+              <q-icon name="card_membership" />
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label> Subscription </q-item-label>
+            </q-item-section>
+
+            <q-item-section v-if="!miniState" side>
+              <q-badge :color="isSubscribed ? 'positive' : 'negative'" rounded>
+                {{ isSubscribed ? 'Active' : 'Required' }}
+              </q-badge>
+            </q-item-section>
+
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
+              Subscription
+            </q-tooltip>
+          </q-item>
+
+          <!-- VERIFICATION -->
+          <q-item clickable :active="isRouteActive('DriverVerification')" active-class="active-menu"
+            @click="navigate('DriverVerification')">
+            <q-item-section avatar>
+              <q-icon name="verified_user" />
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label> Verification </q-item-label>
+            </q-item-section>
+
+            <q-item-section v-if="!miniState" side>
+              <q-badge :color="isVerified ? 'positive' : 'warning'" :text-color="isVerified ? 'white' : 'dark'" rounded>
+                {{ isVerified ? 'Verified' : 'Pending' }}
+              </q-badge>
+            </q-item-section>
+
+            <q-tooltip v-if="miniState" anchor="center right" self="center left">
+              Document Verification
+            </q-tooltip>
+          </q-item>
+
           <!-- =================================================
                MANAGEMENT
           ================================================== -->
@@ -580,6 +624,9 @@ import { useRouter, useRoute } from 'vue-router'
 
 import { useQuasar } from 'quasar'
 import VehicleType from '@/pages/customer/VehicleType.vue'
+import { useDriverOnboarding } from '@/composables/useDriverOnboarding'
+
+const { isSubscribed, isVerified } = useDriverOnboarding()
 
 /* =========================================================
    QUASAR
@@ -651,6 +698,8 @@ const pageTitles = {
   DriverEarnings: 'Earnings',
 
   DriverProfile: 'Profile',
+  DriverSubscription: 'Subscription',
+  DriverVerification: 'Document Verification',
 
   'driver-management': 'Management',
 

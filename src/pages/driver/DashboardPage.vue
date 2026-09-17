@@ -57,6 +57,76 @@
 
     </div>
 
+    <!-- =========================================================
+         ONBOARDING & VERIFICATION STATUS BANNER
+    ========================================================== -->
+    <q-banner
+      v-if="!canTakeRides"
+      class="rounded-borders q-mb-lg"
+      :class="{
+        'bg-amber-1 text-dark border-amber': isPendingVerification,
+        'bg-blue-1 text-primary border-blue': !isProfileCompleted || !isSubscribed
+      }"
+      bordered
+    >
+      <template #avatar>
+        <q-icon
+          :name="isPendingVerification ? 'hourglass_top' : (!isProfileCompleted ? 'person' : 'card_membership')"
+          size="28px"
+          :color="isPendingVerification ? 'warning' : 'primary'"
+        />
+      </template>
+
+      <div class="text-subtitle1 text-weight-bold">
+        <span v-if="!isProfileCompleted">Driver Profile Incomplete</span>
+        <span v-else-if="!isSubscribed">Driver Subscription Required</span>
+        <span v-else-if="isPendingVerification">Document Verification in Progress</span>
+      </div>
+
+      <div class="text-body2 q-mt-xs">
+        <span v-if="!isProfileCompleted">
+          Please complete your driver profile details to unlock your driver subscription and document verification.
+        </span>
+        <span v-else-if="!isSubscribed">
+          You need an active 0% commission subscription pass to receive customer ride requests.
+        </span>
+        <span v-else-if="isPendingVerification">
+          Your uploaded documents are currently being verified by the admin team. You will be able to go online and accept rides as soon as approval is completed.
+        </span>
+      </div>
+
+      <template #action>
+        <q-btn
+          v-if="!isProfileCompleted"
+          color="primary"
+          unelevated
+          no-caps
+          label="Complete Profile"
+          class="text-weight-bold"
+          @click="$router.push({ name: 'DriverProfile' })"
+        />
+        <q-btn
+          v-else-if="!isSubscribed"
+          color="primary"
+          unelevated
+          no-caps
+          label="Get Subscription Pass"
+          class="text-weight-bold"
+          @click="$router.push({ name: 'DriverSubscription' })"
+        />
+        <q-btn
+          v-else-if="isPendingVerification"
+          color="warning"
+          text-color="dark"
+          unelevated
+          no-caps
+          icon="verified_user"
+          label="Check Verification Status"
+          class="text-weight-bold"
+          @click="$router.push({ name: 'DriverVerification' })"
+        />
+      </template>
+    </q-banner>
 
     <!-- =========================================================
          DRIVER STATUS + PROFILE
@@ -96,8 +166,19 @@
 
             <div class="q-ml-md">
 
-              <div class="text-h6 text-weight-bold">
-                {{ driver.name || 'Driver' }}
+              <div class="row items-center">
+                <div class="text-h6 text-weight-bold">
+                  {{ driver.name || 'Driver' }}
+                </div>
+                <q-badge
+                  :color="isVerified ? 'positive' : (isPendingVerification ? 'warning' : 'grey-7')"
+                  :text-color="isPendingVerification ? 'dark' : 'white'"
+                  class="q-ml-sm text-weight-bold"
+                  rounded
+                >
+                  <q-icon :name="isVerified ? 'check_circle' : 'hourglass_top'" size="13px" class="q-mr-xs" />
+                  {{ isVerified ? 'Verified Driver' : (isPendingVerification ? 'Verification Pending' : 'Unverified') }}
+                </q-badge>
               </div>
 
               <div class="text-grey-7">
@@ -166,7 +247,11 @@
                 color="positive"
                 :disable="statusUpdating"
                 @update:model-value="changeDriverStatus"
-              />
+              >
+                <q-tooltip v-if="!canTakeRides">
+                  Document verification required to go online
+                </q-tooltip>
+              </q-toggle>
 
             </div>
 
@@ -1544,6 +1629,7 @@ import { ref, computed, onMounted, nextTick, onUnmounted } from 'vue'
 import { useQuasar, Notify } from 'quasar'
 import { useRouter } from 'vue-router'
 import { useLocationTracker } from '@/composables/useLocationTracker'
+import { useDriverOnboarding } from '@/composables/useDriverOnboarding'
 import api from '@/config/api'
 
 // 1. Leaflet & Plugins Setup
@@ -1584,6 +1670,14 @@ const riderSvg = `data:image/svg+xml;utf8,${encodeURIComponent(`
 const { startTracking } = useLocationTracker()
 const $q = useQuasar()
 const router = useRouter()
+const {
+  isProfileCompleted,
+  isSubscribed,
+  activePlan,
+  isVerified,
+  isPendingVerification,
+  canTakeRides
+} = useDriverOnboarding()
 
 /* =========================================================
    REACTIVE STATES
@@ -1600,6 +1694,22 @@ const selectedTrip = ref(null)
 
 // Leaflet Map Active Instances Dictionary
 const mapInstances = {}
+
+const safeRemoveMap = (mapKey) => {
+  const currentMap = mapInstances[mapKey]
+  if (!currentMap) return
+
+  try {
+    const container = currentMap.getContainer?.()
+    if (container && container.parentNode) {
+      currentMap.remove()
+    }
+  } catch (error) {
+    console.warn('Map cleanup warning:', error)
+  } finally {
+    delete mapInstances[mapKey]
+  }
+}
 
 // Driver Profile State
 const driver = ref({
@@ -1830,6 +1940,7 @@ const fetchUpcoming = async () => {
     await nextTick()
     if (acceptedRide.value) {
       await trackRide()
+      console.log(acceptedRide.value,"acceptedRide.value,")
       initPickupMap(acceptedRide.value, 'current-accepted')
     }
   } catch (error) {
@@ -1857,34 +1968,50 @@ const trackRide = async () => {
     const locationData = pickLocationRes.data?.data || pickLocationRes.data || {}
     const riderLocation = locationData.rider || locationData.pickup || locationData.customer
     const driverLocation = locationData.driver || locationData.vehicle
+    const normalizedStatus = String(locationData.status || '').toLowerCase()
 
+    if (riderLocation) {
+      const riderLatitude = riderLocation.latitude ?? riderLocation.lat ?? locationData.rider_latitude ?? locationData.latitude_from ?? locationData.pickup_latitude
+      const riderLongitude = riderLocation.longitude ?? riderLocation.lng ?? locationData.rider_longitude ?? locationData.longitude_from ?? locationData.pickup_longitude
 
-    if (locationData.status =="accepted") {
-      trip.rider = { ...trip.rider, ...riderLocation }
-      trip.rider.latitude = riderLocation.latitude
-      trip.rider.longitude = riderLocation.longitude
-    }
-
-    if (!locationData.status=="confirmed" && (locationData.rider_latitude || locationData.latitude_from)) {
+      if (Number.isFinite(Number(riderLatitude)) && Number.isFinite(Number(riderLongitude))) {
+        trip.rider = {
+          ...trip.rider,
+          ...riderLocation,
+          latitude: Number(riderLatitude),
+          longitude: Number(riderLongitude)
+        }
+      }
+    } else if (normalizedStatus !== 'confirmed' && (locationData.rider_latitude || locationData.latitude_from)) {
       trip.rider = {
         ...trip.rider,
-        latitude: locationData.rider_latitude ?? locationData.latitude_from ?? locationData.pickup_latitude,
-        longitude: locationData.rider_longitude ?? locationData.longitude_from ?? locationData.pickup_longitude
+        latitude: Number(locationData.rider_latitude ?? locationData.latitude_from ?? locationData.pickup_latitude),
+        longitude: Number(locationData.rider_longitude ?? locationData.longitude_from ?? locationData.pickup_longitude)
       }
     }
 
-    if (locationData.status =="accepted") {
-      trip.driver = { ...trip.driver, ...driverLocation }
-      trip.driver.latitude = driverLocation.latitude
-      trip.driver.longitude = driverLocation.longitude
-    }
+    if (driverLocation) {
+      const driverLatitude = driverLocation.latitude ?? driverLocation.lat ?? locationData.driver_latitude ?? locationData.latitude_driver
+      const driverLongitude = driverLocation.longitude ?? driverLocation.lng ?? locationData.driver_longitude ?? locationData.longitude_driver
 
-    if (!locationData.status=="confirmed" && (locationData.driver_latitude || locationData.latitude_driver)) {
+      if (Number.isFinite(Number(driverLatitude)) && Number.isFinite(Number(driverLongitude))) {
+        trip.driver = {
+          ...trip.driver,
+          ...driverLocation,
+          latitude: Number(driverLatitude),
+          longitude: Number(driverLongitude)
+        }
+      }
+    } else if (normalizedStatus !== 'confirmed' && (locationData.driver_latitude || locationData.latitude_driver)) {
       trip.driver = {
         ...trip.driver,
-        latitude: locationData.driver_latitude ?? locationData.latitude_driver,
-        longitude: locationData.driver_longitude ?? locationData.longitude_driver
+        latitude: Number(locationData.driver_latitude ?? locationData.latitude_driver),
+        longitude: Number(locationData.driver_longitude ?? locationData.longitude_driver)
       }
+    }
+
+    if (normalizedStatus) {
+      trip.status = normalizedStatus
     }
 
     return trip
@@ -1896,6 +2023,31 @@ const trackRide = async () => {
 
 // 1. Accept Ride Action
 const acceptRide = async (trip) => {
+  if (!canTakeRides.value) {
+    if (!isVerified.value) {
+      $q.dialog({
+        title: 'Documents Under Verification',
+        message: 'You cannot accept rides until your uploaded documents are verified and approved by the admin team.',
+        ok: 'Check Verification Status',
+        cancel: 'Close'
+      }).onOk(() => {
+        router.push({ name: 'DriverVerification' })
+      })
+      return
+    }
+    if (!isSubscribed.value) {
+      $q.dialog({
+        title: 'Subscription Required',
+        message: 'An active driver subscription pass is required to accept customer rides.',
+        ok: 'View Plans',
+        cancel: 'Close'
+      }).onOk(() => {
+        router.push({ name: 'DriverSubscription' })
+      })
+      return
+    }
+  }
+
   acceptingId.value = trip.id
   try {
     const response = await api.put(`/driver/accept-ride/${trip.id}`)
@@ -1935,13 +2087,9 @@ const acceptRide = async (trip) => {
 const initPickupMap = (trip, mapKey = trip.id) => {
   const containerId = mapKey === 'current-accepted' ? 'map-current-accepted' : `map-${trip.id}`
   const mapContainer = document.getElementById(containerId)
-  if (!mapContainer) return
+  if (!mapContainer || !mapContainer.isConnected) return
 
-  // Cleanup existing map instance before re-initializing
-  if (mapInstances[mapKey]) {
-    mapInstances[mapKey].remove()
-    delete mapInstances[mapKey]
-  }
+  safeRemoveMap(mapKey)
 
   const routePoints = getRideRoutePoints(trip)
   const driverPoint = routePoints.from
@@ -1999,13 +2147,9 @@ const rejectRide = async (bookingId) => {
       Notify.create({ type: 'info', message: 'Ride request declined.' })
 
       // Destroy map instance if created
-      if (mapInstances[bookingId]) {
-        mapInstances[bookingId].remove()
-        delete mapInstances[bookingId]
-      }
-      if (acceptedRide.value?.id === bookingId && mapInstances['current-accepted']) {
-        mapInstances['current-accepted'].remove()
-        delete mapInstances['current-accepted']
+      safeRemoveMap(bookingId)
+      if (acceptedRide.value?.id === bookingId) {
+        safeRemoveMap('current-accepted')
       }
 
       upcomingTrips.value = upcomingTrips.value.filter(trip => trip.id !== bookingId)
@@ -2021,7 +2165,7 @@ const rejectRide = async (bookingId) => {
 
 // 4. Open External Google Maps Application
 const openExternalNavigation = (trip) => {
-  console.log(trip)
+
   const rLat = trip.rider?.latitude || trip.latitude_to
   const rLng = trip.rider?.longitude || trip.longitude_to
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${rLat},${rLng}&travelmode=driving`, '_blank')
@@ -2051,6 +2195,7 @@ const verifyOtpAndStart = async () => {
     if (response.data?.success || response.status === 200) {
       const apiStatus = response.data?.data?.status || response.data?.status
       selectedTrip.value.status = isRideStarted({ status: apiStatus }) ? apiStatus : 'started'
+
       Notify.create({ type: 'positive', message: 'OTP verified! Ride started successfully.' })
       showOtpModal.value = false
       await trackRide()
@@ -2105,6 +2250,33 @@ const completeRide = async (trip) => {
    DRIVER ONLINE STATUS TOGGLE
 ========================================================= */
 const changeDriverStatus = async (status) => {
+  // If attempting to go online, enforce verification and subscription
+  if (status && !canTakeRides.value) {
+    driver.value.isOnline = false
+    if (!isVerified.value) {
+      $q.dialog({
+        title: 'Verification In Progress',
+        message: 'You cannot go online until your uploaded documents are verified and approved by the admin team.',
+        ok: 'Check Verification Status',
+        cancel: 'Close'
+      }).onOk(() => {
+        router.push({ name: 'DriverVerification' })
+      })
+      return
+    }
+    if (!isSubscribed.value) {
+      $q.dialog({
+        title: 'Subscription Required',
+        message: 'You must have an active driver subscription pass to go online.',
+        ok: 'View Plans',
+        cancel: 'Close'
+      }).onOk(() => {
+        router.push({ name: 'DriverSubscription' })
+      })
+      return
+    }
+  }
+
   try {
     statusUpdating.value = true
     await api.post(`/driver/${driver.value.id}/status`, {
@@ -2190,25 +2362,25 @@ const getCoordinates = (point, fallbackLatitude, fallbackLongitude) => {
 }
 
 const getRideRoutePoints = (trip) => {
-
-
   const driverPoint = getCoordinates(
     trip.driver,
     trip.driver_latitude ?? trip.driver_lat ?? trip.latitude_driver ?? trip.driverLatitude,
     trip.driver_longitude ?? trip.driver_lng ?? trip.longitude_driver ?? trip.driverLongitude
   )
+
   const pickupPoint = getCoordinates(
     trip.rider,
     trip.latitude_from ?? trip.rider_latitude ?? trip.pickup_latitude ?? trip.riderLatitude,
     trip.longitude_from ?? trip.rider_longitude ?? trip.pickup_longitude ?? trip.riderLongitude
   )
+
   const dropPoint = getCoordinates(
     trip.drop || trip.destination,
     trip.latitude_to ?? trip.drop_latitude ?? trip.to_latitude,
     trip.longitude_to ?? trip.drop_longitude ?? trip.to_longitude
   )
 
-  if (isActiveRide(trip) && trip.status =="confirmed" && pickupPoint && dropPoint) {
+  if (String(trip?.status || '').toLowerCase() === 'confirmed' && pickupPoint && dropPoint) {
     return {
       from: pickupPoint,
       to: dropPoint,
@@ -2218,8 +2390,8 @@ const getRideRoutePoints = (trip) => {
   }
 
   return {
-    from: driverPoint,
-    to: pickupPoint,
+    from: driverPoint || pickupPoint,
+    to: pickupPoint || driverPoint,
     fromLabel: 'Your Location (Driver)',
     toLabel: 'Rider Pickup Location'
   }
@@ -2337,10 +2509,7 @@ onMounted(async () => {
 // Memory leak prevention: Clean up active Leaflet map instances on unmount
 onUnmounted(() => {
   Object.keys(mapInstances).forEach((key) => {
-    if (mapInstances[key]) {
-      mapInstances[key].remove()
-      delete mapInstances[key]
-    }
+    safeRemoveMap(key)
   })
 })
 </script>

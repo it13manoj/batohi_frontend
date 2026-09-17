@@ -320,7 +320,7 @@ const handleLogin = async () => {
     // Redirect to designated dashboard
     const selectedRole = activeRole.value.toUpperCase()
     if (selectedRole === 'DRIVER') {
-      router.push('/driver/dashboard')
+      router.push('/driver/profile')
     } else if (selectedRole === 'AGENTS') {
       router.push('/agent/dashboard')
     } else {

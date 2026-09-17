@@ -546,6 +546,16 @@ const routes = [
         name: 'DriverProfile',
         component: () => import('@/pages/driver/ProfilePage.vue')
       },
+      {
+        path: 'subscription',
+        name: 'DriverSubscription',
+        component: () => import('@/pages/driver/SubscriptionPage.vue')
+      },
+      {
+        path: 'verification',
+        name: 'DriverVerification',
+        component: () => import('@/pages/driver/VerificationPage.vue')
+      },
 
       {
         path: 'trip-history',
