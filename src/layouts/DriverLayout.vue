@@ -1106,7 +1106,9 @@ onMounted(() => {
 .drawer-scroll {
   flex: 1 1 auto;
   min-height: 0;
-  height: auto;
+  height: calc(100vh - 220px);
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
 }
 
 /* =========================================================

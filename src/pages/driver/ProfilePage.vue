@@ -116,7 +116,7 @@
               <div class="row items-center q-mb-lg">
                 <div class="profile-image-wrapper q-mr-lg">
                   <q-avatar size="100px" class="profile-avatar shadow-2">
-                    <img v-if="profile.photo" :src="profile.photo.startsWith('blob:') ? profile.photo : `${imagesBaseUrl}${profile.photo}`" alt="Driver" />
+                    <img v-if="profile.photo" :src="profile.photo.startsWith('blob:') ? profile.photo : `${imagesBaseUrls}${profile.photo}`" alt="Driver" />
                     <span v-else class="profile-initials text-h5">{{ getInitials(profile.name) }}</span>
                   </q-avatar>
                   <q-btn
@@ -491,7 +491,7 @@
           <q-card-section class="text-center q-pa-lg">
             <div class="profile-image-wrapper">
               <q-avatar size="125px" class="profile-avatar shadow-2">
-                <img v-if="profile.photo" :src="profile.photo.startsWith('blob:') ? profile.photo : `${imagesBaseUrl}${profile.photo}`" alt="Driver Profile" />
+                <img v-if="profile.photo" :src="profile.photo.startsWith('blob:') ? profile.photo : `${imagesBaseUrls}${profile.photo}`" alt="Driver Profile" />
                 <span v-else class="profile-initials">{{ getInitials(profile.name) }}</span>
               </q-avatar>
               <q-btn round unelevated color="primary" icon="photo_camera" class="profile-camera-btn" @click="openProfilePicker">
@@ -664,7 +664,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import api from '@/config/api'
+import api, { imagesBaseUrl } from '@/config/api'
 import { useDriverOnboarding } from '@/composables/useDriverOnboarding'
 
 const router = useRouter()
@@ -685,7 +685,7 @@ const viewMode = ref(!isProfileCompleted.value ? 'wizard' : 'wizard')
 const editMode = ref(false)
 const saving = ref(false)
 
-const imagesBaseUrl = ref('http://localhost:3300/uploads/')
+const imagesBaseUrls = ref(`${imagesBaseUrl}`)
 const token = localStorage.getItem('token') || sessionStorage.getItem('token')
 
 const decodeJwt = t => {
@@ -708,6 +708,11 @@ const decodeJwt = t => {
 const genderOptions = ['Male', 'Female', 'Other']
 const agencyTypeOptions = ['Individual / Freelance', 'Fleet Partner', 'Corporate Agency']
 const stateOptions = ['Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Telangana', 'Uttar Pradesh', 'Bihar', 'West Bengal']
+const vehicleTypeOptions = [
+  { label: 'Bike', value: 'bike' },
+  { label: 'Auto', value: 'auto' },
+  { label: 'Car', value: 'car' }
+]
 
 const profile = reactive({
   driverId: `DRV-${decodeJwt(token)?.id || '8842'}`,
@@ -733,7 +738,7 @@ const profile = reactive({
   experienceYears: 5,
   licensePhoto: null,
   vehicleNumber: 'MH 02 AB 4589',
-  vehicleType: 'Sedan',
+  vehicleType: 'bike',
   insuranceNumber: 'POL-77889922',
   insuranceIssueDate: '2024-01-01',
   insuranceExpiry: '2026-12-31',
