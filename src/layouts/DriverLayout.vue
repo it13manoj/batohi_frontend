@@ -973,6 +973,8 @@ onMounted(() => {
 }
 
 .driver-drawer :deep(.q-drawer__content) {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -1102,7 +1104,9 @@ onMounted(() => {
 ========================================================= */
 
 .drawer-scroll {
-  height: calc(100vh - 235px);
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
 }
 
 /* =========================================================
@@ -1168,22 +1172,15 @@ onMounted(() => {
 ========================================================= */
 
 .drawer-footer {
-  position: absolute;
-
-  bottom: 0;
-
-  left: 0;
-
-  right: 0;
-
+  position: static;
+  flex-shrink: 0;
   background: #ffffff;
+  border-top: 1px solid #e5e7eb;
 }
 
 .drawer-footer .q-item {
   min-height: 55px;
-
   margin: 6px 10px;
-
   border-radius: 9px;
 }
 
