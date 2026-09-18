@@ -163,7 +163,10 @@
                   </q-input>
                 </div>
                 <div class="col-12 col-md-6">
-                  <q-input v-model="profile.emergencyContact" label="Emergency Contact Phone" outlined dense placeholder="Guardian / Family contact" />
+                  <q-input v-model="profile.emergencyContactName" label="Emergency Contact Name" outlined dense placeholder="Guardian / Family member name" />
+                </div>
+                <div class="col-12 col-md-6">
+                  <q-input v-model="profile.emergencyContactNumber" label="Emergency Contact Number" outlined dense placeholder="Guardian / Family contact" />
                 </div>
               </div>
             </q-step>
@@ -600,6 +603,12 @@
                 <q-select v-model="profile.gender" :options="genderOptions" label="Gender" outlined dense :readonly="!editMode" />
               </div>
               <div class="col-12 col-md-6">
+                <q-input v-model="profile.emergencyContactName" label="Emergency Contact Name" outlined dense :readonly="!editMode" />
+              </div>
+              <div class="col-12 col-md-6">
+                <q-input v-model="profile.emergencyContactNumber" label="Emergency Contact Number" outlined dense :readonly="!editMode" />
+              </div>
+              <div class="col-12 col-md-6">
                 <q-select v-model="profile.agencyType" :options="agencyTypeOptions" label="Agency Type" outlined dense :readonly="!editMode" />
               </div>
               <div class="col-12 col-md-6">
@@ -642,6 +651,12 @@
               </div>
               <div class="col-12 col-md-6">
                 <q-input v-model="profile.licenseNumber" label="Driving License Number" outlined dense :readonly="!editMode" />
+              </div>
+              <div class="col-12 col-md-6">
+                <q-input v-model="profile.licenseIssueDate" label="License Issue Date" outlined dense :readonly="!editMode" />
+              </div>
+              <div class="col-12 col-md-6">
+                <q-input v-model="profile.experienceYears" label="Experience Years" type="number" outlined dense :readonly="!editMode" />
               </div>
               <div class="col-12 col-md-6">
                 <q-input v-model="profile.licenseExpiry" label="License Expiry" outlined dense :readonly="!editMode" />
@@ -726,6 +741,8 @@ const profile = reactive({
   pincode: '400001',
   address: 'Shop 14, Commercial Complex, Andheri East',
   agencyType: 'Individual / Freelance',
+  emergencyContactName: 'Ramesh Kumar',
+  emergencyContactNumber: '+91 9876543211',
   emergencyContact: '+91 9876543211',
   photo: null,
   aadharNumber: '345678901234',
@@ -844,7 +861,11 @@ const saveProfile = async () => {
     formData.append('state', profile.state)
     formData.append('pincode', profile.pincode || 400001)
     formData.append('drivingLicenseNo', profile.licenseNumber)
+    formData.append('licenseIssueDate', profile.licenseIssueDate || '')
     formData.append('licenseExpiryDate', profile.licenseExpiry)
+    formData.append('experienceYears', profile.experienceYears ?? 0)
+    formData.append('emergencyContactName', profile.emergencyContactName || '')
+    formData.append('emergencyContactNumber', profile.emergencyContactNumber || profile.emergencyContact || '')
     formData.append('aadhaarNumber', profile.aadharNumber)
     formData.append('panNumber', profile.panNumber)
 
@@ -919,7 +940,12 @@ const fetchProfile = async () => {
       profile.city = data.city || profile.city
       profile.state = data.state || profile.state
       profile.licenseNumber = data.driving_license_no || profile.licenseNumber
+      profile.licenseIssueDate = data.license_issue_date || data.licenseIssueDate || profile.licenseIssueDate
       profile.licenseExpiry = data.license_expiry_date || profile.licenseExpiry
+      profile.experienceYears = data.experience_years ?? data.experienceYears ?? profile.experienceYears
+      profile.emergencyContactName = data.emergency_contact_name || data.emergencyContactName || profile.emergencyContactName
+      profile.emergencyContactNumber = data.emergency_contact_number || data.emergencyContactNumber || data.emergency_contact || profile.emergencyContactNumber
+      profile.emergencyContact = profile.emergencyContactNumber || profile.emergencyContact
       profile.aadharNumber = data.aadhaar_number || profile.aadharNumber
       profile.panNumber = data.pan_number || profile.panNumber
       if (data.profile_image) profile.photo = data.profile_image

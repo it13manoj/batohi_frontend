@@ -17,12 +17,12 @@
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://unpkg.com;
     style-src 'self' 'unsafe-inline' https://unpkg.com;
-    img-src 'self' data: blob: https://api.batohidriver.com https://*.tile.openstreetmap.org https://unpkg.com;
+    img-src 'self' data: blob: http://localhost:3300 https://*.tile.openstreetmap.org https://unpkg.com;
     font-src 'self' data:;
     connect-src 'self' 
-      https://api.batohidriver.com 
+      http://localhost:3300 
       ws://localhost:* 
-      https://api.batohidriver.com
+      http://localhost:3300
       https://router.project-osrm.org
       https://nominatim.openstreetmap.org 
       https://*.tile.openstreetmap.org

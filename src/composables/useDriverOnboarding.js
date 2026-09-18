@@ -294,7 +294,7 @@ const loadState = () => {
 // Shared reactive state
 const onboardingState = ref(loadState())
 
-// Helper function to persist state
+// Helper function to persist state locally
 const persistState = () => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(onboardingState.value))
@@ -370,12 +370,10 @@ export const useDriverOnboarding = () => {
     return onboardingState.value.verificationStatus === 'verified'
   })
 
-  // Driver can only take rides if profile is completed, subscription is active, AND verified
   const canTakeRides = computed(() => {
     return isProfileCompleted.value && isSubscribed.value && isVerified.value
   })
 
-  // Current onboarding stage (1: Profile, 2: Subscription, 3: Verification, 4: Ready)
   const currentStage = computed(() => {
     if (!isProfileCompleted.value) return 1
     if (!isSubscribed.value) return 2
@@ -383,178 +381,35 @@ export const useDriverOnboarding = () => {
     return 4
   })
 
-  // Get active plans list for current or specified vehicle category
   const currentVehiclePlans = computed(() => {
     const cat = onboardingState.value.vehicleCategory || 'bike'
     return VEHICLE_CONFIG[cat]?.plans || VEHICLE_CONFIG.bike.plans
   })
 
-  // --- ACTIONS ---
+  // --- ACTIONS WITH AUTOMATED API INTEGRATION ---
 
-  // Set the driver's vehicle category (e.g. 'bike', 'auto', 'car')
-  const setVehicleCategory = cat => {
-    if (VEHICLE_CONFIG[cat]) {
-      onboardingState.value.vehicleCategory = cat
-      persistState()
-    }
-  }
-
-  // Complete profile step
-  const completeProfile = (docsSummary = {}) => {
-    onboardingState.value.isProfileCompleted = true
-    onboardingState.value.profileStep = 6
-
-    if (
-      docsSummary.vehicleCategory &&
-      VEHICLE_CONFIG[docsSummary.vehicleCategory.toLowerCase()]
-    ) {
-      onboardingState.value.vehicleCategory =
-        docsSummary.vehicleCategory.toLowerCase()
-    }
-
-    if (docsSummary.aadharNumber)
-      onboardingState.value.documents.aadhar.number = docsSummary.aadharNumber
-    if (docsSummary.panNumber)
-      onboardingState.value.documents.pan.number = docsSummary.panNumber
-    if (docsSummary.licenseNumber)
-      onboardingState.value.documents.license.number = docsSummary.licenseNumber
-    if (docsSummary.insuranceNumber)
-      onboardingState.value.documents.insurance.number =
-        docsSummary.insuranceNumber
-
-    persistState()
-  }
-
-  // Activate driver subscription (Calls backend API & updates local state)
-  const activateSubscription = async (plan, paymentInfo = {}) => {
+  // 1. Synchronize Driver Onboarding Status from Backend API
+  const fetchDriverStatus = async () => {
     try {
-      console.log(plan)
-
-      const isTrial = !!paymentInfo.isFreeTrial || plan.isFreeTrial || false
-      const cat = onboardingState.value.vehicleCategory || 'bike'
-      const cycleMap = {
-        1: 1,
-        3: 3,
-        6: 6,
-        12: 12,
-        '1_month': 1,
-        '3_months': 3,
-        '6_months': 6,
-        '1_year': 12
+      const response = await api.get('/driver/status')
+      if (response.data && response.data.success) {
+        setDriverState(response.data)
       }
-      const baseMonths = Number(
-        plan.baseMonths ??
-          cycleMap[plan.cycle] ??
-          cycleMap[plan.durationLabel] ??
-          1
-      )
-      const bonusDays = Number(
-        plan.bonusDays ??
-          (baseMonths === 3
-            ? 15
-            : baseMonths === 6
-              ? 30
-              : baseMonths === 12
-                ? 90
-                : 0)
-      )
-      const totalDays = Number(
-        plan.totalDays ?? Math.max(0, baseMonths * 30 + bonusDays)
-      )
-      const startDate = new Date().toISOString()
-      const expiryDate = new Date(
-        Date.now() + totalDays * 24 * 60 * 60 * 1000
-      ).toISOString()
-
-      // 1. Send request to backend API
-      const response = await api.post('/driver/activate-subscription', {
-        planId: plan.id,
-        planName: plan.name || plan.planName || plan.title,
-        vehicleCategory: cat,
-        paymentMethod:
-          paymentInfo.paymentMethod || (isTrial ? 'Free Trial Offer' : 'UPI'),
-        transactionId: paymentInfo.transactionId || null,
-        isFreeTrial: isTrial,
-        baseMonths,
-        bonusDays,
-        totalDays,
-        startDate,
-        expiryDate,
-        cycle: plan.cycle || '1_month',
-        durationLabel: plan.durationLabel || '1 Month',
-        price: Number(plan.price || 0)
-      })
-
-      const data = response.data
-
-      if (data && data.success) {
-        const sub = data.subscription
-
-        if (isTrial) {
-          onboardingState.value.freeTrialClaimed = true
-        }
-
-        // 2. Map backend response back to onboardingState
-        onboardingState.value.subscription = {
-          status: sub.status || 'active',
-          vehicleCategory: sub.vehicleCategory || cat,
-          planId: sub.planId || plan.id,
-          planName: sub.planName || plan.name,
-          price: sub.price ?? (isTrial ? 0 : plan.price),
-          cycle: sub.cycle || plan.cycle || '1_month',
-          durationLabel: sub.durationLabel || plan.durationLabel || '1 Month',
-          baseMonths: Number(sub.baseMonths ?? baseMonths),
-          bonusDays: Number(sub.bonusDays ?? bonusDays),
-          totalDays: Number(sub.totalDays ?? totalDays),
-          bonusLabel: sub.bonusLabel || plan.bonusLabel || null,
-          isFreeTrial: Boolean(sub.isFreeTrial),
-          startDate: sub.startDate || startDate,
-          expiryDate: sub.expiryDate || sub.endDate || expiryDate,
-          transactionId: sub.transactionId,
-          paymentMethod: sub.paymentMethod
-        }
-
-        // 3. Update verification state if not already verified
-        if (onboardingState.value.verificationStatus !== 'verified') {
-          onboardingState.value.verificationStatus = 'pending'
-          onboardingState.value.verificationSubmittedAt =
-            new Date().toISOString()
-          Object.keys(onboardingState.value.documents).forEach(k => {
-            if (onboardingState.value.documents[k]) {
-              onboardingState.value.documents[k].status = 'pending'
-            }
-          })
-        }
-
-        persistState()
-
-        return {
-          success: true,
-          message:
-            data.message ||
-            (isTrial
-              ? 'Free trial activated successfully.'
-              : 'Subscription activated successfully.'),
-          data: onboardingState.value.subscription
-        }
-      } else {
-        return {
-          success: false,
-          message: data?.message || 'Failed to activate subscription.'
-        }
+      await fetchActivePlan()
+      return {
+        success: true,
+        message: 'Driver onboarding status synced.',
+        data: onboardingState.value
       }
     } catch (error) {
-      console.error('Error activating subscription via API:', error)
-      return {
-        success: false,
-        message:
-          error.response?.data?.message ||
-          'Network error while activating subscription.'
-      }
+      console.error('Failed to fetch full driver status:', error)
+      // Fallback: sync active plan if full status endpoint fails
+      await fetchActivePlan()
+      return { success: false, data: onboardingState.value }
     }
   }
 
-  // Fetch active plan status from backend API
+  // 2. Fetch Active Plan
   const fetchActivePlan = async () => {
     try {
       const response = await api.get('/driver/active_plans')
@@ -598,18 +453,190 @@ export const useDriverOnboarding = () => {
     }
   }
 
-  // Sync status
-  const fetchDriverStatus = async () => {
-    await fetchActivePlan()
-    persistState()
-    return {
-      success: true,
-      message: 'Driver onboarding status synced.',
-      data: onboardingState.value
+  // 3. Set Vehicle Category with API Sync
+  const setVehicleCategory = async cat => {
+    if (VEHICLE_CONFIG[cat]) {
+      onboardingState.value.vehicleCategory = cat
+      persistState()
+
+      try {
+        await api.post('/driver/update-vehicle-category', { category: cat })
+      } catch (error) {
+        console.error('Failed to persist vehicle category to server:', error)
+      }
     }
   }
 
-  // Claim 1st Month Free Trial specifically via API
+  // 4. Complete Profile with API Sync
+  const completeProfile = async (docsSummary = {}) => {
+    try {
+      // API call to persist profile and document details to backend
+      const response = await api.post('/driver/complete-profile', docsSummary)
+
+      onboardingState.value.isProfileCompleted = true
+      onboardingState.value.profileStep = 6
+
+      if (
+        docsSummary.vehicleCategory &&
+        VEHICLE_CONFIG[docsSummary.vehicleCategory.toLowerCase()]
+      ) {
+        onboardingState.value.vehicleCategory =
+          docsSummary.vehicleCategory.toLowerCase()
+      }
+
+      if (docsSummary.aadharNumber)
+        onboardingState.value.documents.aadhar.number = docsSummary.aadharNumber
+      if (docsSummary.panNumber)
+        onboardingState.value.documents.pan.number = docsSummary.panNumber
+      if (docsSummary.licenseNumber)
+        onboardingState.value.documents.license.number =
+          docsSummary.licenseNumber
+      if (docsSummary.insuranceNumber)
+        onboardingState.value.documents.insurance.number =
+          docsSummary.insuranceNumber
+
+      persistState()
+
+      return {
+        success: true,
+        message: response.data?.message || 'Profile completed successfully.'
+      }
+    } catch (error) {
+      console.error('Error completing profile via API:', error)
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'Failed to complete profile on server.'
+      }
+    }
+  }
+
+  // 5. Activate Subscription
+  const activateSubscription = async (plan, paymentInfo = {}) => {
+    try {
+      const isTrial = !!paymentInfo.isFreeTrial || plan.isFreeTrial || false
+      const cat = onboardingState.value.vehicleCategory || 'bike'
+      const cycleMap = {
+        1: 1,
+        3: 3,
+        6: 6,
+        12: 12,
+        '1_month': 1,
+        '3_months': 3,
+        '6_months': 6,
+        '1_year': 12
+      }
+      const baseMonths = Number(
+        plan.baseMonths ??
+          cycleMap[plan.cycle] ??
+          cycleMap[plan.durationLabel] ??
+          1
+      )
+      const bonusDays = Number(
+        plan.bonusDays ??
+          (baseMonths === 3
+            ? 15
+            : baseMonths === 6
+              ? 30
+              : baseMonths === 12
+                ? 90
+                : 0)
+      )
+      const totalDays = Number(
+        plan.totalDays ?? Math.max(0, baseMonths * 30 + bonusDays)
+      )
+      const startDate = new Date().toISOString()
+      const expiryDate = new Date(
+        Date.now() + totalDays * 24 * 60 * 60 * 1000
+      ).toISOString()
+
+      const response = await api.post('/driver/activate-subscription', {
+        planId: plan.id,
+        planName: plan.name || plan.planName || plan.title,
+        vehicleCategory: cat,
+        paymentMethod:
+          paymentInfo.paymentMethod || (isTrial ? 'Free Trial Offer' : 'UPI'),
+        transactionId: paymentInfo.transactionId || null,
+        isFreeTrial: isTrial,
+        baseMonths,
+        bonusDays,
+        totalDays,
+        startDate,
+        expiryDate,
+        cycle: plan.cycle || '1_month',
+        durationLabel: plan.durationLabel || '1 Month',
+        price: Number(plan.price || 0)
+      })
+
+      const data = response.data
+
+      if (data && data.success) {
+        const sub = data.subscription || {}
+
+        if (isTrial) {
+          onboardingState.value.freeTrialClaimed = true
+        }
+
+        onboardingState.value.subscription = {
+          status: sub.status || 'active',
+          vehicleCategory: sub.vehicleCategory || cat,
+          planId: sub.planId || plan.id,
+          planName: sub.planName || plan.name,
+          price: sub.price ?? (isTrial ? 0 : plan.price),
+          cycle: sub.cycle || plan.cycle || '1_month',
+          durationLabel: sub.durationLabel || plan.durationLabel || '1 Month',
+          baseMonths: Number(sub.baseMonths ?? baseMonths),
+          bonusDays: Number(sub.bonusDays ?? bonusDays),
+          totalDays: Number(sub.totalDays ?? totalDays),
+          bonusLabel: sub.bonusLabel || plan.bonusLabel || null,
+          isFreeTrial: Boolean(sub.isFreeTrial),
+          startDate: sub.startDate || startDate,
+          expiryDate: sub.expiryDate || sub.endDate || expiryDate,
+          transactionId: sub.transactionId,
+          paymentMethod: sub.paymentMethod
+        }
+
+        if (onboardingState.value.verificationStatus !== 'verified') {
+          onboardingState.value.verificationStatus = 'pending'
+          onboardingState.value.verificationSubmittedAt =
+            new Date().toISOString()
+          Object.keys(onboardingState.value.documents).forEach(k => {
+            if (onboardingState.value.documents[k]) {
+              onboardingState.value.documents[k].status = 'pending'
+            }
+          })
+        }
+
+        persistState()
+
+        return {
+          success: true,
+          message:
+            data.message ||
+            (isTrial
+              ? 'Free trial activated successfully.'
+              : 'Subscription activated successfully.'),
+          data: onboardingState.value.subscription
+        }
+      } else {
+        return {
+          success: false,
+          message: data?.message || 'Failed to activate subscription.'
+        }
+      }
+    } catch (error) {
+      console.error('Error activating subscription via API:', error)
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'Network error while activating subscription.'
+      }
+    }
+  }
+
+  // 6. Claim Free Trial
   const claimFreeTrial = async (cat = null) => {
     if (cat && VEHICLE_CONFIG[cat]) {
       onboardingState.value.vehicleCategory = cat
@@ -627,13 +654,17 @@ export const useDriverOnboarding = () => {
       isFreeTrial: true
     }
 
-    await api.post(`/driver/claim-free-trial`, trialPlan)
+    try {
+      await api.post(`/driver/claim-free-trial`, trialPlan)
+    } catch (error) {
+      console.warn('Failed API call for claim-free-trial endpoint:', error)
+    }
 
     return activateSubscription(trialPlan, { isFreeTrial: true })
   }
 
-  // Set document verification status
-  const setVerificationStatus = (status, notes = '') => {
+  // 7. Set Document Verification Status with API Sync
+  const setVerificationStatus = async (status, notes = '') => {
     onboardingState.value.verificationStatus = status
     if (status === 'verified') {
       onboardingState.value.verificationApprovedAt = new Date().toISOString()
@@ -655,8 +686,20 @@ export const useDriverOnboarding = () => {
       onboardingState.value.verificationNotes = notes
     }
     persistState()
+
+    try {
+      await api.post('/driver/update-verification', {
+        status,
+        notes,
+        submittedAt: onboardingState.value.verificationSubmittedAt,
+        approvedAt: onboardingState.value.verificationApprovedAt
+      })
+    } catch (error) {
+      console.error('Failed to sync verification status with API:', error)
+    }
   }
 
+  // 8. Set Driver State Helper
   const setDriverState = (driverData = {}) => {
     if (!driverData || typeof driverData !== 'object') return
 
@@ -743,7 +786,7 @@ export const useDriverOnboarding = () => {
     persistState()
   }
 
-  // Reset entire onboarding state
+  // 9. Reset Onboarding
   const resetOnboarding = () => {
     onboardingState.value = getDefaultState()
     persistState()

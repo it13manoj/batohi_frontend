@@ -410,11 +410,24 @@
             <q-list bordered separator class="rounded-borders">
               <q-item tag="label" v-ripple>
                 <q-item-section avatar>
-                  <q-radio v-model="paymentMethod" val="UPI" color="primary" />
+                  <q-radio v-model="paymentMethod" val="card" color="primary" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-weight-bold">UPI (Google Pay, PhonePe, Paytm)</q-item-label>
-                  <q-item-label caption>Fastest, instant activation</q-item-label>
+                  <q-item-label class="text-weight-bold">Debit / Credit Card</q-item-label>
+                  <q-item-label caption>Visa, Mastercard, RuPay, Amex</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-icon name="credit_card" size="24px" color="primary" />
+                </q-item-section>
+              </q-item>
+
+              <q-item tag="label" v-ripple>
+                <q-item-section avatar>
+                  <q-radio v-model="paymentMethod" val="upi" color="primary" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-weight-bold">UPI</q-item-label>
+                  <q-item-label caption>Google Pay, PhonePe, Paytm, BHIM</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-icon name="qr_code_2" size="24px" color="primary" />
@@ -423,30 +436,20 @@
 
               <q-item tag="label" v-ripple>
                 <q-item-section avatar>
-                  <q-radio v-model="paymentMethod" val="Card" color="primary" />
+                  <q-radio v-model="paymentMethod" val="bank" color="primary" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-weight-bold">Debit / Credit Card</q-item-label>
-                  <q-item-label caption>Visa, Mastercard, RuPay</q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <q-icon name="credit_card" size="24px" color="grey-7" />
-                </q-item-section>
-              </q-item>
-
-              <q-item tag="label" v-ripple>
-                <q-item-section avatar>
-                  <q-radio v-model="paymentMethod" val="NetBanking" color="primary" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="text-weight-bold">Net Banking</q-item-label>
-                  <q-item-label caption>All major Indian banks</q-item-label>
+                  <q-item-label class="text-weight-bold">Net Banking / Bank Transfer</q-item-label>
+                  <q-item-label caption>Powered by Stripe secure checkout</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-icon name="account_balance" size="24px" color="grey-7" />
                 </q-item-section>
               </q-item>
             </q-list>
+            <div class="text-caption text-grey-6 q-mt-sm">
+              Secure payment details are collected on the Stripe checkout page. No card or banking information is entered inside this app.
+            </div>
           </div>
 
           <!-- Total Calculation -->
@@ -531,10 +534,12 @@ import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useDriverOnboarding, VEHICLE_CONFIG } from '@/composables/useDriverOnboarding'
 import api from '@/config/api'
+import { createStripeCheckoutSession, redirectToStripeCheckout } from '@/services/payment.service'
 
 const router = useRouter()
 const route = useRoute()
 const $q = useQuasar()
+const PENDING_SUBSCRIPTION_KEY = 'batohi_pending_subscription'
 
 // Destructure composable methods and state
 const {
@@ -561,7 +566,7 @@ const selectedPlan = ref(null)
 const couponCode = ref('')
 const couponApplied = ref(false)
 const discountAmount = ref(0)
-const paymentMethod = ref('UPI')
+const paymentMethod = ref('card')
 const isProcessingPayment = ref(false)
 
 // Dynamic Plans list from API
@@ -638,14 +643,152 @@ const handleActivateFreeTrial = async () => {
 }
 
 // Final calculated total
+const normalizeAmount = value => {
+  const numeric = Number(value ?? 0)
+  if (!Number.isFinite(numeric)) return 0
+  return Number(numeric.toFixed(2))
+}
+
+const normalizeAmountMinor = value => {
+  return Math.round(normalizeAmount(value) * 100)
+}
+
+const finalMinorAmount = computed(() => {
+  if (!selectedPlan.value) return 0
+
+  let amt = parseFloat(selectedPlan.value.price || 0)
+  if (couponApplied.value) {
+    amt = Math.max(0, amt - Number(discountAmount.value || 0))
+  }
+
+  return normalizeAmountMinor(amt)
+})
+
 const finalAmount = computed(() => {
   if (!selectedPlan.value) return 0
   let amt = parseFloat(selectedPlan.value.price || 0)
   if (couponApplied.value) {
     amt = Math.max(0, amt - discountAmount.value)
   }
-  return amt
+  return normalizeAmount(amt)
 })
+
+const savePendingSubscription = () => {
+  if (!selectedPlan.value) return
+
+  const pending = {
+    plan: {
+      ...selectedPlan.value,
+      name: selectedPlan.value.name || selectedPlan.value.planName,
+      price: selectedPlan.value.price,
+      payableAmount: selectedPlan.value.price,
+      payableAmountMinor: selectedPlan.value.price
+    },
+    vehicleCategory: activeVehicleCategory.value,
+    amount: selectedPlan.value.price,
+    amountMinor: selectedPlan.value.price,
+    paymentMethod: paymentMethod.value,
+    couponCode: couponApplied.value ? couponCode.value : null,
+    timestamp: Date.now()
+  }
+
+  sessionStorage.setItem(PENDING_SUBSCRIPTION_KEY, JSON.stringify(pending))
+}
+
+const clearPendingSubscription = () => {
+  sessionStorage.removeItem(PENDING_SUBSCRIPTION_KEY)
+}
+
+const handleCheckoutCallback = async () => {
+  const query = route.query || {}
+  const sessionId =
+    query.checkout_session_id ||
+    query.checkoutSessionId ||
+    query.session_id ||
+    query.sessionId ||
+    query.id
+
+  const isSuccessRoute =
+    route.name === 'DriverSubscriptionSuccess' ||
+    route.path?.includes('/subscription/success') ||
+    route.fullPath?.includes('/subscription/success')
+
+  const isSuccess =
+    query.success === 'true' ||
+    query.payment_status === 'paid' ||
+    query.status === 'success' ||
+    query.result === 'success' ||
+    isSuccessRoute
+
+  const isCancelled =
+    query.canceled === 'true' ||
+    query.cancelled === 'true' ||
+    query.payment_status === 'cancelled' ||
+    query.status === 'cancelled'
+
+  if (isCancelled) {
+    clearPendingSubscription()
+    $q.notify({
+      type: 'info',
+      message: 'Stripe checkout was cancelled. You can retry the subscription anytime.'
+    })
+    return
+  }
+
+  if (!isSuccess) {
+    return
+  }
+
+  if (!sessionId && isSuccessRoute) {
+    try {
+      await fetchDriverStatus()
+      clearPendingSubscription()
+      successDialog.value = true
+      return
+    } catch (error) {
+      console.error('Failed to refresh subscription status on success route:', error)
+    }
+  }
+
+  const pendingRaw = sessionStorage.getItem(PENDING_SUBSCRIPTION_KEY)
+  let pending = null
+
+  try {
+    pending = pendingRaw ? JSON.parse(pendingRaw) : null
+  } catch (error) {
+    console.warn('Unable to parse pending subscription state:', error)
+  }
+
+  try {
+    if (pending?.plan) {
+      const result = await activateSubscription(pending.plan, {
+        paymentMethod: pending.paymentMethod || paymentMethod.value,
+        couponCode: pending.couponCode,
+        transactionId: sessionId,
+        isStripeCheckout: true
+      })
+
+      if (result?.success) {
+        clearPendingSubscription()
+        checkoutDialog.value = false
+        successDialog.value = true
+        await fetchDriverStatus()
+        await fetchPlansForCategory(activeVehicleCategory.value)
+        return
+      }
+    }
+
+    await fetchDriverStatus()
+    clearPendingSubscription()
+    successDialog.value = true
+  } catch (error) {
+    console.error('Failed to finalize subscription after Stripe return:', error)
+    $q.notify({
+      type: 'negative',
+      message: error.response?.data?.message || 'Subscription was paid but activation is still pending.'
+    })
+  }
+}
 
 // Date formatter helper
 const formatDate = (isoStr) => {
@@ -664,7 +807,7 @@ const openCheckout = (plan) => {
   couponCode.value = ''
   couponApplied.value = false
   discountAmount.value = 0
-  paymentMethod.value = 'UPI'
+  paymentMethod.value = 'card'
   checkoutDialog.value = true
 }
 
@@ -703,14 +846,44 @@ const applyCoupon = async () => {
 const processPayment = async () => {
   if (!selectedPlan.value) return
 
+
   isProcessingPayment.value = true
   try {
+    const payload = {
+      planId: selectedPlan.value.id || selectedPlan.value._id,
+      planName: selectedPlan.value.name || selectedPlan.value.planName,
+      vehicleCategory: activeVehicleCategory.value,
+      amount: Number(selectedPlan.value.price),
+      amountMinor: Number(selectedPlan.value.price),
+      baseAmount: Number(selectedPlan.value.price),
+      baseAmountMinor:Number(selectedPlan.value.price),
+      currency: 'INR',
+      paymentMethod: paymentMethod.value,
+      couponCode: couponApplied.value ? couponCode.value : null,
+      checkoutType: 'subscription'
+    }
+
+    savePendingSubscription()
+
+    try {
+      const stripeSession = await createStripeCheckoutSession(payload)
+      const redirected = await redirectToStripeCheckout(stripeSession)
+
+      if (redirected) {
+        checkoutDialog.value = false
+        return
+      }
+    } catch (stripeError) {
+      console.warn('Stripe checkout unavailable, falling back to default subscription activation:', stripeError)
+    }
+
     const res = await activateSubscription(selectedPlan.value, {
       paymentMethod: paymentMethod.value,
       couponCode: couponApplied.value ? couponCode.value : null
     })
 
     if (res && res.success) {
+      clearPendingSubscription()
       checkoutDialog.value = false
       successDialog.value = true
 
@@ -719,7 +892,6 @@ const processPayment = async () => {
         message: res.message || 'Subscription activated successfully!'
       })
 
-      // Refresh live status and plans
       await fetchDriverStatus()
       await fetchPlansForCategory(activeVehicleCategory.value)
     }
@@ -742,6 +914,7 @@ const goToVerification = () => {
 // On Component Mount: Sync driver status, set vehicle category from query or active subscription, and load plans
 onMounted(async () => {
   try {
+    await handleCheckoutCallback()
     await fetchDriverStatus()
 
     // 1. Check URL query override first

@@ -552,6 +552,11 @@ const routes = [
         component: () => import('@/pages/driver/SubscriptionPage.vue')
       },
       {
+        path: 'subscription/success',
+        name: 'DriverSubscriptionSuccess',
+        component: () => import('@/pages/driver/SubscriptionPage.vue')
+      },
+      {
         path: 'verification',
         name: 'DriverVerification',
         component: () => import('@/pages/driver/VerificationPage.vue')
