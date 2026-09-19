@@ -159,7 +159,7 @@ const routes = [
       // -------------------------------------------------
 
       {
-        path: 'booking-details',
+        path: 'booking-details/:bookingId?',
         name: 'customer-booking-details',
         component: () => import('@/pages/customer/BookingDetailsPage.vue')
       },
