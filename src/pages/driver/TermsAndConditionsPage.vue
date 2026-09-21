@@ -485,303 +485,231 @@ const searchText = ref('')
 // =====================================================
 
 const sections = [
-
   {
     title: 'Acceptance of Terms',
     content: [
-      'By registering as a driver with BatohiDrive and using the driver platform, you agree to follow these Terms & Conditions.',
+      'By registering as a driver with BatohiDrive and using the driver panel, you agree to follow these Terms & Conditions.',
       'If you do not agree with any part of these terms, you should not use the BatohiDrive driver services.'
     ]
   },
-
   {
     title: 'Driver Eligibility',
     content: [
       'Drivers must meet all eligibility requirements established by BatohiDrive and applicable laws.'
     ],
     points: [
-      'Provide accurate personal and driver information.',
-      'Maintain a valid driving licence.',
-      'Meet the required minimum age and eligibility requirements.',
-      'Provide valid vehicle registration and insurance documents.',
+      'Provide accurate personal and vehicle information.',
+      'Maintain a valid driving licence and required permits.',
+      'Meet the minimum age and legal eligibility requirements.',
+      'Provide valid vehicle registration, insurance, and compliance documents.',
       'Complete any required driver verification process.'
     ]
   },
-
   {
-    title: 'Driver Account',
+    title: 'Driver Account Responsibility',
     content: [
-      'Your driver account is personal to you. You are responsible for maintaining the security of your account and login credentials.'
+      'Your driver account is personal and must be kept secure. You are responsible for all activity performed through your account.'
     ],
     points: [
       'Do not share your account with another person.',
-      'Keep your mobile number and profile information updated.',
-      'Immediately report unauthorized access to BatohiDrive.',
-      'Provide truthful and accurate information at all times.'
+      'Keep your mobile number and profile information accurate and updated.',
+      'Report unauthorized access immediately to BatohiDrive support.',
+      'Provide truthful and complete information at all times.'
     ]
   },
-
   {
-    title: 'Driver Profile Information',
+    title: 'Vehicle Ownership and Authorization',
     content: [
-      'Drivers must ensure that all information provided in their profile is accurate and up to date.'
+      'If a driver adds a vehicle or ride to the platform, the driver must provide, and ensure accuracy of, all legal and ownership-related information.'
     ],
     points: [
-      'Driver name and contact information.',
-      'Driving licence information.',
-      'Vehicle details.',
-      'Bank or payment information where applicable.',
-      'Required identity and verification information.'
+      'The driver must be the lawful owner or have valid authorization to use the vehicle on the platform.',
+      'The driver must disclose all required owner details when relevant.',
+      'Vehicle documents must be valid, updated, and available when requested.',
+      'Any change in ownership, registration, or legal use must be updated immediately.',
+      'False or incomplete ownership information may lead to suspension or termination.'
     ]
   },
-
   {
     title: 'Vehicle Requirements',
     content: [
-      'Drivers are responsible for ensuring that the vehicle used for BatohiDrive trips is safe, clean, properly maintained, and legally permitted for use.'
+      'Drivers are responsible for ensuring the vehicle used on the platform is safe, roadworthy, clean, and legally permitted for operation.'
     ],
     points: [
       'Keep the vehicle in safe operating condition.',
       'Maintain valid registration and insurance.',
-      'Complete required vehicle inspections.',
-      'Keep required vehicle documents available.',
-      'Immediately report serious vehicle problems.'
+      'Complete required inspections or documentation updates.',
+      'Keep required vehicle documents available during operation.',
+      'Report vehicle defects or breakdowns without delay.'
     ]
   },
-
   {
     title: 'Trip and Booking Responsibilities',
     content: [
-      'Drivers are expected to properly manage assigned bookings and complete trips according to the information provided through the BatohiDrive platform.'
+      'Drivers are expected to handle assigned bookings responsibly and complete trips according to the information provided through the BatohiDrive platform.'
     ],
     points: [
-      'Review booking details before starting a trip.',
-      'Arrive at the pickup location on time whenever reasonably possible.',
-      'Confirm the correct customer before starting the trip.',
-      'Follow the designated trip process.',
-      'Complete the trip correctly through the driver application.'
+      'Review booking details before accepting or starting a trip.',
+      'Reach the pickup point as reasonably possible within the scheduled time.',
+      'Confirm correct customer and trip information before starting a ride.',
+      'Use the designated trip workflow and update trip status correctly.',
+      'Complete the trip in accordance with platform and safety requirements.'
     ]
   },
-
-  {
-    title: 'Customer Interaction',
-    content: [
-      'Drivers must treat all customers respectfully and professionally.'
-    ],
-    points: [
-      'Communicate politely with customers.',
-      'Respect customer privacy.',
-      'Do not engage in threatening, abusive, or discriminatory behaviour.',
-      'Do not request unnecessary personal information.',
-      'Report serious customer-related issues to BatohiDrive support.'
-    ]
-  },
-
   {
     title: 'Driver Conduct',
     content: [
-      'Drivers must maintain professional conduct while using the BatohiDrive platform and while providing services to customers.'
+      'Drivers must maintain professional and respectful conduct while using the platform and while providing transport services.'
     ],
     points: [
-      'Do not use abusive or offensive language.',
-      'Do not harass or threaten customers.',
-      'Do not misuse customer information.',
-      'Do not intentionally manipulate trip information.',
-      'Do not allow unauthorized persons to operate your driver account.'
+      'Do not use abusive, threatening, discriminatory, or offensive language.',
+      'Do not misuse customer information or personal data.',
+      'Do not manipulate trip details or platform records.',
+      'Do not allow unauthorized persons to operate the driver account.',
+      'Promptly report incidents, complaints, or suspicious activity to support.'
     ]
   },
-
   {
-    title: 'Driving and Safety',
+    title: 'Safety and Road Compliance',
     content: [
-      'Safety is a fundamental responsibility of every BatohiDrive driver.'
+      'Safety is a fundamental responsibility of every driver using the platform.'
     ],
     points: [
-      'Follow all applicable traffic laws.',
-      'Drive responsibly and safely.',
+      'Follow all applicable traffic and road laws.',
+      'Drive responsibly and safely at all times.',
       'Do not drive under the influence of alcohol or drugs.',
-      'Do not use a mobile phone in a way that violates traffic laws.',
-      'Use appropriate safety equipment where required.',
-      'Prioritize the safety of customers and other road users.'
+      'Do not use mobile devices in a way that violates safety laws.',
+      'Use required safety equipment and procedures.',
+      'Prioritize the safety of passengers, road users, and yourself.'
     ]
   },
-
   {
-    title: 'Driver Documents',
+    title: 'Driver and Vehicle Documents',
     content: [
-      'All required driver and vehicle documents must remain valid during the period in which you provide services through BatohiDrive.'
+      'All required driver and vehicle documents must remain valid during the period in which the driver provides services through BatohiDrive.'
     ],
     points: [
       'Driving licence.',
       'Vehicle registration documents.',
-      'Vehicle insurance.',
-      'Required permits or certificates.',
-      'Any other documents requested by BatohiDrive.'
+      'Insurance records.',
+      'Any permits or certificates required by law or platform policy.',
+      'Any other documents requested by BatohiDrive for compliance or verification.'
     ]
   },
-
   {
     title: 'Earnings and Payments',
     content: [
       'Driver earnings are calculated according to the applicable BatohiDrive pricing, commission, and payment structure.'
     ],
     points: [
-      'Review your earnings through the driver panel.',
-      'Keep payment information accurate.',
-      'Payments may be subject to applicable deductions or platform charges.',
-      'Payment timing may depend on the applicable payment schedule.'
+      'Review earnings through the driver panel.',
+      'Keep payment information accurate and up to date.',
+      'Payments may be subject to deductions, fees, or platform charges as applicable.',
+      'Payment timing depends on the settlement process of the platform.'
     ]
   },
-
   {
-    title: 'Cancellation of Bookings',
+    title: 'Cancellation and Service Issues',
     content: [
-      'Drivers should accept and complete bookings responsibly. Unnecessary or repeated cancellations may affect driver performance or account status.'
+      'Drivers should accept and complete bookings responsibly. Unnecessary or repeated cancellations may affect performance, account standing, or service access.'
     ],
     points: [
       'Avoid cancelling trips without a valid reason.',
-      'Inform support when an emergency prevents trip completion.',
-      'Do not encourage customers to cancel bookings improperly.',
-      'Follow BatohiDrive cancellation procedures.'
+      'Report emergencies or obstacles to support as soon as reasonably possible.',
+      'Do not encourage customers to cancel in unauthorized ways.',
+      'Follow the official cancellation process if a trip cannot continue.'
     ]
   },
-
   {
-    title: 'Vehicle Breakdown or Emergency',
+    title: 'Incident and Emergency Handling',
     content: [
-      'If a vehicle breakdown, accident, medical emergency, or other serious incident occurs during a trip, the driver must prioritize safety and contact the appropriate emergency services when necessary.'
+      'If a breakdown, accident, medical emergency, or other serious event occurs during a trip, the driver must prioritize safety and contact appropriate services when necessary.'
     ],
     points: [
-      'Move to a safe location where possible.',
-      'Assist customers within reasonable and safe limits.',
-      'Contact emergency services when required.',
-      'Inform BatohiDrive support as soon as reasonably possible.'
+      'Move to a safe location when possible.',
+      'Seek emergency assistance when required.',
+      'Inform BatohiDrive support as soon as it is safe to do so.',
+      'Provide correct and honest information about the event.'
     ]
   },
-
   {
     title: 'Prohibited Activities',
     content: [
       'Drivers must not use the BatohiDrive platform for illegal, fraudulent, or unauthorized activities.'
     ],
     points: [
-      'Fraudulent bookings or trip activity.',
-      'Providing false documents.',
-      'Manipulating trip information.',
+      'Fraudulent bookings or trip manipulation.',
+      'Submitting false, misleading, or forged documents.',
       'Unauthorized use of another driver account.',
-      'Misuse of customer information.',
-      'Any activity that violates applicable laws.'
+      'Misuse or disclosure of customer information.',
+      'Any activity that violates local, state, or national laws.'
     ]
   },
-
   {
     title: 'Account Suspension or Termination',
     content: [
-      'BatohiDrive may restrict, suspend, or terminate a driver account where there is a violation of these terms, applicable law, safety requirements, or platform policies.'
+      'BatohiDrive may restrict, suspend, or terminate a driver account where there is a violation of these terms, safety requirements, platform policy, or applicable law.'
     ],
     points: [
-      'Serious safety violations.',
-      'Fraudulent activity.',
+      'Serious safety violations or repeated misconduct.',
+      'Fraud or false documentation.',
       'Invalid or expired required documents.',
-      'Repeated policy violations.',
-      'Customer safety or security concerns.',
-      'Providing false or misleading information.'
+      'Repeated breach of booking and customer-related rules.',
+      'Failure to cooperate with support or compliance requests.'
     ]
   },
-
   {
     title: 'Privacy and Customer Information',
     content: [
-      'Drivers may receive customer information that is necessary to provide a booking. Such information must only be used for legitimate BatohiDrive services.'
+      'Drivers may receive customer information that is necessary to complete a booking, but such information must only be used for legitimate BatohiDrive service needs.'
     ],
     points: [
-      'Do not share customer information with unauthorized persons.',
+      'Do not share customer information with third parties.',
       'Do not use customer information for personal purposes.',
-      'Do not contact customers outside legitimate service requirements.',
-      'Follow the BatohiDrive Privacy Policy.'
+      'Do not contact customers outside the approved service context.',
+      'Follow the BatohiDrive Privacy Policy at all times.'
     ]
   },
-
   {
-    title: 'Support and Complaints',
+    title: 'Support and Complaint Handling',
     content: [
-      'Drivers can contact BatohiDrive support for assistance with bookings, customers, payments, vehicles, documents, or technical issues.'
+      'Drivers may contact BatohiDrive support for help with bookings, customer issues, vehicle concerns, payments, digital issues, or documentation questions.'
     ],
     points: [
       'Report serious incidents promptly.',
-      'Provide accurate information when submitting a complaint.',
+      'Give clear information when raising a complaint.',
       'Cooperate with reasonable investigations.',
-      'Follow support instructions regarding active bookings.'
+      'Follow support instructions regarding active trips or account issues.'
     ]
   },
-
   {
     title: 'Changes to These Terms',
     content: [
-      'BatohiDrive may update these Terms & Conditions from time to time to reflect changes in services, policies, technology, or applicable requirements.',
-      'Updated terms will be made available through the platform.'
+      'BatohiDrive may update these Terms & Conditions from time to time to reflect changes in services, platform policy, technical systems, or legal requirements.',
+      'Updated terms will be made available through the driver panel or the official platform notice.'
     ]
   },
-
   {
     title: 'Governing Law',
     content: [
-      'These Terms & Conditions are subject to applicable laws and regulations governing the services provided through BatohiDrive.'
+      'These Terms & Conditions are governed by the laws of the applicable jurisdiction where BatohiDrive operates, and any dispute must be handled under the applicable legal framework.'
     ]
   },
-
   {
     title: 'Contact BatohiDrive',
     content: [
-      'If you have questions regarding these Terms & Conditions, please contact BatohiDrive support through the driver application or support channel provided by the platform.'
+      'If you have questions regarding these Terms & Conditions, contact BatohiDrive support through the driver menu or the official support channel provided by the platform.'
     ]
   }
-
 ]
 
-
-// =====================================================
-// DRIVER RESPONSIBILITIES
-// =====================================================
-
 const responsibilities = [
-
-  {
-    icon: 'verified_user',
-    title: 'Valid Documents',
-    description: 'Keep your driver and vehicle documents valid.'
-  },
-
-  {
-    icon: 'directions_car',
-    title: 'Safe Vehicle',
-    description: 'Maintain a clean and roadworthy vehicle.'
-  },
-
-  {
-    icon: 'traffic',
-    title: 'Safe Driving',
-    description: 'Follow traffic laws and drive responsibly.'
-  },
-
-  {
-    icon: 'person',
-    title: 'Professional Behaviour',
-    description: 'Treat customers respectfully and professionally.'
-  },
-
-  {
-    icon: 'event_available',
-    title: 'Trip Commitment',
-    description: 'Complete assigned bookings responsibly.'
-  },
-
-  {
-    icon: 'support_agent',
-    title: 'Report Issues',
-    description: 'Contact support when serious problems occur.'
-  }
-
+  { icon: 'verified_user', title: 'Valid Documents', description: 'Keep your driver and vehicle documents valid and current.' },
+  { icon: 'directions_car', title: 'Safe Vehicle', description: 'Maintain a roadworthy and clean vehicle.' },
+  { icon: 'traffic', title: 'Safe Driving', description: 'Follow traffic laws and drive responsibly.' },
+  { icon: 'person', title: 'Professional Behaviour', description: 'Treat customers respectfully and professionally.' },
+  { icon: 'event_available', title: 'Trip Commitment', description: 'Complete bookings responsibly and follow trip process.' },
+  { icon: 'support_agent', title: 'Report Issues', description: 'Contact support whenever a serious problem or incident occurs.' }
 ]
 
 

@@ -540,297 +540,180 @@ const searchText = ref('')
 // =====================================================
 
 const sections = [
-
   {
     title: 'Introduction',
     content: [
-      'BatohiDrive respects the privacy of drivers using its platform. This Privacy Policy explains how information relating to drivers may be collected, used, stored, and protected.',
-      'By using the BatohiDrive driver platform, you acknowledge that your information may be processed as described in this policy.'
+      'BatohiDrive respects the privacy of drivers using its platform. This Privacy Policy explains how driver information may be collected, used, stored, and protected.',
+      'By registering as a driver and using the BatohiDrive driver panel, you agree that your information may be processed according to this policy.'
     ]
   },
-
   {
     title: 'Information We Collect',
     content: [
-      'Depending on the services you use, BatohiDrive may collect information necessary to create and operate your driver account.'
+      'Depending on the services used, BatohiDrive may collect information necessary to create, verify, and operate a driver account.'
     ],
     points: [
-      'Name and contact information.',
-      'Profile information and account details.',
-      'Driving licence and verification information.',
-      'Vehicle registration and insurance information.',
-      'Vehicle details such as model, number, and other relevant information.',
-      'Bank or payment information required for driver payments.',
-      'Documents submitted for verification.'
+      'Full name, contact number, email address, profile information, and account details.',
+      'Driving licence, identity verification, and background-check information when required.',
+      'Vehicle registration, insurance, ownership or authorization details, and vehicle documents.',
+      'Bank account and payout information required for driver payments.',
+      'Trip, route, booking, pickup, and payment records generated through the platform.',
+      'Device, location, app usage, and communication data needed for operational support and safety.'
     ]
   },
-
   {
-    title: 'Trip and Booking Information',
+    title: 'Vehicle and Ride Ownership Information',
     content: [
-      'When you accept or complete bookings through BatohiDrive, information relating to the trip may be recorded for service delivery, operational, safety, and support purposes.'
+      'If a driver adds a vehicle or ride to the platform, the driver must provide complete and accurate information about the vehicle and its legal usage.'
     ],
     points: [
-      'Booking details.',
-      'Pickup and destination information.',
-      'Trip status and timestamps.',
-      'Customer-related information necessary to complete the booking.',
-      'Trip completion information.',
-      'Cancellation information.'
+      'Vehicle owner name and legal authorization to use the vehicle on the platform.',
+      'Registration number, model, color, and vehicle details.',
+      'Insurance and compliance documents required for legal operation.',
+      'Any ownership or authorization information that may affect the driver’s right to list the vehicle.',
+      'Prompt update of any change in ownership, status, or legal authorization.'
     ]
   },
-
   {
-    title: 'Location Information',
+    title: 'Purpose of Data Collection',
     content: [
-      'Location information may be collected while you are using driver services where it is necessary for trip management, customer pickup, safety, navigation, service monitoring, or other legitimate platform purposes.'
+      'BatohiDrive may use driver information for legitimate platform, service, safety, legal, and business purposes.'
     ],
     points: [
-      'Help identify your location during an active trip.',
-      'Assist with customer pickup.',
-      'Support trip management.',
-      'Improve operational and safety processes.',
-      'Investigate service-related incidents when necessary.'
+      'Create, manage, and verify the driver account.',
+      'Enable booking assignment, trip coordination, and service delivery.',
+      'Process subscriptions, commissions, deductions, and settlements.',
+      'Verify driver and vehicle eligibility and legal compliance.',
+      'Provide support, track issues, and resolve disputes.',
+      'Protect against fraud, misuse, misconduct, and account security issues.',
+      'Comply with legal, tax, regulatory, or enforcement requirements.'
     ]
   },
-
   {
-    title: 'Vehicle Information',
+    title: 'Location and Trip Information',
     content: [
-      'Information about your registered vehicle may be collected and stored to verify that the vehicle meets applicable requirements and to support trip operations.'
+      'The platform may collect location and trip data when required for navigation, trip management, pickup coordination, safety monitoring, and support services.'
     ],
     points: [
-      'Vehicle number.',
-      'Vehicle type and model.',
-      'Vehicle colour.',
-      'Registration information.',
-      'Insurance information.',
-      'Vehicle documents and verification records.'
+      'Pickup and drop locations for assigned trips.',
+      'Driver location during active or assigned rides.',
+      'Trip time, route, status, and completion information.',
+      'Relevant data needed to monitor service quality or resolve incidents.'
     ]
   },
-
-  {
-    title: 'How We Use Your Information',
-    content: [
-      'BatohiDrive may use driver information for legitimate operational, service, safety, legal, and business purposes.'
-    ],
-    points: [
-      'Create and manage your driver account.',
-      'Verify your identity and documents.',
-      'Assign and manage bookings.',
-      'Facilitate communication between drivers and customers.',
-      'Calculate and process driver earnings.',
-      'Provide customer and driver support.',
-      'Maintain platform security.',
-      'Detect and prevent fraud or misuse.',
-      'Improve platform performance and services.',
-      'Comply with applicable legal requirements.'
-    ]
-  },
-
-  {
-    title: 'Customer Information Available to Drivers',
-    content: [
-      'Drivers may receive limited customer information that is necessary to complete an assigned booking.'
-    ],
-    points: [
-      'Use customer information only for the relevant booking.',
-      'Do not save or share customer information for personal purposes.',
-      'Do not misuse customer contact details.',
-      'Do not disclose customer information to unauthorized persons.'
-    ]
-  },
-
-  {
-    title: 'Communication',
-    content: [
-      'BatohiDrive may communicate with drivers through the application, phone, SMS, email, notifications, or other available communication channels.'
-    ],
-    points: [
-      'Booking and trip notifications.',
-      'Account-related messages.',
-      'Document expiry reminders.',
-      'Payment and earnings information.',
-      'Safety and service notifications.',
-      'Support communications.',
-      'Important policy updates.'
-    ]
-  },
-
-  {
-    title: 'Earnings and Payment Information',
-    content: [
-      'Information related to driver earnings and payments may be processed to calculate, record, and facilitate payments for completed services.'
-    ],
-    points: [
-      'Trip earnings.',
-      'Applicable platform charges or deductions.',
-      'Payment status.',
-      'Payment account information.',
-      'Transaction records.'
-    ]
-  },
-
-  {
-    title: 'Document and Verification Information',
-    content: [
-      'Driver and vehicle documents may be collected to verify eligibility and compliance with platform requirements.'
-    ],
-    points: [
-      'Driving licence.',
-      'Vehicle registration documents.',
-      'Insurance documents.',
-      'Required permits or certificates.',
-      'Other verification documents requested by BatohiDrive.'
-    ]
-  },
-
-  {
-    title: 'Data Security',
-    content: [
-      'BatohiDrive takes reasonable measures to protect driver information from unauthorized access, misuse, alteration, disclosure, or loss.'
-    ],
-    points: [
-      'Access to information may be restricted to authorized personnel.',
-      'Account security measures may be used to protect driver accounts.',
-      'Information may be monitored for security and fraud prevention.',
-      'Drivers should keep their passwords and login credentials confidential.'
-    ]
-  },
-
   {
     title: 'Sharing of Information',
     content: [
-      'BatohiDrive may share information where necessary to operate the platform, provide services, protect users, or comply with applicable requirements.'
+      'BatohiDrive may share information with third parties when necessary to operate the platform, complete bookings, provide support, protect users, or comply with applicable law.'
     ],
     points: [
-      'With customers when information is necessary to complete a booking.',
-      'With authorized service providers supporting platform operations.',
-      'With payment or financial service providers where required.',
-      'With authorities when legally required.',
-      'With relevant parties when necessary to investigate safety, fraud, or security incidents.'
+      'Customer information only to the extent necessary to complete the relevant trip.',
+      'Authorized service providers for hosting, analytics, payment, security, and support.',
+      'Regulators, government authorities, or law enforcement when legally required.',
+      'Insurance, legal, or compliance partners when required for claims, verification, or disputes.',
+      'Other relevant parties as required for safety, security, or fraudulent activity investigation.'
     ]
   },
-
   {
-    title: 'Fraud and Security Monitoring',
+    title: 'Driver Responsibility for Vehicle and Owner Details',
     content: [
-      'BatohiDrive may monitor platform activity to identify suspicious behaviour, fraudulent activity, account misuse, or security threats.'
+      'The driver is solely responsible for providing correct information about the vehicle, ownership, and legal authorization to use the vehicle on the platform.'
     ],
     points: [
-      'Unusual booking activity.',
-      'Suspicious account activity.',
-      'Document irregularities.',
-      'Payment-related fraud.',
-      'Unauthorized account access.',
-      'Repeated policy violations.'
+      'The driver must ensure that the vehicle is legally owned, registered, or lawfully authorized for use.',
+      'The driver must confirm that all registration, insurance, and compliance documents are valid.',
+      'The driver must provide accurate owner details and disclose any third-party ownership or authorization if applicable.',
+      'Any change in ownership, registration status, or legal use must be updated immediately.',
+      'Failure to provide accurate information may result in account restriction, suspension, or legal consequences.'
     ]
   },
-
+  {
+    title: 'Security Measures',
+    content: [
+      'BatohiDrive uses reasonable technical and organizational safeguards to protect driver information from unauthorized access, misuse, alteration, or disclosure.'
+    ],
+    points: [
+      'Restricted access to personal data in line with role and operational need.',
+      'Use of secure application and platform infrastructure where available.',
+      'Monitoring for suspicious activity, unauthorized access, or misuse.',
+      'Drivers must keep passwords, OTPs, and account credentials secure.'
+    ]
+  },
   {
     title: 'Data Retention',
     content: [
-      'Driver information may be retained for as long as reasonably necessary for service delivery, account management, legal compliance, dispute resolution, security, accounting, and legitimate business purposes.'
+      'Driver information may be retained for as long as needed to provide services, manage accounts, satisfy legal obligations, resolve disputes, maintain security, or support business operations.'
     ]
   },
-
   {
-    title: 'Your Responsibilities',
+    title: 'Customer Information Handling',
     content: [
-      'Drivers are responsible for protecting their own account information and using customer information appropriately.'
+      'Drivers may receive limited customer information necessary to complete bookings, but must use it only for the relevant trip or service.'
     ],
     points: [
-      'Keep your login credentials secure.',
-      'Keep your profile information accurate.',
-      'Do not share your account with another person.',
-      'Do not misuse customer information.',
-      'Report suspected unauthorized account access.',
-      'Report privacy or security concerns to BatohiDrive.'
+      'Customer information must not be shared with unrelated third parties.',
+      'Customer information must not be used for personal or commercial purposes outside the ride/service context.',
+      'Any concern about misuse or privacy violation must be reported immediately to support.'
     ]
   },
-
+  {
+    title: 'Communication and Notifications',
+    content: [
+      'BatohiDrive may communicate with drivers through the app, email, SMS, notifications, and other available support channels.'
+    ],
+    points: [
+      'Booking updates and trip notifications.',
+      'Verification and document expiry reminders.',
+      'Payment, payout, and subscription notices.',
+      'Safety alerts and service-related announcements.',
+      'Support messages and policy updates.'
+    ]
+  },
+  {
+    title: 'Your Rights and Requests',
+    content: [
+      'Drivers may request access to or correction of their personal data, subject to applicable laws and platform verification requirements.'
+    ],
+    points: [
+      'Request data access or correction where applicable.',
+      'Request information about how personal data is processed.',
+      'Request support if data appears incomplete, inaccurate, or outdated.',
+      'Raise concerns regarding data privacy or misuse through the support channel.'
+    ]
+  },
   {
     title: 'Third-Party Services',
     content: [
-      'BatohiDrive may use third-party service providers to support functions such as hosting, communication, payments, analytics, security, or other platform operations.',
-      'Where applicable, such providers may process information only for purposes related to the services they provide.'
+      'BatohiDrive may use third-party providers for hosting, payments, analytics, support, communication, and security-related services.'
+    ],
+    points: [
+      'Third parties process data only as needed to provide the required service.',
+      'The company remains responsible for the use of the platform and driver data.',
+      'Drivers must review applicable platform and service terms when necessary.'
     ]
   },
-
-  {
-    title: 'Children and Minors',
-    content: [
-      'The BatohiDrive driver platform is intended for eligible drivers who meet applicable age and legal requirements. BatohiDrive does not knowingly provide driver accounts to persons who do not meet these requirements.'
-    ]
-  },
-
   {
     title: 'Policy Updates',
     content: [
-      'BatohiDrive may update this Privacy Policy from time to time to reflect changes in services, technology, legal requirements, or business practices.',
-      'Updated versions may be made available through the driver platform.'
+      'BatohiDrive may update this Privacy Policy from time to time to reflect changes in services, regulatory requirements, or business practices.',
+      'Continued use of the driver platform after an update means the driver accepts the revised policy.'
     ]
   },
-
   {
-    title: 'Privacy Concerns and Support',
+    title: 'Contact and Support',
     content: [
-      'If you have questions, concerns, or requests regarding your personal information, please contact BatohiDrive support through the available support channels.'
-    ]
-  },
-
-  {
-    title: 'Contact BatohiDrive',
-    content: [
-      'For questions regarding this Privacy Policy or the handling of driver information, please contact BatohiDrive support through the driver application or the official support channel provided by the platform.'
+      'If you have questions about this Privacy Policy or want to request support regarding your personal data, please contact the BatohiDrive support team through the driver panel or official support channel.'
     ]
   }
-
 ]
 
-
-// =====================================================
-// DATA TYPES
-// =====================================================
-
 const dataTypes = [
-
-  {
-    icon: 'person',
-    title: 'Profile Information',
-    description: 'Name, contact details, account and verification information.'
-  },
-
-  {
-    icon: 'directions_car',
-    title: 'Vehicle Information',
-    description: 'Vehicle number, model, colour, registration and insurance details.'
-  },
-
-  {
-    icon: 'description',
-    title: 'Documents',
-    description: 'Driving licence, insurance and other required documents.'
-  },
-
-  {
-    icon: 'location_on',
-    title: 'Location',
-    description: 'Location information used for active trip and operational purposes.'
-  },
-
-  {
-    icon: 'route',
-    title: 'Trip Information',
-    description: 'Booking, trip status, pickup and destination information.'
-  },
-
-  {
-    icon: 'account_balance_wallet',
-    title: 'Earnings',
-    description: 'Trip earnings, payment status and transaction information.'
-  }
-
+  { icon: 'person', title: 'Profile Information', description: 'Name, mobile, email, account details, and profile information.' },
+  { icon: 'directions_car', title: 'Vehicle Information', description: 'Vehicle number, model, color, registration, insurance, and ownership details.' },
+  { icon: 'description', title: 'Documents', description: 'Driving licence, KYC, vehicle papers, and verification records.' },
+  { icon: 'location_on', title: 'Location', description: 'Trip pickup, route, and active location data needed for service operation.' },
+  { icon: 'route', title: 'Trip Information', description: 'Trip status, booking details, destination, history, and completion records.' },
+  { icon: 'account_balance_wallet', title: 'Payments', description: 'Payout details, subscription records, and payment transactions.' }
 ]
 
 

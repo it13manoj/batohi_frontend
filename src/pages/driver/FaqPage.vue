@@ -489,318 +489,188 @@ const selectedCategory = ref('All')
 // CATEGORIES
 // =====================================================
 
-const categories = [
-  'All',
-  'Account',
-  'Trips',
-  'Bookings',
-  'Customer',
-  'Vehicle',
-  'Documents',
-  'Earnings',
-  'Cancellation',
-  'Safety',
-  'Support'
-]
-
-// =====================================================
-// FAQ DATA
-// =====================================================
+const categories = ['All', 'Account', 'Trips', 'Bookings', 'Vehicle', 'Documents', 'Earnings', 'Cancellation', 'Safety', 'Support']
 
 const faqs = ref([
   {
     id: 1,
     category: 'Account',
     icon: 'person',
-    question: 'How can I update my driver profile?',
-    answer:
-      'You can update your available profile information from the My Profile section of your driver panel.',
+    question: 'Who is responsible for the vehicle and driver documents?',
+    answer: 'The driver is responsible for the vehicle, legal compliance, driver documents, and operational safety. BatohiDrive provides the platform and subscription access, but does not own the vehicle or operate the trip business directly.',
     points: [
-      'Open My Profile from the driver menu.',
-      'Update the information that can be edited.',
-      'Save your changes after reviewing the details.'
+      'The driver must provide accurate ownership or authorization information when listing a vehicle.',
+      'The driver must keep all required licenses, registrations, and insurance documents valid.',
+      'Any missing or false vehicle information may lead to account restriction or suspension.'
     ]
   },
-
   {
     id: 2,
     category: 'Account',
     icon: 'lock',
-    question: 'What should I do if I forget my password?',
-    answer:
-      'Use the Forgot Password option on the login page to reset your account password.',
+    question: 'What if I forget my password or cannot access my account?',
+    answer: 'Use the forgot password option on the login page or contact support through the driver panel for account recovery help.',
     points: [
-      'Enter your registered mobile number or email address.',
-      'Verify the OTP if required.',
-      'Create a new password and log in again.'
+      'Verify the registered mobile number or email before resetting.',
+      'Do not share your account credentials with anyone.',
+      'Support may ask for identity verification before approving account recovery.'
     ]
   },
-
   {
     id: 3,
     category: 'Trips',
     icon: 'route',
     question: 'Where can I see my assigned trips?',
-    answer:
-      'Assigned trips can be viewed from the My Trips or Trips section of your driver panel.',
+    answer: 'Assigned trips can be viewed in the Trips or My Trips section of your driver panel.',
     points: [
-      'Check upcoming trips for future bookings.',
-      'Open a trip to view customer and pickup information.',
-      'Update the trip status according to the actual trip progress.'
+      'Check pickup location, route, trip status, and customer information.',
+      'Update trip status only after actual trip action is completed.',
+      'If the trip details are wrong, contact support immediately.'
     ]
   },
-
   {
     id: 4,
     category: 'Trips',
     icon: 'play_circle',
-    question: 'How do I start a trip?',
-    answer:
-      'When you reach the pickup location and are ready to begin the trip, open the assigned booking and use the available Start Trip option.',
+    question: 'How do I start and complete a trip?',
+    answer: 'Open the assigned booking and use the Start Trip option when you are at the pickup location. Complete the trip when the ride is finished and update the booking status in the app.',
     points: [
-      'Verify the booking information.',
-      'Confirm that you are at the correct pickup location.',
-      'Start the trip using the driver panel.'
+      'Verify the pickup location and customer before starting.',
+      'Do not mark the trip complete before the ride is actually finished.',
+      'If there is a problem, contact support instead of making an incorrect status update.'
     ]
   },
-
   {
     id: 5,
-    category: 'Trips',
-    icon: 'task_alt',
-    question: 'How do I complete a trip?',
-    answer:
-      'After the customer journey has been completed, use the Complete Trip option available in the trip details.',
-    points: [
-      'Make sure the trip has actually been completed.',
-      'Review the trip details.',
-      'Update the trip status to completed.'
-    ]
-  },
-
-  {
-    id: 6,
     category: 'Bookings',
     icon: 'event',
-    question: 'How will I receive a new booking?',
-    answer:
-      'When a booking is assigned to you, the booking information may appear in your driver panel and you may receive a notification depending on the system configuration.',
+    question: 'How do I receive new bookings?',
+    answer: 'New or assigned bookings appear in the driver panel and may also trigger notifications depending on the system configuration.',
     points: [
-      'Check your upcoming bookings regularly.',
-      'Review pickup date and time.',
-      'Review customer and vehicle information before accepting or starting the trip.'
+      'Check your booking list regularly.',
+      'Review pickup time and route before accepting or starting the trip.',
+      'Do not use customer information outside the assigned trip.'
     ]
   },
-
   {
-    id: 7,
-    category: 'Bookings',
-    icon: 'visibility',
-    question: 'What information can I see about a booking?',
-    answer:
-      'Depending on the booking and your driver permissions, you may see information such as customer details, pickup location, destination, scheduled time and vehicle information.',
-    points: [
-      'Only use customer information for the assigned trip.',
-      'Keep customer information private.',
-      'Contact support if booking information appears incorrect.'
-    ]
-  },
-
-  {
-    id: 8,
-    category: 'Customer',
-    icon: 'person',
-    question: 'What should I do if I cannot find the customer?',
-    answer:
-      'First verify the pickup location and booking details. If you still cannot locate the customer, contact the customer using the available communication option or contact BatohiDrive support.',
-    points: [
-      'Wait at the correct pickup location.',
-      'Check the scheduled pickup time.',
-      'Contact support if the customer cannot be located.'
-    ]
-  },
-
-  {
-    id: 9,
-    category: 'Customer',
-    icon: 'support_agent',
-    question: 'What should I do if a customer has a complaint?',
-    answer:
-      'Remain professional and try to understand the customers concern. If the issue cannot be resolved directly, contact BatohiDrive support.',
-    points: [
-      'Communicate politely with the customer.',
-      'Do not argue with the customer.',
-      'Report serious issues to support.'
-    ]
-  },
-
-  {
-    id: 10,
+    id: 6,
     category: 'Vehicle',
     icon: 'directions_car',
-    question: 'Can I change my registered vehicle?',
-    answer:
-      'Vehicle changes depend on the driver account and system configuration. Contact the appropriate BatohiDrive team if you need to update your registered vehicle.',
+    question: 'Can I change my registered vehicle or owner details?',
+    answer: 'Yes, but the updated information must be accurate and may require document verification before it is accepted on the platform.',
     points: [
-      'Vehicle information must be accurate.',
-      'Required vehicle documents may need to be submitted.',
-      'The updated vehicle may require verification before use.'
+      'Updated vehicle details must match the actual legal status of the vehicle.',
+      'Any change in ownership or authorization must be reported promptly.',
+      'Failure to update documents may cause trip or account issues.'
     ]
   },
-
   {
-    id: 11,
+    id: 7,
     category: 'Vehicle',
     icon: 'build',
-    question: 'What should I do if my vehicle breaks down during a trip?',
-    answer:
-      'Move to a safe location if possible and contact BatohiDrive support immediately. Explain the situation and provide the booking details.',
+    question: 'What if my vehicle breaks down during a trip?',
+    answer: 'Move to a safe place if possible, prioritize safety, and contact support or emergency services as needed.',
     points: [
-      'Prioritize the safety of yourself and the customer.',
       'Do not continue driving an unsafe vehicle.',
-      'Inform support as soon as possible.'
+      'Inform the platform support team as soon as it is safe to do so.',
+      'Provide accurate details about the incident and trip status.'
     ]
   },
-
   {
-    id: 12,
+    id: 8,
     category: 'Documents',
     icon: 'folder',
-    question: 'Where can I check my vehicle documents?',
-    answer:
-      'If document management is enabled for your driver account, you can view relevant document information from the vehicle or document section of your driver panel.',
+    question: 'Where can I check my driver and vehicle documents?',
+    answer: 'If document management is enabled for your account, you can view and update required documents from the driver panel or vehicle section.',
     points: [
-      'Keep documents valid and up to date.',
-      'Upload clear document copies when requested.',
-      'Contact support if a document status appears incorrect.'
-    ]
-  },
-
-  {
-    id: 13,
-    category: 'Documents',
-    icon: 'verified',
-    question: 'What happens if my driver documents expire?',
-    answer:
-      'Expired documents may affect your ability to receive or complete bookings. You should update documents before their expiry date whenever possible.',
-    points: [
-      'Monitor document expiry dates.',
-      'Submit updated documents when requested.',
+      'Keep all required documents valid and up to date.',
+      'Upload updated documents when requested.',
       'Do not operate without legally required valid documents.'
     ]
   },
-
   {
-    id: 14,
+    id: 9,
+    category: 'Documents',
+    icon: 'verified',
+    question: 'What happens if my documents expire?',
+    answer: 'Expired or invalid documents may block bookings or trigger account restrictions. Drivers should renew them before expiry whenever possible.',
+    points: [
+      'Monitor expiry dates regularly.',
+      'Submit renewal documents before the expiry date.',
+      'Do not continue to operate with expired documents.'
+    ]
+  },
+  {
+    id: 10,
     category: 'Earnings',
     icon: 'currency_rupee',
-    question: 'Where can I see my earnings?',
-    answer:
-      'Your available earnings information can be viewed from the Earnings section of the driver panel.',
+    question: 'Where can I see my earnings and payouts?',
+    answer: 'Earnings and payment information are available in the Earnings or Payments section of the driver panel, depending on your account setup.',
     points: [
-      'Check completed trip earnings.',
-      'Review your earnings history.',
-      'Contact support if an earning appears incorrect.'
+      'Check completed rides and payout status.',
+      'Make sure bank and payout information is accurate.',
+      'Contact support if a payment appears incorrect or delayed.'
     ]
   },
-
   {
-    id: 15,
+    id: 11,
     category: 'Earnings',
-    icon: 'account_balance',
-    question: 'When will my earnings be paid?',
-    answer:
-      'Payment timing depends on the BatohiDrive payment and settlement process configured for your driver account.',
+    icon: 'money_off',
+    question: 'Is the subscription fee refundable?',
+    answer: 'Usually no, subscription and platform access fees are non-refundable once the service has been activated or used, except in limited cases such as duplicate billing, wrong charge, or platform access failure.',
     points: [
-      'Make sure your payment information is correct.',
-      'Check your earnings history.',
-      'Contact support if a payment is delayed beyond the applicable period.'
+      'Deferred or unused access may be reviewed in limited cases.',
+      'No refund is given for low earnings or inactivity.',
+      'Submit a refund request through support with full payment details.'
     ]
   },
-
   {
-    id: 16,
+    id: 12,
     category: 'Cancellation',
     icon: 'event_busy',
-    question: 'What should I do if a customer wants to cancel a trip?',
-    answer:
-      'Ask the customer to follow the official cancellation process. If assistance is required, contact BatohiDrive support instead of cancelling the trip incorrectly from your side.',
+    question: 'Can I cancel a trip?',
+    answer: 'Trip cancellation should only happen for valid reasons and must follow the platform process. Repeated or unnecessary cancellations may affect your account status.',
     points: [
-      'Do not make false cancellation updates.',
-      'Follow the official cancellation procedure.',
-      'Contact support if the situation is unclear.'
+      'Contact support if you cannot complete a trip.',
+      'Do not cancel without a valid reason.',
+      'Provide the correct reason when requesting cancellation or support.'
     ]
   },
-
   {
-    id: 17,
-    category: 'Cancellation',
-    icon: 'cancel',
-    question: 'Can I cancel an assigned trip?',
-    answer:
-      'Drivers should not cancel assigned trips without a valid reason or without following the BatohiDrive driver procedure. If you cannot complete a trip, contact support as soon as possible.',
-    points: [
-      'Inform support immediately.',
-      'Explain the reason for cancellation.',
-      'Avoid unnecessary trip cancellations.'
-    ]
-  },
-
-  {
-    id: 18,
+    id: 13,
     category: 'Safety',
     icon: 'health_and_safety',
     question: 'What should I do in case of an emergency?',
-    answer:
-      'In an emergency, prioritize the safety of yourself and the customer and contact the appropriate emergency service when necessary. Inform BatohiDrive support as soon as it is safe to do so.',
+    answer: 'Prioritize safety, contact emergency services if required, and inform BatohiDrive support as soon as safe to do so.',
     points: [
-      'Move to a safe location when possible.',
-      'Contact emergency services when required.',
-      'Inform BatohiDrive support about the incident.'
+      'Move to a safe place when possible.',
+      'Do not continue unsafe driving.',
+      'Provide honest and clear information about the incident.'
     ]
   },
-
   {
-    id: 19,
+    id: 14,
     category: 'Safety',
     icon: 'security',
-    question: 'What safety rules should I follow while driving?',
-    answer:
-      'Drivers should follow applicable traffic laws, drive responsibly and ensure that the vehicle is safe to operate.',
+    question: 'What safety rules must I follow as a driver?',
+    answer: 'Drivers must follow all traffic laws, drive responsibly, and ensure the vehicle is safe to operate before and during trips.',
     points: [
-      'Follow speed limits and traffic rules.',
+      'Follow local traffic laws and road safety rules.',
       'Do not drive under the influence of alcohol or drugs.',
-      'Do not use a mobile phone in a way that compromises safe driving.',
-      'Use appropriate safety equipment and procedures.'
+      'Do not use a phone in a way that affects safe driving.',
+      'Use all required safety measures and procedures.'
     ]
   },
-
   {
-    id: 20,
+    id: 15,
     category: 'Support',
     icon: 'support_agent',
     question: 'How can I contact BatohiDrive support?',
-    answer:
-      'You can contact BatohiDrive support through the support option available in your driver panel.',
+    answer: 'You can contact support through the support option in the driver panel or the official support channel available to your account.',
     points: [
-      'Keep your booking ID available.',
-      'Explain your issue clearly.',
-      'Provide screenshots or relevant information when requested.'
-    ]
-  },
-
-  {
-    id: 21,
-    category: 'Support',
-    icon: 'report_problem',
-    question: 'What should I do if there is an issue with the driver app?',
-    answer:
-      'First check your internet connection and try reopening the application or page. If the issue continues, contact BatohiDrive support.',
-    points: [
-      'Check your internet connection.',
-      'Refresh or reopen the application.',
-      'Record the error message if possible.',
-      'Contact support with the relevant details.'
+      'Include booking ID, issue summary, and screenshots if possible.',
+      'Report serious issues promptly.',
+      'Support may ask for verification before resolving account or payment concerns.'
     ]
   }
 ])
