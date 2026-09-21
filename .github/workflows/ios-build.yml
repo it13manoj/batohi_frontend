@@ -14,20 +14,20 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 20
           cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci || npm install
 
-      - name: Build Quasar
+      - name: Build Quasar App
         run: npm run build
 
-      - name: Setup CocoaPods
-        run: pod install --project-directory=src-capacitor/ios/App
-
-      - name: Sync Capacitor
+      - name: Sync Capacitor iOS
         run: npx cap sync ios
+
+      - name: Install CocoaPods
+        run: pod install --project-directory=src-capacitor/ios/App
 
       - name: Build iOS Project
         run: |
