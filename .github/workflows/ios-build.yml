@@ -14,24 +14,30 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install root dependencies
+        run: npm ci || npm install
 
-      - name: Build Quasar
+      - name: Install Capacitor inner dependencies
+        run: |
+          if [ -d "src-capacitor" ]; then
+            cd src-capacitor && npm install
+          fi
+
+      - name: Build Quasar App
         run: npm run build
 
-      - name: Setup CocoaPods
-        run: pod install --project-directory=src-capacitor/ios/App
-
-      - name: Sync Capacitor
+      - name: Sync Capacitor iOS
         run: npx cap sync ios
+
+      - name: Install CocoaPods
+        run: pod install --project-directory=ios/App
 
       - name: Build iOS Project
         run: |
-          xcodebuild -workspace src-capacitor/ios/App/App.xcworkspace \
+          xcodebuild -workspace ios/App/App.xcworkspace \
                      -scheme App \
                      -configuration Release \
                      -derivedDataPath build \
