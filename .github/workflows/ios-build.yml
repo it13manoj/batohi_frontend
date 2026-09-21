@@ -33,11 +33,11 @@ jobs:
         run: npx cap sync ios
 
       - name: Install CocoaPods
-        run: pod install --project-directory=src-capacitor/ios/App
+        run: pod install --project-directory=ios/App
 
       - name: Build iOS Project
         run: |
-          xcodebuild -workspace src-capacitor/ios/App/App.xcworkspace \
+          xcodebuild -workspace ios/App/App.xcworkspace \
                      -scheme App \
                      -configuration Release \
                      -derivedDataPath build \
