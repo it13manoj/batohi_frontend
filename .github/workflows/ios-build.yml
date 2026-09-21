@@ -14,11 +14,17 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm ci || npm install
+
+      - name: Install Capacitor inner dependencies
+        run: |
+          if [ -d "src-capacitor" ]; then
+            cd src-capacitor && npm install
+          fi
 
       - name: Build Quasar App
         run: npm run build
