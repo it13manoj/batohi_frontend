@@ -292,6 +292,27 @@ const handleLogin = async () => {
     const response = await api.post('/users/login', requestData)
     const data = response.data
 
+    if (data?.otp_required === true || data?.success === true && data?.otp_required) {
+      const pendingOtp = {
+        email: data.email || form.email,
+        user_id: data.user_id || data.userId || null,
+        role: activeRole.value,
+        password: form.password,
+        remember: !!form.remember
+      }
+
+      localStorage.setItem('pendingOtpLogin', JSON.stringify(pendingOtp))
+
+      $q.notify({
+        type: 'positive',
+        message: data.message || 'OTP sent to your email.',
+        position: 'top'
+      })
+
+      router.push('/verify-otp')
+      return
+    }
+
     if (!data.token) {
       throw new Error('No token received from server')
     }
