@@ -14,114 +14,133 @@
 
       <q-separator />
 
-      <q-card-section>
-        <div class="row q-col-gutter-md">
-          <!-- FROM LOCATION -->
-          <div :class="isBike ? 'col-12 col-md-5' : 'col-12 col-md-4'">
-            <q-select
-              v-model="searchForm.from"
-              use-input
-              fill-input
-              hide-selected
-              outlined
-              label="From"
-              placeholder="Search pickup location"
-              :options="fromOptions"
-              :loading="loadingFrom"
-              @filter="filterFromLocations"
-              @update:model-value="onSelectFrom"
-              clearable
-            >
-              <template #prepend>
-                <q-icon name="location_on" color="primary" />
-              </template>
-              <template #append>
-                <q-btn
-                  flat
-                  round
-                  dense
-                  icon="my_location"
-                  color="primary"
-                  :loading="detectingLocation"
-                  @click.stop="detectAndSetCurrentLocation"
-                >
-                  <q-tooltip>Use Current Location</q-tooltip>
-                </q-btn>
-              </template>
-              <template #no-option>
-                <q-item>
-                  <q-item-section class="text-grey">
-                    Type at least 3 characters to search...
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
-          </div>
+    <q-card-section>
+  <div class="search-form-grid row q-col-gutter-md">
+    <!-- FROM LOCATION -->
+    <div :class="isBike ? 'col-12 col-md-4' : 'col-12 col-md-3'">
+      <q-select
+        v-model="searchForm.from"
+        use-input
+        fill-input
+        hide-selected
+        outlined
+        label="From"
+        placeholder="Search pickup location"
+        :options="fromOptions"
+        :loading="loadingFrom"
+        @filter="filterFromLocations"
+        @update:model-value="onSelectFrom"
+        clearable
+      >
+        <template #prepend>
+          <q-icon name="location_on" color="primary" />
+        </template>
+        <template #append>
+          <q-btn
+            flat
+            round
+            dense
+            icon="my_location"
+            color="primary"
+            :loading="detectingLocation"
+            @click.stop="detectAndSetCurrentLocation"
+          >
+            <q-tooltip>Use Current Location</q-tooltip>
+          </q-btn>
+        </template>
+        <template #no-option>
+          <q-item>
+            <q-item-section class="text-grey">
+              Type at least 3 characters to search...
+            </q-item-section>
+          </q-item>
+        </template>
+      </q-select>
+    </div>
 
-          <!-- TO LOCATION -->
-          <div :class="isBike ? 'col-12 col-md-5' : 'col-12 col-md-4'">
-            <q-select
-              v-model="searchForm.to"
-              use-input
-              fill-input
-              hide-selected
-              outlined
-              label="To"
-              placeholder="Search drop location"
-              :options="toOptions"
-              :loading="loadingTo"
-              @filter="filterToLocations"
-              @update:model-value="onSelectTo"
-              clearable
-            >
-              <template #prepend>
-                <q-icon name="location_on" color="negative" />
-              </template>
-              <template #no-option>
-                <q-item>
-                  <q-item-section class="text-grey">
-                    Type at least 3 characters to search...
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
-          </div>
+    <!-- TO LOCATION -->
+    <div :class="isBike ? 'col-12 col-md-4' : 'col-12 col-md-3'">
+      <q-select
+        v-model="searchForm.to"
+        use-input
+        fill-input
+        hide-selected
+        outlined
+        label="To"
+        placeholder="Search drop location"
+        :options="toOptions"
+        :loading="loadingTo"
+        @filter="filterToLocations"
+        @update:model-value="onSelectTo"
+        clearable
+      >
+        <template #prepend>
+          <q-icon name="location_on" color="negative" />
+        </template>
+        <template #no-option>
+          <q-item>
+            <q-item-section class="text-grey">
+              Type at least 3 characters to search...
+            </q-item-section>
+          </q-item>
+        </template>
+      </q-select>
+    </div>
 
-          <!-- PASSENGERS (HIDDEN FOR BIKE) -->
-          <div v-if="!isBike" class="col-12 col-md-2">
-            <q-select
-              v-model="searchForm.passengers"
-              outlined
-              label="Passengers"
-              :options="passengerOptions"
-            >
-              <template #prepend>
-                <q-icon name="people" color="primary" />
-              </template>
-            </q-select>
-          </div>
+    <!-- PASSENGERS (HIDDEN FOR BIKE) -->
+    <div v-if="!isBike" class="col-12 col-md-2">
+      <q-select
+        v-model="searchForm.passengers"
+        outlined
+        label="Passengers"
+        :options="passengerOptions"
+      >
+        <template #prepend>
+          <q-icon name="people" color="primary" />
+        </template>
+      </q-select>
+    </div>
 
-          <!-- SEARCH BUTTON -->
-          <div class="col-12 col-md-2 flex flex-center">
-            <q-btn
-              unelevated
-              rounded
-              color="primary"
-              icon="search"
-              label="Search"
-              :loading="searching"
-              class="full-width search-btn"
-              @click="searchVehicles"
-            />
-          </div>
-        </div>
-      </q-card-section>
+    <!-- FARE / PRICE INPUT -->
+    <div :class="isBike ? 'col-12 col-md-2' : 'col-12 col-md-2'">
+      <q-input
+        v-model.number="searchForm.fare"
+        type="number"
+        outlined
+        label="Fare"
+        placeholder="Offer price"
+        min="0"
+      >
+        <template #prepend>
+          <q-icon name="payments" color="primary" />
+        </template>
+      </q-input>
+    </div>
+
+    <!-- SEARCH BUTTON -->
+    <div class="col-12 col-md-2 flex flex-center">
+      <q-btn
+        unelevated
+        rounded
+        color="primary"
+        icon="search"
+        label="Search"
+        :loading="searching"
+        class="full-width search-btn"
+        @click="searchVehicles"
+      />
+    </div>
+  </div>
+</q-card-section>
+
+
+
     </q-card>
 
     <!-- DRIVER/VEHICLE RESULTS LIST -->
     <div v-if="hasSearched" class="results-section">
       <div class="text-h6 text-weight-bold q-mb-md">
-        Available Rides ({{ rawDrivers.length }})
+        Available Rides ({{ filteredDrivers.length }})
       </div>
 
       <!-- LOADING STATE -->
@@ -131,7 +150,7 @@
       </div>
 
       <!-- NO RESULTS FOUND -->
-      <q-card v-else-if="rawDrivers.length === 0" class="text-center q-pa-xl">
+      <q-card v-else-if="filteredDrivers.length === 0" class="text-center q-pa-xl">
         <q-icon name="directions_car_off" size="48px" color="grey-5" />
         <div class="text-h6 text-grey-7 q-mt-sm">No drivers available nearby</div>
         <div class="text-caption text-grey-6">Try searching in another area or modifying your search details.</div>
@@ -140,15 +159,15 @@
       <!-- RESULTS LIST -->
       <div v-else class="column gap-md">
         <q-card
-          v-for="driver in rawDrivers"
+          v-for="driver in filteredDrivers"
           :key="driver.id"
           class="driver-card flat bordered"
         >
           <q-card-section>
-            <div class="row items-center justify-between q-col-gutter-md">
+            <div class="driver-grid row items-center justify-between q-col-gutter-md">
 
               <!-- DRIVER INFO & AVATAR -->
-              <div class="col-12 col-sm-4 flex items-center">
+              <div class="col-12 col-sm-4 flex items-center driver-info-block">
                 <q-avatar size="56px" class="q-mr-md bg-grey-3">
                   <img
                     v-if="driver.profile_image"
@@ -256,6 +275,7 @@ const searchForm = ref({
   from: route.query.from || null,
   to: route.query.to || null,
   passengers: Number(route.query.passengers) || 1,
+  fare: Number(route.query.fare) || null,
 
   fromLat: route.query.fromLat ? Number(route.query.fromLat) : null,
   fromLng: route.query.fromLng ? Number(route.query.fromLng) : null,
@@ -265,6 +285,19 @@ const searchForm = ref({
 
 const passengerOptions = [1, 2, 3, 4, 5, 6, 7, 8]
 let debounceTimer = null
+
+const filteredDrivers = computed(() => {
+  const maxFare = Number(searchForm.value.fare)
+
+  if (!maxFare || maxFare <= 0) {
+    return rawDrivers.value
+  }
+
+  return rawDrivers.value.filter((driver) => {
+    const fare = Number(calculateFare(driver))
+    return Number.isFinite(fare) && fare <= maxFare
+  })
+})
 
 // MEDIA BASE URL HELPER
 const getMediaUrl = (path) => {
@@ -464,6 +497,7 @@ const fetchNearestVehicles = async () => {
       toLng: searchForm.value.toLng || undefined,
       passengers: searchForm.value.passengers,
       vehicleType: vehicleType.value || undefined,
+      fare: searchForm.value.fare || undefined,
       radius: 15
     }
 
@@ -652,10 +686,86 @@ onMounted(async () => {
 .gap-md {
   gap: 16px;
 }
+
+.search-form-grid,
+.driver-grid {
+  margin: 0;
+}
+
+.search-form-grid > [class*='col-'],
+.driver-grid > [class*='col-'] {
+  min-width: 0;
+}
+
 .driver-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 .driver-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 767px) {
+  .search-card :deep(.q-card__section) {
+    padding: 14px;
+  }
+
+  .search-form-grid {
+    row-gap: 12px;
+  }
+
+  .search-form-grid > [class*='col-'],
+  .driver-grid > [class*='col-'] {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-basis: 100% !important;
+  }
+
+  .search-btn {
+    min-height: 44px;
+  }
+
+  .driver-grid {
+    display: flex;
+    flex-direction: column;
+    row-gap: 12px;
+    align-items: stretch;
+  }
+
+  .driver-info-block {
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .driver-card :deep(.q-card__section) {
+    padding: 14px 12px;
+  }
+
+  .driver-card .text-right {
+    text-align: left !important;
+    align-items: stretch !important;
+  }
+
+  .driver-card .row.items-center.q-gutter-x-sm {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .driver-card .q-chip {
+    max-width: 100%;
+  }
+
+  .driver-card .q-chip__content,
+  .driver-card .ellipsis {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: unset;
+  }
+
+  .driver-card .text-h5 {
+    font-size: 1.5rem;
+  }
 }
 </style>

@@ -1,94 +1,50 @@
 <template>
   <q-page class="privacy-page q-pa-md">
-
     <!-- =====================================================
          PAGE HEADER
     ====================================================== -->
     <div class="page-header q-mb-lg">
-
       <div class="row items-center no-wrap">
-
         <div class="header-icon">
-          <q-icon
-            name="privacy_tip"
-            size="30px"
-            color="primary"
-          />
+          <q-icon name="privacy_tip" size="30px" color="primary" />
         </div>
 
         <div class="q-ml-md">
-
-          <div class="text-h5 text-weight-bold">
-            Privacy Policy
-          </div>
+          <div class="text-h5 text-weight-bold"> Privacy Policy </div>
 
           <div class="text-grey-7 q-mt-xs">
             Learn how BatohiDrive collects, uses, and protects your information
           </div>
-
         </div>
-
       </div>
 
-      <q-badge
-        color="blue-1"
-        text-color="primary"
-        class="q-mt-md"
-      >
+      <q-badge color="blue-1" text-color="primary" class="q-mt-md">
         Driver Privacy
       </q-badge>
-
     </div>
-
 
     <!-- =====================================================
          LAST UPDATED
     ====================================================== -->
-    <q-card
-      flat
-      bordered
-      class="info-card q-mb-md"
-    >
-
+    <q-card flat bordered class="info-card q-mb-md">
       <q-card-section>
-
         <div class="row items-center">
-
-          <q-icon
-            name="update"
-            color="primary"
-            size="22px"
-            class="q-mr-sm"
-          />
+          <q-icon name="update" color="primary" size="22px" class="q-mr-sm" />
 
           <div>
-            <div class="text-weight-medium">
-              Last Updated
-            </div>
+            <div class="text-weight-medium"> Last Updated </div>
 
-            <div class="text-grey-7 text-caption">
-              September 2, 2026
-            </div>
+            <div class="text-grey-7 text-caption"> September 2, 2026 </div>
           </div>
-
         </div>
-
       </q-card-section>
-
     </q-card>
-
 
     <!-- =====================================================
          SEARCH
     ====================================================== -->
-    <q-card
-      flat
-      bordered
-      class="search-card q-mb-lg"
-    >
-
+    <q-card flat bordered class="search-card q-mb-lg">
       <q-card-section>
-
         <q-input
           v-model="searchText"
           outlined
@@ -97,23 +53,17 @@
           placeholder="Search privacy policy..."
           class="search-input"
         >
-
           <template #prepend>
             <q-icon name="search" />
           </template>
-
         </q-input>
-
       </q-card-section>
-
     </q-card>
-
 
     <!-- =====================================================
          PRIVACY SECTIONS
     ====================================================== -->
     <div v-if="filteredSections.length">
-
       <q-card
         v-for="(section, index) in filteredSections"
         :key="index"
@@ -121,11 +71,8 @@
         bordered
         class="privacy-card q-mb-md"
       >
-
         <q-card-section>
-
           <div class="row items-start no-wrap">
-
             <!-- Section Number -->
             <div class="section-number">
               {{ index + 1 }}
@@ -133,7 +80,6 @@
 
             <!-- Content -->
             <div class="section-content">
-
               <div class="section-title">
                 {{ section.title }}
               </div>
@@ -146,54 +92,29 @@
                 {{ paragraph }}
               </div>
 
-
               <!-- Bullet Points -->
-              <ul
-                v-if="section.points"
-                class="privacy-list"
-              >
-
+              <ul v-if="section.points" class="privacy-list">
                 <li
                   v-for="(point, pointIndex) in section.points"
                   :key="pointIndex"
                 >
                   {{ point }}
                 </li>
-
               </ul>
-
             </div>
-
           </div>
-
         </q-card-section>
-
       </q-card>
-
     </div>
-
 
     <!-- =====================================================
          NO SEARCH RESULT
     ====================================================== -->
-    <q-card
-      v-else
-      flat
-      bordered
-      class="empty-card"
-    >
-
+    <q-card v-else flat bordered class="empty-card">
       <q-card-section class="text-center q-pa-xl">
+        <q-icon name="search_off" size="55px" color="grey-5" />
 
-        <q-icon
-          name="search_off"
-          size="55px"
-          color="grey-5"
-        />
-
-        <div class="text-h6 text-grey-8 q-mt-md">
-          No results found
-        </div>
+        <div class="text-h6 text-grey-8 q-mt-md"> No results found </div>
 
         <div class="text-grey-6 q-mt-sm">
           We couldn't find anything matching your search.
@@ -207,58 +128,29 @@
           class="q-mt-md"
           @click="searchText = ''"
         />
-
       </q-card-section>
-
     </q-card>
-
 
     <!-- =====================================================
          INFORMATION WE COLLECT
     ====================================================== -->
-    <q-card
-      v-if="!searchText"
-      flat
-      bordered
-      class="data-card q-mt-lg"
-    >
-
+    <q-card v-if="!searchText" flat bordered class="data-card q-mt-lg">
       <q-card-section>
-
         <div class="row items-center">
-
-          <q-icon
-            name="storage"
-            color="primary"
-            size="26px"
-            class="q-mr-sm"
-          />
+          <q-icon name="storage" color="primary" size="26px" class="q-mr-sm" />
 
           <div class="text-h6 text-weight-bold">
             Information We May Collect
           </div>
-
         </div>
 
-
         <div class="data-grid q-mt-md">
-
-          <div
-            v-for="item in dataTypes"
-            :key="item.title"
-            class="data-item"
-          >
-
+          <div v-for="item in dataTypes" :key="item.title" class="data-item">
             <div class="data-icon">
-              <q-icon
-                :name="item.icon"
-                color="primary"
-                size="23px"
-              />
+              <q-icon :name="item.icon" color="primary" size="23px" />
             </div>
 
             <div class="q-ml-md">
-
               <div class="text-weight-medium">
                 {{ item.title }}
               </div>
@@ -266,92 +158,54 @@
               <div class="text-caption text-grey-7 q-mt-xs">
                 {{ item.description }}
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </q-card-section>
-
     </q-card>
-
 
     <!-- =====================================================
          DRIVER DATA SAFETY
     ====================================================== -->
-    <q-card
-      v-if="!searchText"
-      flat
-      class="security-card q-mt-lg"
-    >
-
+    <q-card v-if="!searchText" flat class="security-card q-mt-lg">
       <q-card-section>
-
         <div class="row items-start no-wrap">
-
-          <q-icon
-            name="shield"
-            size="34px"
-            color="primary"
-          />
+          <q-icon name="shield" size="34px" color="primary" />
 
           <div class="q-ml-md">
-
             <div class="text-h6 text-weight-bold">
               Your Information Matters
             </div>
 
             <div class="text-grey-7 q-mt-sm">
-              BatohiDrive takes reasonable steps to protect driver
-              information and uses personal data only for legitimate
-              business, service, safety, legal, and operational purposes.
+              BatohiDrive takes reasonable steps to protect driver information
+              and uses personal data only for legitimate business, service,
+              safety, legal, and operational purposes.
             </div>
-
           </div>
-
         </div>
-
       </q-card-section>
-
     </q-card>
-
 
     <!-- =====================================================
          SUPPORT
     ====================================================== -->
-    <q-card
-      v-if="!searchText"
-      flat
-      class="support-card q-mt-lg"
-    >
-
+    <q-card v-if="!searchText" flat class="support-card q-mt-lg">
       <q-card-section>
-
         <div class="row items-center justify-between">
-
           <div class="row items-center">
-
-            <q-icon
-              name="support_agent"
-              size="32px"
-              color="primary"
-            />
+            <q-icon name="support_agent" size="32px" color="primary" />
 
             <div class="q-ml-md">
-
               <div class="text-subtitle1 text-weight-bold">
                 Privacy Questions?
               </div>
 
               <div class="text-grey-7">
-                Contact BatohiDrive support if you have questions
-                about your personal information.
+                Contact BatohiDrive support if you have questions about your
+                personal information.
               </div>
-
             </div>
-
           </div>
 
           <q-btn
@@ -361,13 +215,9 @@
             label="Contact Support"
             @click="contactSupport"
           />
-
         </div>
-
       </q-card-section>
-
     </q-card>
-
 
     <!-- =====================================================
          RELATED INFORMATION
@@ -379,15 +229,9 @@
       Driver Information
     </div>
 
-
-    <div
-      v-if="!searchText"
-      class="row q-col-gutter-md"
-    >
-
+    <div v-if="!searchText" class="row q-col-gutter-md">
       <!-- Terms -->
       <div class="col-12 col-md-4">
-
         <q-card
           flat
           bordered
@@ -395,14 +239,8 @@
           clickable
           @click="goTo('/driver/terms-and-conditions')"
         >
-
           <q-card-section>
-
-            <q-icon
-              name="description"
-              color="primary"
-              size="30px"
-            />
+            <q-icon name="description" color="primary" size="30px" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-md">
               Terms & Conditions
@@ -414,22 +252,14 @@
 
             <div class="text-primary text-caption q-mt-md">
               View Terms
-              <q-icon
-                name="arrow_forward"
-                size="16px"
-              />
+              <q-icon name="arrow_forward" size="16px" />
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
-
 
       <!-- FAQ -->
       <div class="col-12 col-md-4">
-
         <q-card
           flat
           bordered
@@ -437,14 +267,8 @@
           clickable
           @click="goTo('/driver/faq')"
         >
-
           <q-card-section>
-
-            <q-icon
-              name="help_outline"
-              color="primary"
-              size="30px"
-            />
+            <q-icon name="help_outline" color="primary" size="30px" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-md">
               Driver FAQ
@@ -456,22 +280,14 @@
 
             <div class="text-primary text-caption q-mt-md">
               View FAQ
-              <q-icon
-                name="arrow_forward"
-                size="16px"
-              />
+              <q-icon name="arrow_forward" size="16px" />
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
-
 
       <!-- About -->
       <div class="col-12 col-md-4">
-
         <q-card
           flat
           bordered
@@ -479,14 +295,8 @@
           clickable
           @click="goTo('/driver/about-us')"
         >
-
           <q-card-section>
-
-            <q-icon
-              name="info"
-              color="primary"
-              size="30px"
-            />
+            <q-icon name="info" color="primary" size="30px" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-md">
               About BatohiDrive
@@ -498,28 +308,18 @@
 
             <div class="text-primary text-caption q-mt-md">
               About Us
-              <q-icon
-                name="arrow_forward"
-                size="16px"
-              />
+              <q-icon name="arrow_forward" size="16px" />
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
-
     </div>
-
   </q-page>
 </template>
-
 
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-
 
 // =====================================================
 // ROUTER
@@ -527,13 +327,11 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-
 // =====================================================
 // SEARCH
 // =====================================================
 
 const searchText = ref('')
-
 
 // =====================================================
 // PRIVACY POLICY SECTIONS
@@ -708,59 +506,77 @@ const sections = [
 ]
 
 const dataTypes = [
-  { icon: 'person', title: 'Profile Information', description: 'Name, mobile, email, account details, and profile information.' },
-  { icon: 'directions_car', title: 'Vehicle Information', description: 'Vehicle number, model, color, registration, insurance, and ownership details.' },
-  { icon: 'description', title: 'Documents', description: 'Driving licence, KYC, vehicle papers, and verification records.' },
-  { icon: 'location_on', title: 'Location', description: 'Trip pickup, route, and active location data needed for service operation.' },
-  { icon: 'route', title: 'Trip Information', description: 'Trip status, booking details, destination, history, and completion records.' },
-  { icon: 'account_balance_wallet', title: 'Payments', description: 'Payout details, subscription records, and payment transactions.' }
+  {
+    icon: 'person',
+    title: 'Profile Information',
+    description:
+      'Name, mobile, email, account details, and profile information.'
+  },
+  {
+    icon: 'directions_car',
+    title: 'Vehicle Information',
+    description:
+      'Vehicle number, model, color, registration, insurance, and ownership details.'
+  },
+  {
+    icon: 'description',
+    title: 'Documents',
+    description:
+      'Driving licence, KYC, vehicle papers, and verification records.'
+  },
+  {
+    icon: 'location_on',
+    title: 'Location',
+    description:
+      'Trip pickup, route, and active location data needed for service operation.'
+  },
+  {
+    icon: 'route',
+    title: 'Trip Information',
+    description:
+      'Trip status, booking details, destination, history, and completion records.'
+  },
+  {
+    icon: 'account_balance_wallet',
+    title: 'Payments',
+    description:
+      'Payout details, subscription records, and payment transactions.'
+  }
 ]
-
 
 // =====================================================
 // FILTERED SECTIONS
 // =====================================================
 
 const filteredSections = computed(() => {
-
-  const search = searchText.value
-    .trim()
-    .toLowerCase()
+  const search = searchText.value.trim().toLowerCase()
 
   if (!search) {
     return sections
   }
 
   return sections.filter(section => {
+    const titleMatch = section.title.toLowerCase().includes(search)
 
-    const titleMatch =
-      section.title.toLowerCase().includes(search)
+    const contentMatch = section.content.some(item =>
+      item.toLowerCase().includes(search)
+    )
 
-    const contentMatch =
-      section.content.some(item =>
-        item.toLowerCase().includes(search)
-      )
-
-    const pointsMatch =
-      section.points?.some(item =>
-        item.toLowerCase().includes(search)
-      )
+    const pointsMatch = section.points?.some(item =>
+      item.toLowerCase().includes(search)
+    )
 
     return titleMatch || contentMatch || pointsMatch
-
   })
-
 })
-
 
 // =====================================================
 // NAVIGATION
 // =====================================================
 
-const goTo = (path) => {
+const goTo = path => {
   router.push(path)
 }
-
 
 // =====================================================
 // SUPPORT
@@ -769,12 +585,9 @@ const goTo = (path) => {
 const contactSupport = () => {
   router.push('/driver/support')
 }
-
 </script>
 
-
 <style scoped>
-
 /* =====================================================
    PAGE
 ===================================================== */
@@ -783,7 +596,6 @@ const contactSupport = () => {
   min-height: 100%;
   background: #f7f8fa;
 }
-
 
 /* =====================================================
    HEADER
@@ -804,7 +616,6 @@ const contactSupport = () => {
   border-radius: 12px;
   background: #eaf2ff;
 }
-
 
 /* =====================================================
    CARDS
@@ -828,7 +639,6 @@ const contactSupport = () => {
   transform: translateY(-1px);
 }
 
-
 /* =====================================================
    SEARCH
 ===================================================== */
@@ -836,7 +646,6 @@ const contactSupport = () => {
 .search-input {
   max-width: 600px;
 }
-
 
 /* =====================================================
    SECTION
@@ -878,7 +687,6 @@ const contactSupport = () => {
   margin-bottom: 8px;
 }
 
-
 /* =====================================================
    LIST
 ===================================================== */
@@ -894,7 +702,6 @@ const contactSupport = () => {
   margin-bottom: 8px;
   line-height: 1.6;
 }
-
 
 /* =====================================================
    DATA GRID
@@ -932,7 +739,6 @@ const contactSupport = () => {
   background: #eaf2ff;
 }
 
-
 /* =====================================================
    SECURITY
 ===================================================== */
@@ -941,7 +747,6 @@ const contactSupport = () => {
   background: #eaf2ff;
   border-radius: 14px;
 }
-
 
 /* =====================================================
    SUPPORT
@@ -952,7 +757,6 @@ const contactSupport = () => {
   border-radius: 14px;
   border: 1px solid #dbe7f8;
 }
-
 
 /* =====================================================
    RELATED CARDS
@@ -970,22 +774,17 @@ const contactSupport = () => {
   border-color: #1976d2;
 }
 
-
 /* =====================================================
    RESPONSIVE
 ===================================================== */
 
 @media (max-width: 900px) {
-
   .data-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-
 }
 
-
 @media (max-width: 600px) {
-
   .privacy-page {
     padding: 12px !important;
   }
@@ -1015,7 +814,5 @@ const contactSupport = () => {
     width: 100%;
     margin-top: 16px;
   }
-
 }
-
 </style>

@@ -9,7 +9,8 @@
         <div class="q-ml-md">
           <div class="text-h5 text-weight-bold">Refund Policy</div>
           <div class="text-grey-7 q-mt-xs">
-            Understand how platform and subscription charges are handled for drivers.
+            Understand how platform and subscription charges are handled for
+            drivers.
           </div>
         </div>
       </div>
@@ -33,7 +34,14 @@
 
     <q-card flat bordered class="search-card q-mb-lg">
       <q-card-section>
-        <q-input v-model="searchText" outlined dense clearable placeholder="Search refund policy..." class="search-input">
+        <q-input
+          v-model="searchText"
+          outlined
+          dense
+          clearable
+          placeholder="Search refund policy..."
+          class="search-input"
+        >
           <template #prepend>
             <q-icon name="search" />
           </template>
@@ -42,7 +50,13 @@
     </q-card>
 
     <div v-if="filteredSections.length">
-      <q-card v-for="(section, index) in filteredSections" :key="index" flat bordered class="refund-card q-mb-md">
+      <q-card
+        v-for="(section, index) in filteredSections"
+        :key="index"
+        flat
+        bordered
+        class="refund-card q-mb-md"
+      >
         <q-card-section>
           <div class="row items-start no-wrap">
             <div class="section-number">{{ index + 1 }}</div>
@@ -50,12 +64,19 @@
             <div class="section-content">
               <div class="section-title">{{ section.title }}</div>
 
-              <div v-for="(paragraph, pIndex) in section.content" :key="pIndex" class="section-text">
+              <div
+                v-for="(paragraph, pIndex) in section.content"
+                :key="pIndex"
+                class="section-text"
+              >
                 {{ paragraph }}
               </div>
 
               <ul v-if="section.points" class="refund-list">
-                <li v-for="(point, pointIndex) in section.points" :key="pointIndex">
+                <li
+                  v-for="(point, pointIndex) in section.points"
+                  :key="pointIndex"
+                >
                   {{ point }}
                 </li>
               </ul>
@@ -69,58 +90,114 @@
       <q-card-section class="text-center q-pa-xl">
         <q-icon name="search_off" size="55px" color="grey-5" />
         <div class="text-h6 text-grey-8 q-mt-md">No results found</div>
-        <div class="text-grey-6 q-mt-sm">We could not find any refund policy section matching your search.</div>
-        <q-btn flat color="primary" icon="clear" label="Clear Search" class="q-mt-md" @click="searchText = ''" />
+        <div class="text-grey-6 q-mt-sm"
+          >We could not find any refund policy section matching your
+          search.</div
+        >
+        <q-btn
+          flat
+          color="primary"
+          icon="clear"
+          label="Clear Search"
+          class="q-mt-md"
+          @click="searchText = ''"
+        />
       </q-card-section>
     </q-card>
 
     <q-card flat bordered class="summary-card q-mt-lg">
       <q-card-section>
         <div class="row items-center">
-          <q-icon name="warning_amber" color="primary" size="26px" class="q-mr-sm" />
+          <q-icon
+            name="warning_amber"
+            color="primary"
+            size="26px"
+            class="q-mr-sm"
+          />
           <div class="text-h6 text-weight-bold">Important Notice</div>
         </div>
 
         <div class="summary-text q-mt-md">
-          Most platform subscription fees are non-refundable once the driver account or service access has been activated.
-          The company may review refund requests only in limited cases such as duplicate charges, incorrect billing,
-          or a platform error that prevented access. Drivers should read the policy carefully before paying any fee.
+          Most platform subscription fees are non-refundable once the driver
+          account or service access has been activated. The company may review
+          refund requests only in limited cases such as duplicate charges,
+          incorrect billing, or a platform error that prevented access. Drivers
+          should read the policy carefully before paying any fee.
         </div>
       </q-card-section>
     </q-card>
 
-    <div class="text-subtitle1 text-weight-bold q-mt-xl q-mb-md">Related Driver Information</div>
+    <div class="text-subtitle1 text-weight-bold q-mt-xl q-mb-md"
+      >Related Driver Information</div
+    >
 
     <div class="row q-col-gutter-md">
       <div class="col-12 col-md-4">
-        <q-card flat bordered class="related-card" clickable @click="goTo('/driver/privacy-policy')">
+        <q-card
+          flat
+          bordered
+          class="related-card"
+          clickable
+          @click="goTo('/driver/privacy-policy')"
+        >
           <q-card-section>
             <q-icon name="privacy_tip" color="primary" size="30px" />
-            <div class="text-subtitle1 text-weight-bold q-mt-md">Privacy Policy</div>
-            <div class="text-grey-7 text-caption q-mt-xs">Understand how your information is handled.</div>
-            <div class="text-primary text-caption q-mt-md">View Policy <q-icon name="arrow_forward" size="16px" /></div>
+            <div class="text-subtitle1 text-weight-bold q-mt-md"
+              >Privacy Policy</div
+            >
+            <div class="text-grey-7 text-caption q-mt-xs"
+              >Understand how your information is handled.</div
+            >
+            <div class="text-primary text-caption q-mt-md"
+              >View Policy <q-icon name="arrow_forward" size="16px"
+            /></div>
           </q-card-section>
         </q-card>
       </div>
 
       <div class="col-12 col-md-4">
-        <q-card flat bordered class="related-card" clickable @click="goTo('/driver/terms-and-conditions')">
+        <q-card
+          flat
+          bordered
+          class="related-card"
+          clickable
+          @click="goTo('/driver/terms-and-conditions')"
+        >
           <q-card-section>
             <q-icon name="description" color="primary" size="30px" />
-            <div class="text-subtitle1 text-weight-bold q-mt-md">Terms & Conditions</div>
-            <div class="text-grey-7 text-caption q-mt-xs">Review the legal responsibilities of driving on the platform.</div>
-            <div class="text-primary text-caption q-mt-md">View Terms <q-icon name="arrow_forward" size="16px" /></div>
+            <div class="text-subtitle1 text-weight-bold q-mt-md"
+              >Terms & Conditions</div
+            >
+            <div class="text-grey-7 text-caption q-mt-xs"
+              >Review the legal responsibilities of driving on the
+              platform.</div
+            >
+            <div class="text-primary text-caption q-mt-md"
+              >View Terms <q-icon name="arrow_forward" size="16px"
+            /></div>
           </q-card-section>
         </q-card>
       </div>
 
       <div class="col-12 col-md-4">
-        <q-card flat bordered class="related-card" clickable @click="goTo('/driver/faq')">
+        <q-card
+          flat
+          bordered
+          class="related-card"
+          clickable
+          @click="goTo('/driver/faq')"
+        >
           <q-card-section>
             <q-icon name="help_outline" color="primary" size="30px" />
-            <div class="text-subtitle1 text-weight-bold q-mt-md">Driver FAQ</div>
-            <div class="text-grey-7 text-caption q-mt-xs">Find quick answers to common questions.</div>
-            <div class="text-primary text-caption q-mt-md">View FAQ <q-icon name="arrow_forward" size="16px" /></div>
+            <div class="text-subtitle1 text-weight-bold q-mt-md"
+              >Driver FAQ</div
+            >
+            <div class="text-grey-7 text-caption q-mt-xs"
+              >Find quick answers to common questions.</div
+            >
+            <div class="text-primary text-caption q-mt-md"
+              >View FAQ <q-icon name="arrow_forward" size="16px"
+            /></div>
           </q-card-section>
         </q-card>
       </div>
@@ -278,16 +355,20 @@ const filteredSections = computed(() => {
 
   if (!search) return sections
 
-  return sections.filter((section) => {
+  return sections.filter(section => {
     const titleMatch = section.title.toLowerCase().includes(search)
-    const contentMatch = section.content.some((item) => item.toLowerCase().includes(search))
-    const pointsMatch = section.points?.some((item) => item.toLowerCase().includes(search))
+    const contentMatch = section.content.some(item =>
+      item.toLowerCase().includes(search)
+    )
+    const pointsMatch = section.points?.some(item =>
+      item.toLowerCase().includes(search)
+    )
 
     return titleMatch || contentMatch || pointsMatch
   })
 })
 
-const goTo = (route) => {
+const goTo = route => {
   router.push(route)
 }
 </script>

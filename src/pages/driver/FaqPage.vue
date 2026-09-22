@@ -1,18 +1,12 @@
 <template>
   <q-page class="driver-faq-page q-pa-md">
-
     <!-- =====================================================
          PAGE HEADER
     ====================================================== -->
     <div class="page-header q-mb-lg">
       <div class="row items-center no-wrap">
-
         <div class="header-icon">
-          <q-icon
-            name="help_outline"
-            size="30px"
-            color="primary"
-          />
+          <q-icon name="help_outline" size="30px" color="primary" />
         </div>
 
         <div class="q-ml-md">
@@ -24,18 +18,13 @@
             Find answers to common questions about driving with BatohiDrive
           </div>
         </div>
-
       </div>
     </div>
 
     <!-- =====================================================
          SEARCH
     ====================================================== -->
-    <q-card
-      flat
-      bordered
-      class="search-card q-mb-lg"
-    >
+    <q-card flat bordered class="search-card q-mb-lg">
       <q-input
         v-model="search"
         outlined
@@ -53,17 +42,12 @@
     <!-- =====================================================
          CATEGORY FILTER
     ====================================================== -->
-    <q-card
-      flat
-      bordered
-      class="category-card q-mb-lg"
-    >
+    <q-card flat bordered class="category-card q-mb-lg">
       <div class="text-subtitle1 text-weight-bold q-mb-md">
         Browse by Category
       </div>
 
       <div class="category-list">
-
         <q-btn
           v-for="category in categories"
           :key="category"
@@ -76,18 +60,13 @@
           class="category-btn"
           @click="selectedCategory = category"
         />
-
       </div>
     </q-card>
 
     <!-- =====================================================
          FAQ LIST
     ====================================================== -->
-    <div
-      v-if="filteredFaqs.length"
-      class="faq-list"
-    >
-
+    <div v-if="filteredFaqs.length" class="faq-list">
       <q-card
         v-for="faq in filteredFaqs"
         :key="faq.id"
@@ -95,7 +74,6 @@
         bordered
         class="faq-card q-mb-md"
       >
-
         <q-expansion-item
           expand-separator
           :icon="faq.icon"
@@ -104,19 +82,11 @@
           header-class="faq-header"
           expand-icon-class="text-primary"
         >
-
           <q-card-section class="faq-answer">
-
             <div class="answer-label">
-              <q-icon
-                name="lightbulb"
-                color="primary"
-                size="20px"
-              />
+              <q-icon name="lightbulb" color="primary" size="20px" />
 
-              <span>
-                Answer
-              </span>
+              <span> Answer </span>
             </div>
 
             <div class="answer-text q-mt-sm">
@@ -124,45 +94,23 @@
             </div>
 
             <!-- Additional Points -->
-            <ul
-              v-if="faq.points && faq.points.length"
-              class="answer-list"
-            >
-              <li
-                v-for="(point, index) in faq.points"
-                :key="index"
-              >
+            <ul v-if="faq.points && faq.points.length" class="answer-list">
+              <li v-for="(point, index) in faq.points" :key="index">
                 {{ point }}
               </li>
             </ul>
-
           </q-card-section>
-
         </q-expansion-item>
-
       </q-card>
-
     </div>
 
     <!-- =====================================================
          EMPTY STATE
     ====================================================== -->
-    <q-card
-      v-else
-      flat
-      bordered
-      class="empty-card"
-    >
+    <q-card v-else flat bordered class="empty-card">
+      <q-icon name="search_off" size="55px" color="grey-5" />
 
-      <q-icon
-        name="search_off"
-        size="55px"
-        color="grey-5"
-      />
-
-      <div class="text-h6 q-mt-md">
-        No questions found
-      </div>
+      <div class="text-h6 q-mt-md"> No questions found </div>
 
       <div class="text-grey-6 q-mt-sm">
         Try searching with a different keyword or category.
@@ -177,7 +125,6 @@
         class="q-mt-md"
         @click="clearFilters"
       />
-
     </q-card>
 
     <!-- =====================================================
@@ -188,7 +135,6 @@
     </div>
 
     <div class="row q-col-gutter-md">
-
       <!-- My Trips -->
       <div class="col-12 col-sm-6 col-md-3">
         <q-card
@@ -199,7 +145,6 @@
           @click="goTo('/driver/assigned-trips')"
         >
           <q-card-section>
-
             <q-avatar
               color="blue-1"
               text-color="primary"
@@ -214,7 +159,6 @@
             <div class="text-grey-7 q-mt-xs">
               View your assigned and completed trips.
             </div>
-
           </q-card-section>
         </q-card>
       </div>
@@ -229,7 +173,6 @@
           @click="goTo('/driver/earnings')"
         >
           <q-card-section>
-
             <q-avatar
               color="green-1"
               text-color="positive"
@@ -244,7 +187,6 @@
             <div class="text-grey-7 q-mt-xs">
               Check your earnings and payment information.
             </div>
-
           </q-card-section>
         </q-card>
       </div>
@@ -259,7 +201,6 @@
           @click="goTo('/driver/management')"
         >
           <q-card-section>
-
             <q-avatar
               color="orange-1"
               text-color="orange-8"
@@ -274,7 +215,6 @@
             <div class="text-grey-7 q-mt-xs">
               Manage your vehicle and related information.
             </div>
-
           </q-card-section>
         </q-card>
       </div>
@@ -289,7 +229,6 @@
           @click="contactSupport"
         >
           <q-card-section>
-
             <q-avatar
               color="purple-1"
               text-color="purple"
@@ -297,33 +236,22 @@
               size="48px"
             />
 
-            <div class="text-subtitle1 text-weight-bold q-mt-md">
-              Support
-            </div>
+            <div class="text-subtitle1 text-weight-bold q-mt-md"> Support </div>
 
             <div class="text-grey-7 q-mt-xs">
               Contact support for help with driver issues.
             </div>
-
           </q-card-section>
         </q-card>
       </div>
-
     </div>
 
     <!-- =====================================================
          SUPPORT CARD
     ====================================================== -->
-    <q-card
-      flat
-      bordered
-      class="support-card q-mt-lg"
-    >
-
+    <q-card flat bordered class="support-card q-mt-lg">
       <div class="row items-center justify-between">
-
         <div class="row items-center">
-
           <q-avatar
             color="blue-1"
             text-color="primary"
@@ -332,18 +260,15 @@
           />
 
           <div class="q-ml-md">
-
             <div class="text-subtitle1 text-weight-bold">
               Still need help?
             </div>
 
             <div class="text-grey-7 q-mt-xs">
-              Our support team is available to help you with
-              trips, customers, payments and account-related issues.
+              Our support team is available to help you with trips, customers,
+              payments and account-related issues.
             </div>
-
           </div>
-
         </div>
 
         <q-btn
@@ -354,9 +279,7 @@
           class="q-mt-sm"
           @click="contactSupport"
         />
-
       </div>
-
     </q-card>
 
     <!-- =====================================================
@@ -367,10 +290,8 @@
     </div>
 
     <div class="row q-col-gutter-md">
-
       <!-- Terms -->
       <div class="col-12 col-md-4">
-
         <q-card
           flat
           bordered
@@ -378,14 +299,8 @@
           clickable
           @click="goTo('/driver/terms-and-conditions')"
         >
-
           <q-card-section>
-
-            <q-icon
-              name="description"
-              size="32px"
-              color="primary"
-            />
+            <q-icon name="description" size="32px" color="primary" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-sm">
               Terms & Conditions
@@ -394,16 +309,12 @@
             <div class="text-grey-7 q-mt-xs">
               Review the terms and conditions applicable to drivers.
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
 
       <!-- Privacy -->
       <div class="col-12 col-md-4">
-
         <q-card
           flat
           bordered
@@ -411,14 +322,8 @@
           clickable
           @click="goTo('/driver/privacy-policy')"
         >
-
           <q-card-section>
-
-            <q-icon
-              name="privacy_tip"
-              size="32px"
-              color="primary"
-            />
+            <q-icon name="privacy_tip" size="32px" color="primary" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-sm">
               Privacy Policy
@@ -427,16 +332,12 @@
             <div class="text-grey-7 q-mt-xs">
               Learn how driver information is handled and protected.
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
 
       <!-- About -->
       <div class="col-12 col-md-4">
-
         <q-card
           flat
           bordered
@@ -444,14 +345,8 @@
           clickable
           @click="goTo('/driver/about-us')"
         >
-
           <q-card-section>
-
-            <q-icon
-              name="info"
-              size="32px"
-              color="primary"
-            />
+            <q-icon name="info" size="32px" color="primary" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-sm">
               About BatohiDrive
@@ -460,15 +355,10 @@
             <div class="text-grey-7 q-mt-xs">
               Learn more about BatohiDrive and our services.
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
-
     </div>
-
   </q-page>
 </template>
 
@@ -489,7 +379,18 @@ const selectedCategory = ref('All')
 // CATEGORIES
 // =====================================================
 
-const categories = ['All', 'Account', 'Trips', 'Bookings', 'Vehicle', 'Documents', 'Earnings', 'Cancellation', 'Safety', 'Support']
+const categories = [
+  'All',
+  'Account',
+  'Trips',
+  'Bookings',
+  'Vehicle',
+  'Documents',
+  'Earnings',
+  'Cancellation',
+  'Safety',
+  'Support'
+]
 
 const faqs = ref([
   {
@@ -497,7 +398,8 @@ const faqs = ref([
     category: 'Account',
     icon: 'person',
     question: 'Who is responsible for the vehicle and driver documents?',
-    answer: 'The driver is responsible for the vehicle, legal compliance, driver documents, and operational safety. BatohiDrive provides the platform and subscription access, but does not own the vehicle or operate the trip business directly.',
+    answer:
+      'The driver is responsible for the vehicle, legal compliance, driver documents, and operational safety. BatohiDrive provides the platform and subscription access, but does not own the vehicle or operate the trip business directly.',
     points: [
       'The driver must provide accurate ownership or authorization information when listing a vehicle.',
       'The driver must keep all required licenses, registrations, and insurance documents valid.',
@@ -509,7 +411,8 @@ const faqs = ref([
     category: 'Account',
     icon: 'lock',
     question: 'What if I forget my password or cannot access my account?',
-    answer: 'Use the forgot password option on the login page or contact support through the driver panel for account recovery help.',
+    answer:
+      'Use the forgot password option on the login page or contact support through the driver panel for account recovery help.',
     points: [
       'Verify the registered mobile number or email before resetting.',
       'Do not share your account credentials with anyone.',
@@ -521,7 +424,8 @@ const faqs = ref([
     category: 'Trips',
     icon: 'route',
     question: 'Where can I see my assigned trips?',
-    answer: 'Assigned trips can be viewed in the Trips or My Trips section of your driver panel.',
+    answer:
+      'Assigned trips can be viewed in the Trips or My Trips section of your driver panel.',
     points: [
       'Check pickup location, route, trip status, and customer information.',
       'Update trip status only after actual trip action is completed.',
@@ -533,7 +437,8 @@ const faqs = ref([
     category: 'Trips',
     icon: 'play_circle',
     question: 'How do I start and complete a trip?',
-    answer: 'Open the assigned booking and use the Start Trip option when you are at the pickup location. Complete the trip when the ride is finished and update the booking status in the app.',
+    answer:
+      'Open the assigned booking and use the Start Trip option when you are at the pickup location. Complete the trip when the ride is finished and update the booking status in the app.',
     points: [
       'Verify the pickup location and customer before starting.',
       'Do not mark the trip complete before the ride is actually finished.',
@@ -545,7 +450,8 @@ const faqs = ref([
     category: 'Bookings',
     icon: 'event',
     question: 'How do I receive new bookings?',
-    answer: 'New or assigned bookings appear in the driver panel and may also trigger notifications depending on the system configuration.',
+    answer:
+      'New or assigned bookings appear in the driver panel and may also trigger notifications depending on the system configuration.',
     points: [
       'Check your booking list regularly.',
       'Review pickup time and route before accepting or starting the trip.',
@@ -557,7 +463,8 @@ const faqs = ref([
     category: 'Vehicle',
     icon: 'directions_car',
     question: 'Can I change my registered vehicle or owner details?',
-    answer: 'Yes, but the updated information must be accurate and may require document verification before it is accepted on the platform.',
+    answer:
+      'Yes, but the updated information must be accurate and may require document verification before it is accepted on the platform.',
     points: [
       'Updated vehicle details must match the actual legal status of the vehicle.',
       'Any change in ownership or authorization must be reported promptly.',
@@ -569,7 +476,8 @@ const faqs = ref([
     category: 'Vehicle',
     icon: 'build',
     question: 'What if my vehicle breaks down during a trip?',
-    answer: 'Move to a safe place if possible, prioritize safety, and contact support or emergency services as needed.',
+    answer:
+      'Move to a safe place if possible, prioritize safety, and contact support or emergency services as needed.',
     points: [
       'Do not continue driving an unsafe vehicle.',
       'Inform the platform support team as soon as it is safe to do so.',
@@ -581,7 +489,8 @@ const faqs = ref([
     category: 'Documents',
     icon: 'folder',
     question: 'Where can I check my driver and vehicle documents?',
-    answer: 'If document management is enabled for your account, you can view and update required documents from the driver panel or vehicle section.',
+    answer:
+      'If document management is enabled for your account, you can view and update required documents from the driver panel or vehicle section.',
     points: [
       'Keep all required documents valid and up to date.',
       'Upload updated documents when requested.',
@@ -593,7 +502,8 @@ const faqs = ref([
     category: 'Documents',
     icon: 'verified',
     question: 'What happens if my documents expire?',
-    answer: 'Expired or invalid documents may block bookings or trigger account restrictions. Drivers should renew them before expiry whenever possible.',
+    answer:
+      'Expired or invalid documents may block bookings or trigger account restrictions. Drivers should renew them before expiry whenever possible.',
     points: [
       'Monitor expiry dates regularly.',
       'Submit renewal documents before the expiry date.',
@@ -605,7 +515,8 @@ const faqs = ref([
     category: 'Earnings',
     icon: 'currency_rupee',
     question: 'Where can I see my earnings and payouts?',
-    answer: 'Earnings and payment information are available in the Earnings or Payments section of the driver panel, depending on your account setup.',
+    answer:
+      'Earnings and payment information are available in the Earnings or Payments section of the driver panel, depending on your account setup.',
     points: [
       'Check completed rides and payout status.',
       'Make sure bank and payout information is accurate.',
@@ -617,7 +528,8 @@ const faqs = ref([
     category: 'Earnings',
     icon: 'money_off',
     question: 'Is the subscription fee refundable?',
-    answer: 'Usually no, subscription and platform access fees are non-refundable once the service has been activated or used, except in limited cases such as duplicate billing, wrong charge, or platform access failure.',
+    answer:
+      'Usually no, subscription and platform access fees are non-refundable once the service has been activated or used, except in limited cases such as duplicate billing, wrong charge, or platform access failure.',
     points: [
       'Deferred or unused access may be reviewed in limited cases.',
       'No refund is given for low earnings or inactivity.',
@@ -629,7 +541,8 @@ const faqs = ref([
     category: 'Cancellation',
     icon: 'event_busy',
     question: 'Can I cancel a trip?',
-    answer: 'Trip cancellation should only happen for valid reasons and must follow the platform process. Repeated or unnecessary cancellations may affect your account status.',
+    answer:
+      'Trip cancellation should only happen for valid reasons and must follow the platform process. Repeated or unnecessary cancellations may affect your account status.',
     points: [
       'Contact support if you cannot complete a trip.',
       'Do not cancel without a valid reason.',
@@ -641,7 +554,8 @@ const faqs = ref([
     category: 'Safety',
     icon: 'health_and_safety',
     question: 'What should I do in case of an emergency?',
-    answer: 'Prioritize safety, contact emergency services if required, and inform BatohiDrive support as soon as safe to do so.',
+    answer:
+      'Prioritize safety, contact emergency services if required, and inform BatohiDrive support as soon as safe to do so.',
     points: [
       'Move to a safe place when possible.',
       'Do not continue unsafe driving.',
@@ -653,7 +567,8 @@ const faqs = ref([
     category: 'Safety',
     icon: 'security',
     question: 'What safety rules must I follow as a driver?',
-    answer: 'Drivers must follow all traffic laws, drive responsibly, and ensure the vehicle is safe to operate before and during trips.',
+    answer:
+      'Drivers must follow all traffic laws, drive responsibly, and ensure the vehicle is safe to operate before and during trips.',
     points: [
       'Follow local traffic laws and road safety rules.',
       'Do not drive under the influence of alcohol or drugs.',
@@ -666,7 +581,8 @@ const faqs = ref([
     category: 'Support',
     icon: 'support_agent',
     question: 'How can I contact BatohiDrive support?',
-    answer: 'You can contact support through the support option in the driver panel or the official support channel available to your account.',
+    answer:
+      'You can contact support through the support option in the driver panel or the official support channel available to your account.',
     points: [
       'Include booking ID, issue summary, and screenshots if possible.',
       'Report serious issues promptly.',
@@ -683,7 +599,6 @@ const filteredFaqs = computed(() => {
   const keyword = search.value.trim().toLowerCase()
 
   return faqs.value.filter(faq => {
-
     const categoryMatch =
       selectedCategory.value === 'All' ||
       faq.category === selectedCategory.value
@@ -696,16 +611,13 @@ const filteredFaqs = computed(() => {
       return true
     }
 
-    const questionMatch =
-      faq.question.toLowerCase().includes(keyword)
+    const questionMatch = faq.question.toLowerCase().includes(keyword)
 
-    const answerMatch =
-      faq.answer.toLowerCase().includes(keyword)
+    const answerMatch = faq.answer.toLowerCase().includes(keyword)
 
-    const pointsMatch =
-      faq.points.some(point =>
-        point.toLowerCase().includes(keyword)
-      )
+    const pointsMatch = faq.points.some(point =>
+      point.toLowerCase().includes(keyword)
+    )
 
     return questionMatch || answerMatch || pointsMatch
   })
@@ -715,7 +627,7 @@ const filteredFaqs = computed(() => {
 // CATEGORY ICON
 // =====================================================
 
-const getCategoryIcon = (category) => {
+const getCategoryIcon = category => {
   const icons = {
     All: 'apps',
     Account: 'person',
@@ -746,7 +658,7 @@ const clearFilters = () => {
 // ROUTING
 // =====================================================
 
-const goTo = (route) => {
+const goTo = route => {
   router.push(route)
 }
 
@@ -937,7 +849,6 @@ const contactSupport = () => {
 ===================================================== */
 
 @media (max-width: 768px) {
-
   .driver-faq-page {
     padding: 12px !important;
   }

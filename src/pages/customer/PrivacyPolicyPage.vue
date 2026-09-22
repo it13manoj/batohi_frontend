@@ -1,51 +1,32 @@
 <template>
   <q-page class="privacy-page">
-
     <!-- =====================================================
          PAGE HEADER
     ====================================================== -->
     <div class="privacy-header">
-
       <div class="header-content">
-
         <div class="header-icon">
-          <q-icon
-            name="privacy_tip"
-            size="36px"
-          />
+          <q-icon name="privacy_tip" size="36px" />
         </div>
 
         <div class="col">
-
-          <div class="page-title">
-            Privacy Policy
-          </div>
+          <div class="page-title"> Privacy Policy </div>
 
           <div class="page-subtitle">
             Learn how BatohiDrive collects, uses and protects your information
           </div>
-
         </div>
-
       </div>
-
     </div>
-
 
     <!-- =====================================================
          MAIN CONTAINER
     ====================================================== -->
     <div class="privacy-container">
-
       <!-- ===================================================
            SEARCH
       ==================================================== -->
-      <q-card
-        flat
-        bordered
-        class="search-card q-mb-lg"
-      >
-
+      <q-card flat bordered class="search-card q-mb-lg">
         <q-input
           v-model="search"
           outlined
@@ -54,32 +35,18 @@
           clearable
           placeholder="Search privacy policy..."
         >
-
           <template #prepend>
-            <q-icon
-              name="search"
-              color="primary"
-            />
+            <q-icon name="search" color="primary" />
           </template>
-
         </q-input>
-
       </q-card>
-
 
       <!-- ===================================================
            POLICY INFORMATION
       ==================================================== -->
-      <q-card
-        flat
-        bordered
-        class="policy-info-card q-mb-lg"
-      >
-
+      <q-card flat bordered class="policy-info-card q-mb-lg">
         <q-card-section>
-
           <div class="row items-center no-wrap">
-
             <q-icon
               name="verified_user"
               color="primary"
@@ -88,7 +55,6 @@
             />
 
             <div class="col">
-
               <div class="text-subtitle1 text-weight-bold">
                 Your Privacy Matters
               </div>
@@ -96,82 +62,55 @@
               <div class="text-caption text-grey-7 q-mt-xs">
                 Last updated: 02 September 2026
               </div>
-
             </div>
-
           </div>
 
           <div class="policy-intro q-mt-md">
-            BatohiDrive respects your privacy and is committed to
-            protecting your personal information. This Privacy Policy
-            explains how information may be collected, used and protected
-            when you use our platform and services.
+            BatohiDrive respects your privacy and is committed to protecting
+            your personal information. This Privacy Policy explains how
+            information may be collected, used and protected when you use our
+            platform and services.
           </div>
-
         </q-card-section>
-
       </q-card>
-
 
       <!-- ===================================================
            CONTENT
       ==================================================== -->
       <div class="row q-col-gutter-lg">
-
         <!-- =================================================
              TABLE OF CONTENTS
         ================================================== -->
         <div class="col-12 col-md-3">
-
-          <q-card
-            flat
-            bordered
-            class="toc-card"
-          >
-
+          <q-card flat bordered class="toc-card">
             <q-card-section>
-
               <div class="text-subtitle1 text-weight-bold q-mb-md">
                 Quick Navigation
               </div>
 
               <div class="toc-list">
-
                 <div
                   v-for="section in filteredSections"
                   :key="section.id"
                   class="toc-item"
                   @click="scrollToSection(section.id)"
                 >
-
-                  <q-icon
-                    name="chevron_right"
-                    size="18px"
-                    color="primary"
-                  />
+                  <q-icon name="chevron_right" size="18px" color="primary" />
 
                   <span>
                     {{ section.title }}
                   </span>
-
                 </div>
-
               </div>
-
             </q-card-section>
-
           </q-card>
-
         </div>
-
 
         <!-- =================================================
              POLICY SECTIONS
         ================================================== -->
         <div class="col-12 col-md-9">
-
           <div class="privacy-content">
-
             <q-card
               v-for="(section, index) in filteredSections"
               :key="section.id"
@@ -180,12 +119,9 @@
               bordered
               class="privacy-section q-mb-md"
             >
-
               <q-card-section>
-
                 <!-- Section Header -->
                 <div class="section-heading">
-
                   <q-avatar
                     color="primary"
                     text-color="white"
@@ -198,20 +134,12 @@
                   <div class="section-title">
                     {{ section.title }}
                   </div>
-
                 </div>
 
-
                 <!-- Section Content -->
-                <div
-                  class="section-content q-mt-md"
-                  v-html="section.content"
-                />
-
+                <div class="section-content q-mt-md" v-html="section.content" />
               </q-card-section>
-
             </q-card>
-
 
             <!-- =============================================
                  EMPTY STATE
@@ -222,14 +150,8 @@
               bordered
               class="empty-card"
             >
-
               <q-card-section class="text-center q-pa-xl">
-
-                <q-icon
-                  name="search_off"
-                  size="60px"
-                  color="grey-5"
-                />
+                <q-icon name="search_off" size="60px" color="grey-5" />
 
                 <div class="text-h6 text-weight-bold q-mt-md">
                   No matching section found
@@ -246,77 +168,47 @@
                   class="q-mt-md"
                   @click="search = ''"
                 />
-
               </q-card-section>
-
             </q-card>
-
           </div>
-
         </div>
-
       </div>
-
 
       <!-- ===================================================
            PRIVACY COMMITMENT
       ==================================================== -->
-      <q-card
-        flat
-        bordered
-        class="commitment-card q-mt-xl"
-      >
-
+      <q-card flat bordered class="commitment-card q-mt-xl">
         <q-card-section>
-
           <div class="row items-start no-wrap">
-
             <div class="commitment-icon">
-
-              <q-icon
-                name="security"
-                size="28px"
-                color="primary"
-              />
-
+              <q-icon name="security" size="28px" color="primary" />
             </div>
 
             <div class="col q-ml-md">
-
               <div class="text-subtitle1 text-weight-bold">
                 Our Commitment to Your Privacy
               </div>
 
               <div class="text-grey-7 q-mt-sm">
                 We aim to handle your information responsibly and use
-                appropriate measures to protect it. We also encourage you
-                to keep your account credentials secure and contact support
-                if you notice any suspicious account activity.
+                appropriate measures to protect it. We also encourage you to
+                keep your account credentials secure and contact support if you
+                notice any suspicious account activity.
               </div>
-
             </div>
-
           </div>
-
         </q-card-section>
-
       </q-card>
-
 
       <!-- ===================================================
            RELATED POLICIES
       ==================================================== -->
       <div class="related-section q-mt-xl q-mb-xl">
-
-        <div class="text-h6 text-weight-bold q-mb-md">
-          Related Policies
-        </div>
+        <div class="text-h6 text-weight-bold q-mb-md"> Related Policies </div>
 
         <div class="row q-col-gutter-md">
-
           <!-- Terms -->
           <div class="col-12 col-sm-4">
-
             <q-card
               flat
               bordered
@@ -324,14 +216,8 @@
               class="related-card"
               @click="goToTerms"
             >
-
               <q-card-section>
-
-                <q-icon
-                  name="description"
-                  size="30px"
-                  color="primary"
-                />
+                <q-icon name="description" size="30px" color="primary" />
 
                 <div class="text-subtitle1 text-weight-bold q-mt-sm">
                   Terms & Conditions
@@ -340,17 +226,12 @@
                 <div class="text-caption text-grey-7 q-mt-xs">
                   Read the terms for using BatohiDrive.
                 </div>
-
               </q-card-section>
-
             </q-card>
-
           </div>
-
 
           <!-- Cancellation -->
           <div class="col-12 col-sm-4">
-
             <q-card
               flat
               bordered
@@ -358,14 +239,8 @@
               class="related-card"
               @click="goToCancellation"
             >
-
               <q-card-section>
-
-                <q-icon
-                  name="event_busy"
-                  size="30px"
-                  color="primary"
-                />
+                <q-icon name="event_busy" size="30px" color="primary" />
 
                 <div class="text-subtitle1 text-weight-bold q-mt-sm">
                   Cancellation Policy
@@ -374,17 +249,12 @@
                 <div class="text-caption text-grey-7 q-mt-xs">
                   Learn about booking cancellation rules.
                 </div>
-
               </q-card-section>
-
             </q-card>
-
           </div>
-
 
           <!-- Refund -->
           <div class="col-12 col-sm-4">
-
             <q-card
               flat
               bordered
@@ -392,14 +262,8 @@
               class="related-card"
               @click="goToRefund"
             >
-
               <q-card-section>
-
-                <q-icon
-                  name="currency_rupee"
-                  size="30px"
-                  color="primary"
-                />
+                <q-icon name="currency_rupee" size="30px" color="primary" />
 
                 <div class="text-subtitle1 text-weight-bold q-mt-sm">
                   Refund Policy
@@ -408,30 +272,20 @@
                 <div class="text-caption text-grey-7 q-mt-xs">
                   Learn about refunds and payment returns.
                 </div>
-
               </q-card-section>
-
             </q-card>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
-
   </q-page>
 </template>
 
-
 <script setup>
-
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-
 
 // =====================================================
 // SEARCH
@@ -439,465 +293,290 @@ const router = useRouter()
 
 const search = ref('')
 
-
 // =====================================================
 // PRIVACY POLICY SECTIONS
 // =====================================================
 
 const sections = ref([
-
   {
     id: 1,
-
     title: 'Introduction',
-
     content: `
       <p>
-        Welcome to <strong>BatohiDrive</strong>. We respect your privacy
-        and are committed to protecting your personal information.
+        BatohiDrive operates as a digital platform that connects users with available vehicle services and related booking options.
       </p>
-
       <p>
-        This Privacy Policy explains how information may be collected,
-        used, stored and protected when you access or use BatohiDrive
-        services.
+        This Privacy Policy explains how personal information may be collected, used, stored, and protected when you use the BatohiDrive platform.
       </p>
     `
   },
-
-
   {
     id: 2,
-
     title: 'Information We Collect',
-
     content: `
       <p>
-        Depending on how you use BatohiDrive, we may collect information
-        necessary to provide our services.
+        Depending on your use of the platform, we may collect information necessary to provide and manage booking services.
       </p>
-
       <ul>
-        <li>Name and contact information.</li>
-        <li>Account and profile information.</li>
-        <li>Booking and trip information.</li>
-        <li>Vehicle and service preferences.</li>
-        <li>Payment and transaction-related information.</li>
-        <li>Information you provide when contacting support.</li>
+        <li>Name, mobile number, email address, and profile details.</li>
+        <li>Booking, route, pickup, destination, and trip-related information.</li>
+        <li>Vehicle selection, service preferences, and booking history.</li>
+        <li>Payment method details and transaction records.</li>
+        <li>Support requests and communication records.</li>
+        <li>Device, app, and technical information needed for security and service support.</li>
       </ul>
     `
   },
-
-
   {
     id: 3,
-
     title: 'Account Information',
-
     content: `
       <p>
-        When you create a BatohiDrive account, you may be required to
-        provide information such as your name, mobile number, email
-        address and other account details.
+        When you create a BatohiDrive account, you may be required to provide personal information such as your name, phone number, email address, and other account details.
       </p>
-
       <p>
-        You are responsible for keeping your account information accurate
-        and up to date.
+        You are responsible for keeping your account information accurate and secure.
       </p>
     `
   },
-
-
   {
     id: 4,
-
-    title: 'Booking Information',
-
+    title: 'Booking and Ride Information',
     content: `
       <p>
-        When you search for or book a vehicle, information related to
-        your booking may be collected.
+        When you book or track a vehicle service, information related to your booking may be collected and processed.
       </p>
-
       <ul>
-        <li>Pickup location.</li>
-        <li>Destination.</li>
-        <li>Travel date and time.</li>
-        <li>Selected vehicle.</li>
-        <li>Booking status.</li>
-        <li>Transaction details.</li>
+        <li>Pickup and drop-off locations.</li>
+        <li>Request date, time, and trip status.</li>
+        <li>Selected vehicle type and pricing details.</li>
+        <li>Booking confirmation and payment status.</li>
+        <li>Driver or service contact information required for the booking.</li>
       </ul>
-
-      <p>
-        This information helps us process and manage your bookings.
-      </p>
     `
   },
-
-
   {
     id: 5,
-
     title: 'How We Use Your Information',
-
     content: `
       <p>
-        Information collected through BatohiDrive may be used to:
+        We may use customer information for legitimate business, service, safety, legal, and operational purposes, including:
       </p>
-
       <ul>
-        <li>Create and manage your account.</li>
-        <li>Process vehicle bookings.</li>
-        <li>Provide requested transportation services.</li>
-        <li>Process payments and refunds.</li>
-        <li>Communicate booking updates.</li>
-        <li>Provide customer support.</li>
-        <li>Improve our platform and services.</li>
-        <li>Help maintain platform security.</li>
+        <li>Create and manage customer accounts.</li>
+        <li>Process bookings and service requests.</li>
+        <li>Coordinate vehicle services and ride details.</li>
+        <li>Process payments, refunds, and related charges.</li>
+        <li>Communicate booking and support updates.</li>
+        <li>Improve platform performance and customer support.</li>
+        <li>Maintain account security and investigate misuse.</li>
+        <li>Comply with legal, regulatory, and enforcement requirements.</li>
       </ul>
     `
   },
-
-
   {
     id: 6,
-
-    title: 'Payment Information',
-
+    title: 'Driver, Vehicle Owner, and Service Provider Information',
     content: `
       <p>
-        Payments may be processed through third-party payment service
-        providers.
+        To complete a booking, BatohiDrive may need to share relevant information with the assigned driver, vehicle owner, or service provider as necessary for the requested service.
       </p>
-
       <p>
-        Payment providers may process payment information according to
-        their own privacy policies and security practices.
+        This may include booking status, pickup details, trip information, and limited contact details needed to complete the service.
       </p>
-
       <p>
-        BatohiDrive may receive transaction-related information needed
-        to confirm and manage your booking.
+        Customers should verify the trip details provided by the driver or platform before travel and should not share unnecessary personal information outside the booking context.
       </p>
     `
   },
-
-
   {
     id: 7,
-
     title: 'Location Information',
-
     content: `
       <p>
-        Certain BatohiDrive services may require location information,
-        such as pickup or destination details, to provide the requested
-        transportation service.
+        Location information may be used to support trip pickup, route coordination, booking management, and service support.
       </p>
-
       <p>
-        Location information is used only as necessary for the relevant
-        service and booking experience.
+        We only collect and use location data when necessary for the relevant ride or booking service.
       </p>
     `
   },
-
-
   {
     id: 8,
-
-    title: 'Cookies and Similar Technologies',
-
+    title: 'Payment and Refund Information',
     content: `
       <p>
-        BatohiDrive may use cookies or similar technologies to support
-        website functionality and improve the user experience.
+        Payments may be processed through third-party payment providers. BatohiDrive may receive transaction-related information required to confirm and manage bookings or refunds.
       </p>
-
       <p>
-        These technologies may help remember preferences, maintain
-        sessions and understand how users interact with the platform.
+        Customers are responsible for providing correct payment information and reviewing booking terms, cancellation rules, and refund conditions before confirming a payment.
       </p>
     `
   },
-
-
   {
     id: 9,
-
-    title: 'Sharing of Information',
-
+    title: 'Sharing and Disclosure',
     content: `
       <p>
-        We may share relevant information with service providers or
-        partners when necessary to provide BatohiDrive services.
+        BatohiDrive may share information with relevant service providers, drivers, vehicle owners, payment partners, or authorized third parties where necessary to operate the platform or deliver the service.
       </p>
-
       <p>
-        For example, information necessary to complete a booking may be
-        shared with an applicable driver, vehicle owner or service partner.
-      </p>
-
-      <p>
-        We may also disclose information when required by applicable law
-        or legal process.
+        We may also disclose information when required by law, court order, regulator request, or necessary security investigation.
       </p>
     `
   },
-
-
   {
     id: 10,
-
-    title: 'Data Security',
-
+    title: 'Vehicle and Driver Responsibility',
     content: `
       <p>
-        BatohiDrive takes reasonable measures to help protect your
-        information against unauthorized access, misuse, alteration
-        or disclosure.
+        BatohiDrive provides the digital platform and booking environment, but the vehicle, driver, driver documents, registration, insurance, and operational execution remain the responsibility of the relevant driver or vehicle owner.
       </p>
-
       <p>
-        However, no internet-based system can be guaranteed to be
-        completely secure.
+        Customers should review the booking details, driver profile, and service information provided through the platform and raise any concerns with support where appropriate.
       </p>
     `
   },
-
-
   {
     id: 11,
-
-    title: 'Data Retention',
-
+    title: 'Data Security',
     content: `
       <p>
-        We may retain information for as long as reasonably necessary
-        to provide services, maintain business records, resolve disputes,
-        comply with legal requirements and enforce applicable agreements.
+        BatohiDrive takes reasonable technical and organizational measures to protect customer information against unauthorized access, misuse, alteration, and disclosure.
+      </p>
+      <p>
+        However, no internet or digital service can be guaranteed to be completely secure. Customers should keep their account credentials and personal information protected.
       </p>
     `
   },
-
-
   {
     id: 12,
-
-    title: 'Your Account Security',
-
+    title: 'Data Retention',
     content: `
       <p>
-        You are responsible for keeping your BatohiDrive login credentials
-        confidential.
+        Customer information may be retained for as long as needed to provide services, process bookings, maintain records, resolve disputes, meet legal obligations, and support platform operations.
       </p>
-
+    `
+  },
+  {
+    id: 13,
+    title: 'Customer Responsibilities',
+    content: `
+      <p>
+        Customers are responsible for keeping their account and personal details accurate and for using the platform in line with the applicable terms and policies.
+      </p>
       <ul>
-        <li>Do not share your password with others.</li>
-        <li>Use a strong and unique password.</li>
-        <li>Log out when using a shared device.</li>
-        <li>Notify support if you suspect unauthorized account access.</li>
+        <li>Do not share login details with others.</li>
+        <li>Do not use false or misleading information.</li>
+        <li>Use customer information only for the relevant booking and service.</li>
+        <li>Notify support if you suspect account misuse or unauthorized access.</li>
       </ul>
     `
   },
-
-
-  {
-    id: 13,
-
-    title: 'Third-Party Services',
-
-    content: `
-      <p>
-        BatohiDrive may use third-party services for functions such as
-        payment processing, analytics, communication or other platform
-        services.
-      </p>
-
-      <p>
-        These third parties may have their own privacy policies and terms
-        governing how information is handled.
-      </p>
-    `
-  },
-
-
   {
     id: 14,
-
-    title: 'Your Privacy Rights',
-
+    title: 'Cookies and Similar Technologies',
     content: `
       <p>
-        Depending on applicable law, you may have rights relating to
-        your personal information.
-      </p>
-
-      <p>
-        These may include requesting access to, correction of or deletion
-        of certain personal information, subject to applicable legal
-        requirements and limitations.
-      </p>
-
-      <p>
-        You may contact BatohiDrive support for privacy-related requests.
+        BatohiDrive may use cookies or similar technologies to support platform functionality, remember preferences, and understand user interactions with the app or website.
       </p>
     `
   },
-
-
   {
     id: 15,
-
-    title: 'Children’s Privacy',
-
+    title: 'Your Rights',
     content: `
       <p>
-        BatohiDrive services are not intended to be used by individuals
-        who are not legally eligible to use the applicable service.
+        Depending on applicable law, you may have rights to access, update, or request deletion or correction of some personal information, subject to legal exceptions and verification requirements.
       </p>
-
       <p>
-        We do not knowingly seek to collect personal information from
-        children in violation of applicable law.
+        If you have privacy concerns or a request, contact BatohiDrive support through the official support channel.
       </p>
     `
   },
-
-
   {
     id: 16,
-
-    title: 'Changes to Privacy Policy',
-
+    title: 'Policy Updates',
     content: `
       <p>
-        BatohiDrive may update this Privacy Policy from time to time
-        to reflect changes in our services, technology, legal requirements
-        or business practices.
+        BatohiDrive may update this Privacy Policy from time to time to reflect changes in services, platform operations, laws, or business practices.
       </p>
-
       <p>
-        The updated Privacy Policy will be made available through the
-        platform. Customers are encouraged to review this page periodically.
+        Updated versions will be posted through the platform, and continued use of the service indicates acceptance of the updated policy.
       </p>
     `
   },
-
-
   {
     id: 17,
-
     title: 'Contact Us',
-
     content: `
       <p>
-        If you have questions, concerns or requests regarding this
-        Privacy Policy or the handling of your information, please contact
-        BatohiDrive support through the available customer support channels.
-      </p>
-
-      <p>
-        When contacting support, please provide sufficient information
-        to help us understand and respond to your request.
+        If you have questions or requests related to this Privacy Policy, personal information handling, or booking issues, please contact BatohiDrive support through the available customer support channel.
       </p>
     `
   }
-
 ])
-
 
 // =====================================================
 // FILTER SECTIONS
 // =====================================================
 
 const filteredSections = computed(() => {
-
-  const keyword = search.value
-    .toLowerCase()
-    .trim()
+  const keyword = search.value.toLowerCase().trim()
 
   if (!keyword) {
     return sections.value
   }
 
   return sections.value.filter(section => {
-
     return (
-      section.title
-        .toLowerCase()
-        .includes(keyword) ||
-
-      section.content
-        .toLowerCase()
-        .includes(keyword)
+      section.title.toLowerCase().includes(keyword) ||
+      section.content.toLowerCase().includes(keyword)
     )
-
   })
-
 })
-
 
 // =====================================================
 // SCROLL TO SECTION
 // =====================================================
 
-const scrollToSection = (id) => {
-
-  const element = document.getElementById(
-    `privacy-section-${id}`
-  )
+const scrollToSection = id => {
+  const element = document.getElementById(`privacy-section-${id}`)
 
   if (element) {
-
     element.scrollIntoView({
       behavior: 'smooth',
       block: 'start'
     })
-
   }
-
 }
-
 
 // =====================================================
 // TERMS & CONDITIONS
 // =====================================================
 
 const goToTerms = () => {
-
   router.push('/customer/terms-and-conditions')
-
 }
-
 
 // =====================================================
 // CANCELLATION POLICY
 // =====================================================
 
 const goToCancellation = () => {
-
   router.push('/customer/cancellation-policy')
-
 }
-
 
 // =====================================================
 // REFUND POLICY
 // =====================================================
 
 const goToRefund = () => {
-
   router.push('/customer/refund-policy')
-
 }
-
 </script>
 
-
 <style scoped>
-
 /* =====================================================
    PAGE
 ===================================================== */
@@ -906,7 +585,6 @@ const goToRefund = () => {
   min-height: 100%;
   background: #f7f8fa;
 }
-
 
 /* =====================================================
    HEADER
@@ -942,7 +620,6 @@ const goToRefund = () => {
   margin-right: 16px;
 }
 
-
 /* =====================================================
    TITLE
 ===================================================== */
@@ -959,7 +636,6 @@ const goToRefund = () => {
   font-size: 14px;
 }
 
-
 /* =====================================================
    CONTAINER
 ===================================================== */
@@ -970,7 +646,6 @@ const goToRefund = () => {
   padding: 28px 20px;
 }
 
-
 /* =====================================================
    SEARCH
 ===================================================== */
@@ -980,7 +655,6 @@ const goToRefund = () => {
   background: #ffffff;
   padding: 8px;
 }
-
 
 /* =====================================================
    POLICY INFO
@@ -996,7 +670,6 @@ const goToRefund = () => {
   font-size: 14px;
   line-height: 1.8;
 }
-
 
 /* =====================================================
    TABLE OF CONTENTS
@@ -1040,7 +713,6 @@ const goToRefund = () => {
   margin-left: 3px;
 }
 
-
 /* =====================================================
    PRIVACY SECTION
 ===================================================== */
@@ -1062,7 +734,6 @@ const goToRefund = () => {
   font-weight: 700;
   color: #1f2937;
 }
-
 
 /* =====================================================
    CONTENT
@@ -1090,7 +761,6 @@ const goToRefund = () => {
   margin-bottom: 7px;
 }
 
-
 /* =====================================================
    COMMITMENT
 ===================================================== */
@@ -1113,7 +783,6 @@ const goToRefund = () => {
   background: rgba(25, 118, 210, 0.1);
 }
 
-
 /* =====================================================
    RELATED POLICIES
 ===================================================== */
@@ -1130,10 +799,8 @@ const goToRefund = () => {
 .related-card:hover {
   transform: translateY(-2px);
 
-  box-shadow:
-    0 5px 18px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.07);
 }
-
 
 /* =====================================================
    EMPTY
@@ -1144,13 +811,11 @@ const goToRefund = () => {
   background: #ffffff;
 }
 
-
 /* =====================================================
    MOBILE
 ===================================================== */
 
 @media (max-width: 768px) {
-
   .privacy-header {
     padding: 20px 16px;
   }
@@ -1188,7 +853,5 @@ const goToRefund = () => {
   .section-title {
     font-size: 16px;
   }
-
 }
-
 </style>

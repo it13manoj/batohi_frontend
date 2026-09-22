@@ -200,15 +200,14 @@ import { Capacitor } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
 import api from '@/config/api'
 import { requestNotificationPermission } from '@/boot/firebase'
-// Router & Quasar
+
 const router = useRouter()
 const $q = useQuasar()
 
-// Form References & State
 const loginForm = ref(null)
 const loading = ref(false)
 const showPassword = ref(false)
-const activeRole = ref('USERS') // Options: 'USERS' | 'DRIVER' | 'AGENT'
+const activeRole = ref('USERS')
 
 const form = reactive({
   email: '',
@@ -216,7 +215,6 @@ const form = reactive({
   remember: false
 })
 
-// Dynamic UI labels based on tab choice
 const roleLabel = computed(() => {
   if (activeRole.value === 'DRIVER') return 'Driver'
   if (activeRole.value === 'AGENT') return 'Agent'
@@ -229,48 +227,51 @@ const roleIcon = computed(() => {
   return 'person'
 })
 
+// Clean old or stale tokens on login screen mount
+onMounted(() => {
+  localStorage.removeItem('token')
+  sessionStorage.removeItem('token')
+  delete api.defaults.headers.common['Authorization']
+})
+
+// Safe Geolocation fetcher with fallback for mobile WebViews
 const getCurrentLocation = () => {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by your browser.'))
+      reject(new Error('Geolocation is not supported.'))
     } else {
       navigator.geolocation.getCurrentPosition(
         position => resolve(position.coords),
         error => reject(error),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        {
+          enableHighAccuracy: false, // Prevents hardware code 1/2 error on battery saver
+          timeout: 10000,
+          maximumAge: 30000
+        }
       )
     }
   })
 }
 
-
-const sendLocationToServer = async (coords, userRole) => {
+// Pass token explicitly to ensure Axios isn't unauthenticated
+const sendLocationToServer = async (coords, userRole, token) => {
   try {
-    await api.post('/users/update-location', {
-      latitude: coords.latitude,
-      longitude: coords.longitude,
-      role: userRole
-    })
-  } catch (err) {
-    console.error('Failed to send location to server:', err)
-  }
-}
-
-// Helper function to decode JWT payload safely
-const decodeJwt = (token) => {
-  try {
-    const base64Url = token.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+    await api.post(
+      '/users/update-location',
+      {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        role: userRole
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
     )
-    return JSON.parse(jsonPayload)
-  } catch (e) {
-    console.error('Error decoding JWT token:', e)
-    return null
+    console.log('🌐 Post-login location successfully updated!')
+  } catch (err) {
+    console.error('Failed to send location to server:', err.response?.data || err.message)
   }
 }
 
@@ -295,20 +296,23 @@ const handleLogin = async () => {
       throw new Error('No token received from server')
     }
 
-    // Store Token
+    const token = data.token
+
+    // ALWAYS save token to localStorage so background boot watchers can read it
+    localStorage.setItem('token', token)
     if (form.remember) {
-      localStorage.setItem('token', data.token)
-    } else {
-      sessionStorage.setItem('token', data.token)
+      sessionStorage.setItem('token', token)
     }
 
-    // 📍 >>> ADD LOCATION CAPTURE HERE <<<
+    // CRITICAL: Set global default header for all subsequent Axios calls
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
+    // Non-blocking location capture
     try {
       const coords = await getCurrentLocation()
-      await sendLocationToServer(coords, activeRole.value)
+      await sendLocationToServer(coords, activeRole.value, token)
     } catch (geoErr) {
-      console.warn('Geolocation failed or was denied by user:', geoErr.message)
-      // Login continues even if user denies location permissions
+      console.warn('Geolocation skipped or denied:', geoErr.message)
     }
 
     $q.notify({
@@ -317,40 +321,36 @@ const handleLogin = async () => {
       position: 'top'
     })
 
+    // Enable push notifications asynchronously without blocking router navigation
+    enableNotifications().catch(err => console.warn('Push setup failed:', err))
+
     // Redirect to designated dashboard
     const selectedRole = activeRole.value.toUpperCase()
     if (selectedRole === 'DRIVER') {
       router.push('/driver/profile')
-    } else if (selectedRole === 'AGENTS') {
+    } else if (selectedRole === 'AGENT' || selectedRole === 'AGENTS') {
       router.push('/agent/dashboard')
     } else {
       router.push('/customer/dashboard')
     }
 
-    enableNotifications();
   } catch (error) {
     console.error('Login Error:', error)
-    // ... error handling
+    $q.notify({
+      type: 'negative',
+      message: error.response?.data?.message || 'Login failed. Please check credentials.',
+      position: 'top'
+    })
   } finally {
-
     loading.value = false
   }
 }
 
-// Navigation
-const goToRegister = () => {
-  router.push('/register')
-}
+const goToRegister = () => router.push('/register')
+const goToForgotPassword = () => router.push('/forgot-password')
 
-const goToForgotPassword = () => {
-  router.push('/forgot-password')
-}
-
-  async function enableNotifications() {
+async function enableNotifications() {
   try {
-    let deviceToken = null
-
-    // 1. NATIVE ANDROID / IOS FLOW
     if (Capacitor.isNativePlatform()) {
       let permStatus = await PushNotifications.checkPermissions()
 
@@ -359,7 +359,6 @@ const goToForgotPassword = () => {
       }
 
       if (permStatus.receive === 'granted') {
-        // Listen for the native FCM registration token event
         PushNotifications.addListener('registration', async (token) => {
           console.log('📱 Native FCM Token:', token.value)
           await syncTokenWithBackend(token.value)
@@ -369,16 +368,14 @@ const goToForgotPassword = () => {
           console.error('❌ Native Push Registration Error:', err)
         })
 
-        // Request token from FCM natively
         await PushNotifications.register()
       } else {
-        console.warn('⚠️ Native push notification permission denied by user.')
+        console.warn('⚠️ Native push permission denied.')
       }
       return
     }
 
-    // 2. WEB BROWSER FLOW
-    deviceToken = await requestNotificationPermission()
+    const deviceToken = await requestNotificationPermission()
     if (deviceToken) {
       await syncTokenWithBackend(deviceToken)
     }
@@ -388,22 +385,17 @@ const goToForgotPassword = () => {
   }
 }
 
-// Helper function to send token to your API
 async function syncTokenWithBackend(token) {
   try {
     await api.post('/users/device/token', {
       deviceToken: token
     })
-    console.log('✅ Token successfully synced with backend!')
+    console.log('✅ Push Token successfully synced!')
   } catch (err) {
-    console.error('❌ Failed to sync token with backend:', err.response?.data || err.message)
+    console.error('❌ Failed to sync device token:', err.response?.data || err.message)
   }
 }
-onMounted(()=>{
-// enableNotifications()
-})
 </script>
-
 <style scoped>
 /* PAGE & LAYOUT */
 .login-page {

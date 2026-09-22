@@ -1,23 +1,16 @@
 <template>
   <q-page class="refund-policy-page q-pa-md">
-
     <!-- =====================================================
          PAGE HEADER
     ====================================================== -->
     <div class="page-header q-mb-lg">
       <div class="row items-center no-wrap">
         <div class="header-icon">
-          <q-icon
-            name="currency_rupee"
-            size="30px"
-            color="primary"
-          />
+          <q-icon name="currency_rupee" size="30px" color="primary" />
         </div>
 
         <div class="q-ml-md">
-          <div class="text-h5 text-weight-bold">
-            Refund Policy
-          </div>
+          <div class="text-h5 text-weight-bold"> Refund Policy </div>
 
           <div class="text-grey-7 q-mt-xs">
             Learn how refunds are calculated, processed and credited
@@ -29,11 +22,7 @@
     <!-- =====================================================
          SEARCH
     ====================================================== -->
-    <q-card
-      flat
-      bordered
-      class="search-card q-mb-lg"
-    >
+    <q-card flat bordered class="search-card q-mb-lg">
       <q-input
         v-model="search"
         outlined
@@ -51,13 +40,8 @@
     <!-- =====================================================
          INTRODUCTION
     ====================================================== -->
-    <q-card
-      flat
-      bordered
-      class="intro-card q-mb-lg"
-    >
+    <q-card flat bordered class="intro-card q-mb-lg">
       <div class="row items-start no-wrap">
-
         <q-avatar
           color="primary"
           text-color="white"
@@ -66,21 +50,18 @@
         />
 
         <div class="q-ml-md">
-          <div class="text-h6 text-weight-bold">
-            Refund Policy
-          </div>
+          <div class="text-h6 text-weight-bold"> Refund Policy </div>
 
           <div class="text-grey-7 q-mt-xs">
             Last updated: 02 September 2026
           </div>
 
           <div class="intro-text q-mt-md">
-            This Refund Policy explains when customers may be eligible
-            for a refund after cancelling a vehicle booking or when a
-            booking cannot be fulfilled by BatohiDrive.
+            This Refund Policy explains when customers may be eligible for a
+            refund after cancelling a vehicle booking or when a booking cannot
+            be fulfilled by BatohiDrive.
           </div>
         </div>
-
       </div>
     </q-card>
 
@@ -88,23 +69,16 @@
          MAIN CONTENT
     ====================================================== -->
     <div class="row q-col-gutter-lg">
-
       <!-- ===================================================
            QUICK NAVIGATION
       ==================================================== -->
       <div class="col-12 col-md-3">
-
-        <q-card
-          flat
-          bordered
-          class="navigation-card"
-        >
+        <q-card flat bordered class="navigation-card">
           <div class="text-subtitle1 text-weight-bold q-mb-md">
             Quick Navigation
           </div>
 
           <q-list separator>
-
             <q-item
               v-for="section in filteredSections"
               :key="section.id"
@@ -114,11 +88,7 @@
               @click="scrollToSection(section.id)"
             >
               <q-item-section avatar>
-                <q-icon
-                  :name="section.icon"
-                  color="primary"
-                  size="20px"
-                />
+                <q-icon :name="section.icon" color="primary" size="20px" />
               </q-item-section>
 
               <q-item-section>
@@ -127,7 +97,6 @@
                 </q-item-label>
               </q-item-section>
             </q-item>
-
           </q-list>
 
           <div
@@ -137,14 +106,12 @@
             No sections found
           </div>
         </q-card>
-
       </div>
 
       <!-- ===================================================
            POLICY CONTENT
       ==================================================== -->
       <div class="col-12 col-md-9">
-
         <!-- Empty Search -->
         <q-card
           v-if="filteredSections.length === 0"
@@ -152,15 +119,9 @@
           bordered
           class="empty-card"
         >
-          <q-icon
-            name="search_off"
-            size="50px"
-            color="grey-5"
-          />
+          <q-icon name="search_off" size="50px" color="grey-5" />
 
-          <div class="text-h6 q-mt-md">
-            No results found
-          </div>
+          <div class="text-h6 q-mt-md"> No results found </div>
 
           <div class="text-grey-6 q-mt-sm">
             Try searching with a different keyword.
@@ -174,16 +135,9 @@
           :id="section.id"
           class="policy-section"
         >
-
-          <q-card
-            flat
-            bordered
-            class="policy-card"
-          >
-
+          <q-card flat bordered class="policy-card">
             <!-- Section Header -->
             <div class="section-header row items-center no-wrap">
-
               <q-avatar
                 color="blue-1"
                 text-color="primary"
@@ -196,12 +150,10 @@
                   {{ section.title }}
                 </div>
               </div>
-
             </div>
 
             <!-- Section Content -->
             <div class="section-content q-mt-md">
-
               <p
                 v-for="(paragraph, index) in section.content"
                 :key="index"
@@ -215,48 +167,27 @@
                 v-if="section.points && section.points.length"
                 class="policy-list"
               >
-                <li
-                  v-for="(point, index) in section.points"
-                  :key="index"
-                >
+                <li v-for="(point, index) in section.points" :key="index">
                   {{ point }}
                 </li>
               </ul>
-
             </div>
-
           </q-card>
-
         </div>
-
       </div>
-
     </div>
 
     <!-- =====================================================
          REFUND SUMMARY
     ====================================================== -->
-    <q-card
-      flat
-      bordered
-      class="summary-card q-mt-lg"
-    >
-
-      <div class="text-h6 text-weight-bold q-mb-md">
-        Refund Summary
-      </div>
+    <q-card flat bordered class="summary-card q-mt-lg">
+      <div class="text-h6 text-weight-bold q-mb-md"> Refund Summary </div>
 
       <div class="row q-col-gutter-md">
-
         <!-- Full Refund -->
         <div class="col-12 col-sm-4">
           <div class="refund-box">
-
-            <q-icon
-              name="check_circle"
-              size="30px"
-              color="positive"
-            />
+            <q-icon name="check_circle" size="30px" color="positive" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-sm">
               Full Refund
@@ -266,82 +197,56 @@
               Eligible cancellations made within the applicable
               free-cancellation period may qualify for a full refund.
             </div>
-
           </div>
         </div>
 
         <!-- Partial Refund -->
         <div class="col-12 col-sm-4">
           <div class="refund-box">
-
-            <q-icon
-              name="pie_chart"
-              size="30px"
-              color="orange"
-            />
+            <q-icon name="pie_chart" size="30px" color="orange" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-sm">
               Partial Refund
             </div>
 
             <div class="text-grey-7 q-mt-xs">
-              Late cancellations may qualify for a partial refund
-              after applicable cancellation charges are deducted.
+              Late cancellations may qualify for a partial refund after
+              applicable cancellation charges are deducted.
             </div>
-
           </div>
         </div>
 
         <!-- No Refund -->
         <div class="col-12 col-sm-4">
           <div class="refund-box">
-
-            <q-icon
-              name="money_off"
-              size="30px"
-              color="negative"
-            />
+            <q-icon name="money_off" size="30px" color="negative" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-sm">
               No Refund
             </div>
 
             <div class="text-grey-7 q-mt-xs">
-              Certain cancellations, no-shows or non-refundable
-              bookings may not qualify for a refund.
+              Certain cancellations, no-shows or non-refundable bookings may not
+              qualify for a refund.
             </div>
-
           </div>
         </div>
-
       </div>
-
     </q-card>
 
     <!-- =====================================================
          REFUND PROCESS
     ====================================================== -->
-    <q-card
-      flat
-      bordered
-      class="process-card q-mt-lg"
-    >
-
+    <q-card flat bordered class="process-card q-mt-lg">
       <div class="text-h6 text-weight-bold q-mb-lg">
         How Your Refund Works
       </div>
 
       <div class="row q-col-gutter-md">
-
         <!-- Step 1 -->
         <div class="col-12 col-sm-6 col-md-3">
           <div class="process-step">
-
-            <q-avatar
-              color="primary"
-              text-color="white"
-              size="40px"
-            >
+            <q-avatar color="primary" text-color="white" size="40px">
               1
             </q-avatar>
 
@@ -352,19 +257,13 @@
             <div class="text-grey-7 q-mt-xs">
               Cancel your eligible booking through BatohiDrive.
             </div>
-
           </div>
         </div>
 
         <!-- Step 2 -->
         <div class="col-12 col-sm-6 col-md-3">
           <div class="process-step">
-
-            <q-avatar
-              color="primary"
-              text-color="white"
-              size="40px"
-            >
+            <q-avatar color="primary" text-color="white" size="40px">
               2
             </q-avatar>
 
@@ -375,19 +274,13 @@
             <div class="text-grey-7 q-mt-xs">
               The booking and applicable cancellation terms are reviewed.
             </div>
-
           </div>
         </div>
 
         <!-- Step 3 -->
         <div class="col-12 col-sm-6 col-md-3">
           <div class="process-step">
-
-            <q-avatar
-              color="primary"
-              text-color="white"
-              size="40px"
-            >
+            <q-avatar color="primary" text-color="white" size="40px">
               3
             </q-avatar>
 
@@ -396,21 +289,16 @@
             </div>
 
             <div class="text-grey-7 q-mt-xs">
-              Eligible refunds are initiated through the applicable payment method.
+              Eligible refunds are initiated through the applicable payment
+              method.
             </div>
-
           </div>
         </div>
 
         <!-- Step 4 -->
         <div class="col-12 col-sm-6 col-md-3">
           <div class="process-step">
-
-            <q-avatar
-              color="primary"
-              text-color="white"
-              size="40px"
-            >
+            <q-avatar color="primary" text-color="white" size="40px">
               4
             </q-avatar>
 
@@ -419,14 +307,12 @@
             </div>
 
             <div class="text-grey-7 q-mt-xs">
-              The refunded amount is credited according to the payment provider's processing time.
+              The refunded amount is credited according to the payment
+              provider's processing time.
             </div>
-
           </div>
         </div>
-
       </div>
-
     </q-card>
 
     <!-- =====================================================
@@ -437,10 +323,8 @@
     </div>
 
     <div class="row q-col-gutter-md">
-
       <!-- Terms -->
       <div class="col-12 col-md-4">
-
         <q-card
           flat
           bordered
@@ -448,14 +332,8 @@
           clickable
           @click="goTo('/customer/terms-and-conditions')"
         >
-
           <q-card-section>
-
-            <q-icon
-              name="description"
-              size="32px"
-              color="primary"
-            />
+            <q-icon name="description" size="32px" color="primary" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-sm">
               Terms & Conditions
@@ -464,16 +342,12 @@
             <div class="text-grey-7 q-mt-xs">
               Review the terms applicable to using BatohiDrive.
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
 
       <!-- Privacy -->
       <div class="col-12 col-md-4">
-
         <q-card
           flat
           bordered
@@ -481,14 +355,8 @@
           clickable
           @click="goTo('/customer/privacy-policy')"
         >
-
           <q-card-section>
-
-            <q-icon
-              name="privacy_tip"
-              size="32px"
-              color="primary"
-            />
+            <q-icon name="privacy_tip" size="32px" color="primary" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-sm">
               Privacy Policy
@@ -497,16 +365,12 @@
             <div class="text-grey-7 q-mt-xs">
               Learn how your personal information is collected and protected.
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
 
       <!-- Cancellation -->
       <div class="col-12 col-md-4">
-
         <q-card
           flat
           bordered
@@ -514,14 +378,8 @@
           clickable
           @click="goTo('/customer/cancellation-policy')"
         >
-
           <q-card-section>
-
-            <q-icon
-              name="event_busy"
-              size="32px"
-              color="primary"
-            />
+            <q-icon name="event_busy" size="32px" color="primary" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-sm">
               Cancellation Policy
@@ -530,28 +388,17 @@
             <div class="text-grey-7 q-mt-xs">
               Understand cancellation rules and applicable charges.
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
-
     </div>
 
     <!-- =====================================================
          SUPPORT
     ====================================================== -->
-    <q-card
-      flat
-      bordered
-      class="support-card q-mt-lg"
-    >
-
+    <q-card flat bordered class="support-card q-mt-lg">
       <div class="row items-center justify-between">
-
         <div class="row items-center">
-
           <q-avatar
             color="blue-1"
             text-color="primary"
@@ -560,7 +407,6 @@
           />
 
           <div class="q-ml-md">
-
             <div class="text-subtitle1 text-weight-bold">
               Need help with your refund?
             </div>
@@ -568,9 +414,7 @@
             <div class="text-grey-7 q-mt-xs">
               Contact BatohiDrive support if you have questions about a refund.
             </div>
-
           </div>
-
         </div>
 
         <q-btn
@@ -581,11 +425,8 @@
           class="q-mt-sm"
           @click="contactSupport"
         />
-
       </div>
-
     </q-card>
-
   </q-page>
 </template>
 
@@ -611,49 +452,46 @@ const sections = ref([
     title: '1. Introduction',
     icon: 'info',
     content: [
-      'This Refund Policy explains the circumstances under which customers may receive a refund for vehicle bookings made through BatohiDrive.',
-      'Refund eligibility depends on the applicable booking terms, cancellation time, payment status and reason for cancellation.'
+      'This Refund Policy explains when a customer may be eligible for a refund for a booking made through BatohiDrive.',
+      'Refund eligibility depends on the applicable booking terms, cancellation timing, payment status, and the reason the booking is cancelled or cannot be completed.'
     ],
     points: []
   },
-
   {
     id: 'refund-eligibility',
     title: '2. Refund Eligibility',
     icon: 'check_circle',
     content: [
-      'A customer may be eligible for a refund when a booking is cancelled within the applicable cancellation period or when BatohiDrive is unable to provide the confirmed service.',
-      'The final refund amount is determined according to the cancellation and refund terms applicable to the booking.'
+      'A customer may be eligible for a refund when a booking is cancelled within an eligible cancellation period or when BatohiDrive is unable to provide the confirmed service.',
+      'The final refund amount is determined according to the booking terms, cancellation policy, and the circumstances of the booking.'
     ],
     points: [
-      'Check the cancellation terms before cancelling your booking.',
-      'Refund eligibility may differ between bookings.',
-      'Applicable cancellation charges may be deducted from the refund amount.'
+      'Review the relevant booking terms before confirming payment.',
+      'Some bookings may have different refund conditions.',
+      'Applicable charges or deductions may reduce the final refund amount.'
     ]
   },
-
   {
     id: 'full-refund',
     title: '3. Full Refund',
     icon: 'verified',
     content: [
-      'A full refund may be provided when a booking is cancelled within an eligible free-cancellation period or when BatohiDrive cancels a booking under circumstances where the customer is entitled to a full refund.',
-      'The refundable amount will generally correspond to the eligible amount actually paid by the customer.'
+      'A full refund may be provided when a booking is cancelled within an eligible free-cancellation period or where BatohiDrive cancels the booking and the customer is entitled to a full refund.',
+      'The refundable amount generally corresponds to the eligible amount actually paid by the customer.'
     ],
     points: [
       'The booking must qualify for a full refund.',
-      'Applicable non-refundable charges may be excluded.',
-      'The refund will normally be sent through the original payment method.'
+      'Non-refundable charges may be excluded where the booking terms allow it.',
+      'Eligible refund amounts are normally returned to the original payment method.'
     ]
   },
-
   {
     id: 'partial-refund',
     title: '4. Partial Refund',
     icon: 'pie_chart',
     content: [
-      'A partial refund may apply when a customer cancels after the free-cancellation period but before the booking becomes non-refundable.',
-      'Any applicable cancellation charge will generally be deducted before calculating the refundable amount.'
+      'A partial refund may apply when a booking is cancelled after the free-cancellation window but before it becomes fully non-refundable.',
+      'Applicable cancellation charges or fees may be deducted before calculating the final refund amount.'
     ],
     points: [
       'The refund percentage may vary depending on the booking terms.',
@@ -661,187 +499,146 @@ const sections = ref([
       'The final refund amount will be communicated or displayed where applicable.'
     ]
   },
-
   {
     id: 'non-refundable',
     title: '5. Non-Refundable Bookings',
     icon: 'money_off',
     content: [
-      'Some bookings or charges may be non-refundable. Customers should carefully review the applicable booking terms before making a payment.',
-      'If a booking is marked as non-refundable, cancellation may not result in a refund unless an exception is approved.'
+      'Some bookings or charges may be non-refundable. Customers should review the applicable booking terms before making a payment.',
+      'If a booking is marked as non-refundable, cancellation may not lead to a refund unless a specific exception is approved under the policy.'
     ],
     points: [
       'No-show bookings may be non-refundable.',
-      'Certain late cancellations may be non-refundable.',
-      'Specific service charges may not qualify for a refund.'
+      'Late cancellations may be non-refundable.',
+      'Certain service-related fees may not qualify for a refund.'
     ]
   },
-
   {
-    id: 'cancellation-refund',
-    title: '6. Refund After Cancellation',
+    id: 'platform-cancellation',
+    title: '6. Platform or Service Cancellation',
     icon: 'event_busy',
     content: [
-      'When a customer successfully cancels an eligible booking, BatohiDrive will determine the refund amount based on the cancellation policy associated with that booking.',
-      'The customer may receive a cancellation confirmation containing information about the refund, where applicable.'
+      'If BatohiDrive is unable to provide the confirmed service because of a platform error, service unavailability, or a confirmed booking issue, the customer may be entitled to refund review based on the circumstances.',
+      'The platform will notify the customer about the cancellation or issue and the applicable refund process when possible.'
     ],
     points: [
-      'Cancellation must be successfully recorded.',
-      'Refund amount depends on the applicable cancellation terms.',
-      'Processing may begin after the cancellation has been verified.'
+      'Eligible booking amounts may be reviewed for refund.',
+      'Alternative arrangements may be offered when available.',
+      'The applicable refund depends on the nature of the service failure.'
     ]
   },
-
-  {
-    id: 'batohidrive-cancellation',
-    title: '7. Refund When BatohiDrive Cancels',
-    icon: 'admin_panel_settings',
-    content: [
-      'If BatohiDrive cancels a confirmed booking because the vehicle, driver or service cannot be provided, an eligible refund may be issued according to the circumstances.',
-      'Customers will be informed about the cancellation and refund process whenever reasonably possible.'
-    ],
-    points: [
-      'Eligible booking amounts may be refunded.',
-      'Alternative arrangements may be offered where available.',
-      'The applicable refund amount depends on the circumstances of cancellation.'
-    ]
-  },
-
   {
     id: 'failed-payment',
-    title: '8. Failed or Duplicate Payments',
+    title: '7. Failed or Duplicate Payments',
     icon: 'payment',
     content: [
-      'If a payment fails but the amount is temporarily deducted from the customer account, the amount may be automatically reversed by the payment provider.',
-      'If a customer is charged more than once for the same booking, the duplicate transaction may be reviewed for refund.'
+      'If a payment fails but the amount is temporarily deducted, the payment provider may automatically reverse it.',
+      'If a customer is charged more than once for the same booking, the duplicate charge may be reviewed for refund.'
     ],
     points: [
-      'Keep the payment transaction reference if available.',
-      'Contact support if an amount is not reversed within the expected processing period.',
-      'Duplicate payment claims may require transaction verification.'
+      'Keep the payment reference if available.',
+      'Contact support if the duplicate or failed payment is not reversed within the expected period.',
+      'Verification may be required before a duplicate payment is refunded.'
     ]
   },
-
   {
     id: 'refund-method',
-    title: '9. Refund to Original Payment Method',
+    title: '8. Refund Method and Timing',
     icon: 'account_balance',
     content: [
-      'Eligible refunds are generally processed through the original payment method used for the booking.',
-      'BatohiDrive may not always be able to change the destination account or payment method after a refund has been initiated.'
+      'Eligible refunds are generally processed using the original payment method used for the booking.',
+      'The time required for the funds to appear in the customer account depends on the payment provider, bank, or other financial institution.'
     ],
     points: [
-      'Refunds may be credited to the original card, bank account or payment account.',
-      'Payment-provider rules may affect the refund process.',
-      'Customers should ensure their payment account remains active.'
+      'Refunds may be returned to the original card, wallet, or bank account.',
+      'Payment provider rules may affect the process.',
+      'Customers should make sure their payment account remains active.'
     ]
   },
-
   {
     id: 'processing-time',
-    title: '10. Refund Processing Time',
+    title: '9. Processing Time',
     icon: 'schedule',
     content: [
-      'After an eligible refund has been initiated, the time required for the amount to appear in the customer account may vary depending on the payment gateway, bank or financial institution.',
-      'BatohiDrive cannot guarantee the exact time required by a third-party payment provider.'
+      'After an eligible refund is processed, the actual crediting time may vary depending on the payment gateway, bank, or financial institution.',
+      'BatohiDrive cannot guarantee the exact processing time required by third-party payment providers.'
     ],
     points: [
-      'Refund processing may take several business days.',
-      'Bank holidays and weekends may affect processing time.',
-      'Contact support if the refund exceeds the communicated processing period.'
+      'Refunds may take several business days.',
+      'Bank holidays and weekends may affect timing.',
+      'Contact support if the refund exceeds the expected period.'
     ]
   },
-
   {
-    id: 'refund-charges',
-    title: '11. Charges and Deductions',
+    id: 'charges',
+    title: '10. Charges and Deductions',
     icon: 'receipt_long',
     content: [
-      'The final refund amount may be reduced by applicable cancellation charges, non-refundable fees or other amounts permitted under the booking terms.',
-      'Any applicable deduction will depend on the terms associated with the booking.'
+      'The final refund amount may be reduced by cancellation charges, non-refundable fees, or other amounts allowed under the booking terms.',
+      'Any deduction depends on the booking-specific terms and circumstances.'
     ],
     points: [
-      'Cancellation charges may be deducted.',
+      'Cancellation fees may be deducted.',
       'Certain transaction or service charges may be non-refundable.',
-      'The customer will receive the eligible amount after applicable deductions.'
+      'The customer receives the eligible amount after applicable deductions.'
     ]
   },
-
   {
-    id: 'refund-disputes',
-    title: '12. Refund Disputes',
+    id: 'disputes',
+    title: '11. Refund Disputes and Review',
     icon: 'gavel',
     content: [
-      'If a customer believes that an incorrect refund amount has been issued or a refund has not been received, they may contact BatohiDrive support for review.',
+      'If a customer believes that a refund amount is incorrect or a refund has not been received, they may contact BatohiDrive support for review.',
       'The support team may request booking and payment information to investigate the issue.'
     ],
     points: [
       'Provide your booking ID.',
-      'Provide the payment transaction reference if available.',
-      'Mention the date of cancellation.',
-      'Provide any refund confirmation received.'
+      'Provide the transaction reference if available.',
+      'State the date of cancellation and the issue clearly.',
+      'Include any refund confirmation message you received.'
     ]
   },
-
-  {
-    id: 'emergency-refund',
-    title: '13. Emergency or Exceptional Refunds',
-    icon: 'emergency',
-    content: [
-      'In exceptional circumstances, BatohiDrive may review a refund request outside the standard refund terms.',
-      'Such requests are considered on a case-by-case basis and approval is not guaranteed.'
-    ],
-    points: [
-      'Contact support as soon as possible.',
-      'Explain the circumstances clearly.',
-      'Provide supporting information where reasonably required.'
-    ]
-  },
-
   {
     id: 'customer-responsibility',
-    title: '14. Customer Responsibility',
+    title: '12. Customer Responsibility',
     icon: 'person',
     content: [
-      'Customers are responsible for reviewing booking, cancellation and refund terms before confirming a booking.',
-      'Customers should also ensure that their payment and account information is accurate.'
+      'Customers are responsible for checking booking terms before confirming a booking and for keeping their payment and account information accurate.',
+      'Customers should also use the official BatohiDrive platform for cancellations and refund requests.'
     ],
     points: [
-      'Review refund conditions before payment.',
-      'Cancel bookings through the official BatohiDrive platform.',
+      'Review cancellation and refund terms before payment.',
+      'Cancel through the official booking flow.',
       'Keep booking and payment confirmations.',
-      'Contact support promptly if an issue occurs.'
+      'Report refund issues promptly.'
     ]
   },
-
   {
     id: 'policy-changes',
-    title: '15. Changes to Refund Policy',
+    title: '13. Changes to the Refund Policy',
     icon: 'update',
     content: [
-      'BatohiDrive may update this Refund Policy from time to time to reflect changes in services, payment processes, operational requirements or applicable regulations.',
-      'The latest version of the policy will be made available through the BatohiDrive platform.'
+      'BatohiDrive may update this Refund Policy from time to time to reflect changes in services, payment processes, business practices, or legal requirements.',
+      'The latest version will be made available through the BatohiDrive platform.'
     ],
     points: [
-      'Customers should review the policy before making a booking.',
+      'Review the policy periodically.',
       'Policy updates may be published on the platform.',
-      'The terms applicable to an existing booking may depend on the date and terms of that booking.'
+      'Booking terms are determined according to the applicable policy at the time of booking.'
     ]
   },
-
   {
     id: 'contact-us',
-    title: '16. Contact Us',
+    title: '14. Contact Us',
     icon: 'support_agent',
     content: [
-      'If you have questions about your refund, cancellation charges or refund processing status, please contact BatohiDrive customer support.',
-      'Keep your booking ID and payment information available so that the support team can assist you efficiently.'
+      'If you have questions about refunds, cancellations, duplicate charges, or booking issues, contact BatohiDrive support through the official support channel.',
+      'Keep your booking ID and payment information available so the support team can assist quickly.'
     ],
     points: [
-      'Provide your booking ID.',
-      'Explain your refund concern clearly.',
-      'Share the relevant payment or cancellation details.',
-      'Allow reasonable time for the support team to investigate.'
+      'Provide the booking ID.',
+      'Explain the refund issue clearly.',
+      'Share relevant payment or cancellation details.'
     ]
   }
 ])
@@ -858,18 +655,15 @@ const filteredSections = computed(() => {
   }
 
   return sections.value.filter(section => {
-    const titleMatch =
-      section.title.toLowerCase().includes(keyword)
+    const titleMatch = section.title.toLowerCase().includes(keyword)
 
-    const contentMatch =
-      section.content.some(text =>
-        text.toLowerCase().includes(keyword)
-      )
+    const contentMatch = section.content.some(text =>
+      text.toLowerCase().includes(keyword)
+    )
 
-    const pointsMatch =
-      section.points.some(point =>
-        point.toLowerCase().includes(keyword)
-      )
+    const pointsMatch = section.points.some(point =>
+      point.toLowerCase().includes(keyword)
+    )
 
     return titleMatch || contentMatch || pointsMatch
   })
@@ -879,7 +673,7 @@ const filteredSections = computed(() => {
 // SCROLL TO SECTION
 // =====================================================
 
-const scrollToSection = (id) => {
+const scrollToSection = id => {
   const element = document.getElementById(id)
 
   if (element) {
@@ -894,7 +688,7 @@ const scrollToSection = (id) => {
 // ROUTING
 // =====================================================
 
-const goTo = (route) => {
+const goTo = route => {
   router.push(route)
 }
 
