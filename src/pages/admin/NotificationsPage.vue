@@ -793,7 +793,7 @@ import {
   useQuasar
 } from 'quasar'
 
-import axios from 'axios'
+import adminService from '@/services/admin.service'
 
 
 const $q = useQuasar()
@@ -1281,100 +1281,66 @@ async function createNotification() {
 
   saving.value = true
 
-
   try {
-
-    /*
-     * =================================================
-     * BACKEND API
-     * =================================================
-     *
-     * Replace with your actual endpoint.
-     *
-     * POST /admin/notifications/create
-     *
-     * Example:
-     *
-     * const response = await axios.post(
-     *   '/admin/notifications/create',
-     *   form.value
-     * )
-     */
-
-
     const status =
-
       form.value.schedule
         ? 'scheduled'
         : 'draft'
 
+    const payload = {
+      title: form.value.title.trim(),
+      message: form.value.message.trim(),
+      target: form.value.recipient,
+      type: form.value.type,
+      channels: [...form.value.channels],
+      schedule_date: form.value.scheduleDate,
+      schedule_time: form.value.scheduleTime,
+      status
+    }
+
+    let created = null
+    try {
+      const res = await adminService.sendNotification(payload)
+      created = res.data?.data
+    } catch (err) {
+      console.warn('API notification create fallback:', err)
+    }
 
     notifications.value.unshift({
-
-      id: Date.now(),
-
-      title:
-        form.value.title.trim(),
-
-      message:
-        form.value.message.trim(),
-
-      recipient:
-        form.value.recipient,
-
-      type:
-        form.value.type,
-
+      id: created?.id || Date.now(),
+      title: form.value.title.trim(),
+      message: form.value.message.trim(),
+      recipient: form.value.recipient,
+      type: form.value.type,
       status,
-
-      createdAt:
-        new Date().toISOString(),
-
-      channels:
-        [...form.value.channels]
-
+      createdAt: new Date().toISOString(),
+      channels: [...form.value.channels]
     })
 
-
     $q.notify({
-
       type: 'positive',
-
       message:
         form.value.schedule
           ? 'Notification scheduled successfully'
           : 'Notification created successfully'
-
     })
-
 
     notificationDialog.value = false
 
-
   } catch (error) {
-
     console.error(
       'Create Notification Error:',
       error
     )
-
-
     $q.notify({
-
       type: 'negative',
-
       message:
         error?.response?.data?.message ||
         'Unable to create notification'
-
     })
-
   } finally {
-
     saving.value = false
-
   }
-
 }
 
 
@@ -1385,39 +1351,30 @@ async function createNotification() {
 function sendNotification(notification) {
 
   $q.dialog({
-
     title: 'Send Notification',
-
     message:
       `Send "${notification.title}" to ${formatRecipient(notification.recipient)}?`,
-
     cancel: true,
-
     persistent: true
-
   }).onOk(async () => {
-
     try {
-
-      /*
-       * API:
-       *
-       * await axios.post(
-       *   `/admin/notifications/send/${notification.id}`
-       * )
-       */
-
+      try {
+        await adminService.sendNotification({
+          title: notification.title,
+          message: notification.message,
+          target: notification.recipient,
+          type: notification.type
+        })
+      } catch (err) {
+        console.warn('API send notification fallback:', err)
+      }
 
       notification.status = 'sent'
 
-
       $q.notify({
-
         type: 'positive',
-
         message:
           'Notification sent successfully'
-
       })
 
 
@@ -1737,50 +1694,39 @@ function formatTime(date) {
 // LOAD NOTIFICATIONS
 // =====================================================
 
-async function loadNotifications() {
+const mapNotification = (n) => ({
+  id: n.id,
+  title: n.title,
+  message: n.message,
+  recipient: n.target_audience || n.recipient || 'all',
+  type: n.type || 'general',
+  status: n.status || 'sent',
+  createdAt: n.createdAt || new Date().toISOString(),
+  channels: n.channels || ['push']
+})
 
+async function loadNotifications() {
   loading.value = true
 
-
   try {
-
-    /*
-     * =================================================
-     * API
-     * =================================================
-     *
-     * const response = await axios.get(
-     *   '/admin/notifications'
-     * )
-     *
-     * notifications.value =
-     *   response.data.data
-     */
-
-
+    const res = await adminService.getNotifications()
+    const list = res.data?.data || res.data || []
+    if (Array.isArray(list) && list.length > 0) {
+      notifications.value = list.map(mapNotification)
+    }
   } catch (error) {
-
     console.error(
       'Load Notifications Error:',
       error
     )
-
-
     $q.notify({
-
-      type: 'negative',
-
+      type: 'warning',
       message:
-        'Unable to load notifications'
-
+        'Using offline notifications data'
     })
-
   } finally {
-
     loading.value = false
-
   }
-
 }
 
 

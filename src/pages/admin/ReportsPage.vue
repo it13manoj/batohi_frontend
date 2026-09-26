@@ -916,7 +916,7 @@ import {
   useQuasar
 } from 'quasar'
 
-import axios from 'axios'
+import adminService from '@/services/admin.service'
 
 
 const $q = useQuasar()
@@ -1548,56 +1548,35 @@ async function loadReports() {
   loading.value = true
 
   try {
+    const res = await adminService.getReports({
+      type: reportType.value,
+      from: dateFrom.value,
+      to: dateTo.value
+    })
 
-    /*
-     * =================================================
-     * BACKEND API
-     * =================================================
-     *
-     * Replace with your actual endpoint.
-     *
-     * Example:
-     *
-     * const response = await axios.get(
-     *   '/admin/reports',
-     *   {
-     *     params: {
-     *       type: reportType.value,
-     *       from: dateFrom.value,
-     *       to: dateTo.value
-     *     }
-     *   }
-     * )
-     *
-     * summary.value =
-     *   response.data.summary
-     *
-     * reportRows.value =
-     *   response.data.rows
-     */
+    const payload = res.data?.data || res.data || {}
+    if (payload.summary) {
+      summary.value = {
+        ...summary.value,
+        ...payload.summary
+      }
+    }
 
-
+    if (Array.isArray(payload.rows) && payload.rows.length > 0) {
+      reportRows.value = payload.rows
+    }
   } catch (error) {
-
     console.error(
       'Load Reports Error:',
       error
     )
-
-
     $q.notify({
-
-      type: 'negative',
-
+      type: 'warning',
       message:
-        'Unable to load report data'
-
+        'Using offline report data'
     })
-
   } finally {
-
     loading.value = false
-
   }
 
 }

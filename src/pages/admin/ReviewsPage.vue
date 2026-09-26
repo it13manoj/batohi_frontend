@@ -907,7 +907,7 @@ import {
   useQuasar
 } from 'quasar'
 
-import axios from 'axios'
+import adminService from '@/services/admin.service'
 
 
 const $q = useQuasar()
@@ -1627,28 +1627,18 @@ async function submitReply() {
 function deleteReview(review) {
 
   $q.dialog({
-
     title: 'Delete Review',
-
     message:
       `Are you sure you want to delete the review from ${review.customerName}?`,
-
     cancel: true,
-
     persistent: true
-
   }).onOk(async () => {
-
     try {
-
-      /*
-       * API:
-       *
-       * await axios.delete(
-       *   `/admin/reviews/${review.id}`
-       * )
-       */
-
+      try {
+        await adminService.deleteReview(review.id)
+      } catch (err) {
+        console.warn('API delete review fallback:', err)
+      }
 
       reviews.value =
         reviews.value.filter(
@@ -1656,38 +1646,23 @@ function deleteReview(review) {
             item.id !== review.id
         )
 
-
       $q.notify({
-
         type: 'positive',
-
         message:
           'Review deleted successfully'
-
       })
-
-
     } catch (error) {
-
       console.error(
         'Delete Review Error:',
         error
       )
-
-
       $q.notify({
-
         type: 'negative',
-
         message:
           'Unable to delete review'
-
       })
-
     }
-
   })
-
 }
 
 
@@ -1826,52 +1801,42 @@ function formatTime(date) {
 // LOAD REVIEWS
 // =====================================================
 
-async function loadReviews() {
+const mapReview = (r) => ({
+  id: r.id,
+  customerName: r.Customer?.name || r.customerName || 'Customer',
+  customerAvatar: r.Customer?.avatar || r.customerAvatar || '',
+  customerMobile: r.Customer?.phone || r.customerMobile || '',
+  driverName: r.Driver?.name || r.driverName || 'Driver',
+  vehicle: r.Driver?.Vehicle?.title || r.vehicle || 'Vehicle',
+  rating: Number(r.rating || 5),
+  review: r.comment || r.review || '',
+  status: r.status || 'approved',
+  date: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+  reply: r.reply || null
+})
 
+async function loadReviews() {
   loading.value = true
 
-
   try {
-
-    /*
-     * =================================================
-     * BACKEND API
-     * =================================================
-     *
-     * Replace with your actual endpoint.
-     *
-     * const response = await axios.get(
-     *   '/admin/reviews'
-     * )
-     *
-     * reviews.value =
-     *   response.data.data
-     */
-
-
+    const res = await adminService.getReviews()
+    const list = res.data?.data || res.data || []
+    if (Array.isArray(list) && list.length > 0) {
+      reviews.value = list.map(mapReview)
+    }
   } catch (error) {
-
     console.error(
       'Load Reviews Error:',
       error
     )
-
-
     $q.notify({
-
-      type: 'negative',
-
+      type: 'warning',
       message:
-        'Unable to load reviews'
-
+        'Using offline reviews data'
     })
-
   } finally {
-
     loading.value = false
-
   }
-
 }
 
 

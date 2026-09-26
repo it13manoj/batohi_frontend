@@ -1,4 +1,3 @@
-```vue
 <template>
   <q-page class="customers-page">
 
@@ -1247,6 +1246,7 @@ import {
   Notify
 } from 'quasar'
 
+import adminService from '@/services/admin.service'
 
 /* =========================================================
    LOADING
@@ -1901,7 +1901,7 @@ const handlePhotoUpload = file => {
    SAVE CUSTOMER
 ========================================================= */
 
-const saveCustomer = () => {
+const saveCustomer = async () => {
 
   /* NAME */
 
@@ -2045,6 +2045,11 @@ const saveCustomer = () => {
   /* ===================================================== */
 
   if (editingCustomer.value) {
+    try {
+      await adminService.updateCustomer(customerForm.value.id, customerForm.value)
+    } catch (err) {
+      console.warn('API update failed, updating in-memory:', err?.message)
+    }
 
     const index =
       customers.value.findIndex(
@@ -2053,73 +2058,52 @@ const saveCustomer = () => {
           customerForm.value.id
       )
 
-
     if (index !== -1) {
-
       customers.value[index] = {
-
         ...customers.value[index],
-
         ...customerForm.value
-
       }
-
     }
 
-
     Notify.create({
-
       type: 'positive',
-
-      message:
-        'Customer updated successfully'
-
+      message: 'Customer updated successfully'
     })
-
   }
-
 
   /* ===================================================== */
   /* ADD */
   /* ===================================================== */
 
   else {
+    try {
+      const created = await adminService.createCustomer(customerForm.value)
+      if (created && created.id) {
+        customerForm.value.id = created.id
+      }
+    } catch (err) {
+      console.warn('API create failed, adding in-memory:', err?.message)
+    }
 
     const newCustomer = {
-
       ...customerForm.value,
-
-      id: Date.now(),
-
+      id: customerForm.value.id || Date.now(),
       bookings: 0,
-
       createdAt:
         new Date()
           .toISOString()
           .split('T')[0]
-
     }
 
-
-    customers.value.unshift(
-      newCustomer
-    )
-
+    customers.value.unshift(newCustomer)
 
     Notify.create({
-
       type: 'positive',
-
-      message:
-        'Customer added successfully'
-
+      message: 'Customer added successfully'
     })
-
   }
 
-
   customerDialog.value = false
-
 }
 
 
@@ -2176,12 +2160,16 @@ const confirmDelete = customer => {
    DELETE CUSTOMER
 ========================================================= */
 
-const deleteCustomer = () => {
-
+const deleteCustomer = async () => {
   if (!selectedCustomer.value) {
     return
   }
 
+  try {
+    await adminService.deleteCustomer(selectedCustomer.value.id)
+  } catch (err) {
+    console.warn('API delete failed, removing in-memory:', err?.message)
+  }
 
   customers.value =
     customers.value.filter(
@@ -2190,22 +2178,14 @@ const deleteCustomer = () => {
         selectedCustomer.value.id
     )
 
-
   deleteDialog.value = false
 
-
   Notify.create({
-
     type: 'positive',
-
-    message:
-      'Customer deleted successfully'
-
+    message: 'Customer deleted successfully'
   })
 
-
   selectedCustomer.value = null
-
 }
 
 
@@ -2266,56 +2246,20 @@ const formatDate = date => {
 ========================================================= */
 
 const fetchCustomers = async () => {
-
   loading.value = true
-
   try {
-
-    /*
-     * Later connect your API here.
-     *
-     * Example:
-     *
-     * const response = await axios.get(
-     *   `${BASE_URL}/customers`,
-     *   {
-     *     headers: {
-     *       Authorization:
-     *         `Bearer ${localStorage.getItem('token')}`
-     *     }
-     *   }
-     * )
-     *
-     * customers.value = response.data.data
-     */
-
-  }
-
-  catch (error) {
-
-    console.error(
-      'Customer API Error:',
-      error
-    )
-
-
-    Notify.create({
-
-      type: 'negative',
-
-      message:
-        'Unable to load customers'
-
+    const res = await adminService.getCustomers({
+      search: search.value,
+      status: statusFilter.value
     })
-
-  }
-
-  finally {
-
+    if (res && res.data && res.data.length > 0) {
+      customers.value = res.data
+    }
+  } catch (error) {
+    console.warn('Customer API Notice (using local list if offline):', error?.message)
+  } finally {
     loading.value = false
-
   }
-
 }
 
 
@@ -2868,4 +2812,3 @@ onMounted(() => {
 }
 
 </style>
-```

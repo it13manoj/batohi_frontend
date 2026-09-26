@@ -19,6 +19,7 @@
         icon="refresh"
         label="Refresh"
         unelevated
+        :loading="loading"
         @click="loadDashboard"
       />
 
@@ -420,7 +421,9 @@
 <script setup>
 
 import { ref, onMounted } from 'vue'
+import adminService from '@/services/admin.service'
 
+const loading = ref(false)
 const selectedPeriod = ref('6months')
 
 const periodOptions = [
@@ -617,12 +620,21 @@ const getStatusColor = (status) => {
 }
 
 
-const loadDashboard = () => {
-
-  // Later API call will come here.
-
-  console.log('Dashboard refreshed')
-
+const loadDashboard = async () => {
+  loading.value = true
+  try {
+    const data = await adminService.getDashboard()
+    if (data) {
+      if (data.stats) stats.value = data.stats
+      if (data.revenueData && data.revenueData.length) revenueData.value = data.revenueData
+      if (data.bookingSummary && data.bookingSummary.length) bookingSummary.value = data.bookingSummary
+      if (data.recentBookings && data.recentBookings.length) recentBookings.value = data.recentBookings
+    }
+  } catch (error) {
+    console.warn('Dashboard API notice (using defaults if offline):', error?.message)
+  } finally {
+    loading.value = false
+  }
 }
 
 

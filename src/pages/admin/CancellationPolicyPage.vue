@@ -1,4 +1,3 @@
-```vue
 <template>
   <q-page class="cancellation-page q-pa-md">
 
@@ -1352,4 +1351,3 @@ function getCurrentDate() {
 }
 
 </style>
-```

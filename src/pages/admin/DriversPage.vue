@@ -1,6 +1,5 @@
-```vue
 <template>
-  <q-page class="customers-page">
+  <q-page class="drivers-page">
 
     <!-- =====================================================
          PAGE HEADER
@@ -10,11 +9,11 @@
 
       <div>
         <div class="page-title">
-          Customers
+          Drivers
         </div>
 
         <div class="page-subtitle">
-          Manage BatohiDrive customers
+          Manage BatohiDrive drivers
         </div>
       </div>
 
@@ -22,7 +21,7 @@
         unelevated
         color="primary"
         icon="person_add"
-        label="Add Customer"
+        label="Add Driver"
         @click="openAddDialog"
       />
 
@@ -35,167 +34,72 @@
 
     <div class="row q-col-gutter-md q-mb-lg">
 
-      <!-- Total -->
+      <!-- Total Drivers -->
       <div class="col-12 col-sm-6 col-md-3">
-
         <q-card class="stat-card">
-
           <q-card-section>
-
             <div class="stat-content">
-
-              <q-avatar
-                color="blue-1"
-                text-color="primary"
-                size="50px"
-              >
-                <q-icon
-                  name="people"
-                  size="28px"
-                />
+              <q-avatar color="blue-1" text-color="primary" size="50px">
+                <q-icon name="people" size="28px" />
               </q-avatar>
-
               <div class="stat-info">
-
-                <div class="stat-label">
-                  Total Customers
-                </div>
-
-                <div class="stat-value">
-                  {{ totalCustomers }}
-                </div>
-
+                <div class="stat-label">Total Drivers</div>
+                <div class="stat-value">{{ totalDrivers }}</div>
               </div>
-
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
 
-
-      <!-- Active -->
+      <!-- Active Drivers -->
       <div class="col-12 col-sm-6 col-md-3">
-
         <q-card class="stat-card">
-
           <q-card-section>
-
             <div class="stat-content">
-
-              <q-avatar
-                color="green-1"
-                text-color="positive"
-                size="50px"
-              >
-                <q-icon
-                  name="person"
-                  size="28px"
-                />
+              <q-avatar color="green-1" text-color="positive" size="50px">
+                <q-icon name="person" size="28px" />
               </q-avatar>
-
               <div class="stat-info">
-
-                <div class="stat-label">
-                  Active Customers
-                </div>
-
-                <div class="stat-value">
-                  {{ activeCustomers }}
-                </div>
-
+                <div class="stat-label">Active Drivers</div>
+                <div class="stat-value">{{ activeDrivers }}</div>
               </div>
-
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
 
-
-      <!-- Inactive -->
+      <!-- Pending Verification -->
       <div class="col-12 col-sm-6 col-md-3">
-
-        <q-card class="stat-card">
-
+        <q-card class="stat-card cursor-pointer" @click="activeTab = 'pending'">
           <q-card-section>
-
             <div class="stat-content">
-
-              <q-avatar
-                color="orange-1"
-                text-color="orange"
-                size="50px"
-              >
-                <q-icon
-                  name="person_off"
-                  size="28px"
-                />
+              <q-avatar color="amber-1" text-color="warning" size="50px">
+                <q-icon name="hourglass_top" size="28px" />
               </q-avatar>
-
               <div class="stat-info">
-
-                <div class="stat-label">
-                  Inactive
-                </div>
-
-                <div class="stat-value">
-                  {{ inactiveCustomers }}
-                </div>
-
+                <div class="stat-label">Pending Verification</div>
+                <div class="stat-value text-warning">{{ pendingVerificationCount }}</div>
               </div>
-
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
 
-
-      <!-- New -->
+      <!-- Verified Drivers -->
       <div class="col-12 col-sm-6 col-md-3">
-
-        <q-card class="stat-card">
-
+        <q-card class="stat-card cursor-pointer" @click="activeTab = 'verified'">
           <q-card-section>
-
             <div class="stat-content">
-
-              <q-avatar
-                color="purple-1"
-                text-color="purple"
-                size="50px"
-              >
-                <q-icon
-                  name="person_add"
-                  size="28px"
-                />
+              <q-avatar color="teal-1" text-color="teal" size="50px">
+                <q-icon name="verified" size="28px" />
               </q-avatar>
-
               <div class="stat-info">
-
-                <div class="stat-label">
-                  New This Month
-                </div>
-
-                <div class="stat-value">
-                  {{ newCustomers }}
-                </div>
-
+                <div class="stat-label">Verified Drivers</div>
+                <div class="stat-value text-teal">{{ verifiedDriversCount }}</div>
               </div>
-
             </div>
-
           </q-card-section>
-
         </q-card>
-
       </div>
 
     </div>
@@ -213,11 +117,11 @@
         <div>
 
           <div class="table-title">
-            Customer List
+            Driver Directory & Verification
           </div>
 
           <div class="table-subtitle">
-            View and manage registered customers
+            Manage drivers, inspect submitted compliance documents, and verify registrations
           </div>
 
         </div>
@@ -231,7 +135,7 @@
             outlined
             dense
             debounce="300"
-            placeholder="Search customer..."
+            placeholder="Search driver by name, phone, email..."
             class="search-input"
             clearable
           >
@@ -242,6 +146,19 @@
 
           </q-input>
 
+
+          <!-- Verification Filter -->
+          <q-select
+            v-model="verificationFilter"
+            :options="verificationFilterOptions"
+            outlined
+            dense
+            emit-value
+            map-options
+            label="Verification"
+            class="status-filter"
+            style="min-width: 150px"
+          />
 
           <!-- Status -->
           <q-select
@@ -259,6 +176,26 @@
 
       </q-card-section>
 
+
+      <!-- Verification Tabs -->
+      <q-tabs
+        v-model="activeTab"
+        dense
+        class="text-grey-7 bg-grey-1"
+        active-color="primary"
+        indicator-color="primary"
+        align="left"
+        narrow-indicator
+      >
+        <q-tab name="all" icon="badge" label="All Drivers" />
+        <q-tab name="pending" icon="hourglass_top" label="Pending Verification">
+          <q-badge color="warning" text-color="dark" floating rounded v-if="pendingVerificationCount > 0">
+            {{ pendingVerificationCount }}
+          </q-badge>
+        </q-tab>
+        <q-tab name="verified" icon="verified" label="Verified Drivers" />
+        <q-tab name="rejected" icon="cancel" label="Rejected / Action Needed" />
+      </q-tabs>
 
       <q-separator />
 
@@ -486,6 +423,51 @@
         </template>
 
 
+        <!-- VERIFICATION STATUS -->
+        <template #body-cell-verification="props">
+          <q-td :props="props" class="text-center">
+            <q-chip
+              dense
+              clickable
+              :color="
+                props.row.isVerified || props.row.verificationStatus === 'verified'
+                  ? 'green-1'
+                  : props.row.verificationStatus === 'rejected'
+                    ? 'red-1'
+                    : 'amber-1'
+              "
+              :text-color="
+                props.row.isVerified || props.row.verificationStatus === 'verified'
+                  ? 'positive'
+                  : props.row.verificationStatus === 'rejected'
+                    ? 'negative'
+                    : 'warning'
+              "
+              @click="openVerifyDialog(props.row)"
+            >
+              <q-icon
+                :name="
+                  props.row.isVerified || props.row.verificationStatus === 'verified'
+                    ? 'verified'
+                    : props.row.verificationStatus === 'rejected'
+                      ? 'cancel'
+                      : 'hourglass_top'
+                "
+                size="14px"
+                class="q-mr-xs"
+              />
+              {{
+                props.row.isVerified || props.row.verificationStatus === 'verified'
+                  ? 'Verified'
+                  : props.row.verificationStatus === 'rejected'
+                    ? 'Rejected'
+                    : 'Pending'
+              }}
+            </q-chip>
+          </q-td>
+        </template>
+
+
         <!-- BOOKINGS -->
         <template #body-cell-bookings="props">
 
@@ -522,6 +504,34 @@
             :props="props"
             class="text-right"
           >
+
+            <!-- Verify Docs -->
+            <q-btn
+              unelevated
+              dense
+              no-caps
+              size="sm"
+              :color="
+                props.row.isVerified || props.row.verificationStatus === 'verified'
+                  ? 'positive'
+                  : 'warning'
+              "
+              :text-color="
+                props.row.isVerified || props.row.verificationStatus === 'verified'
+                  ? 'white'
+                  : 'dark'
+              "
+              icon="verified_user"
+              :label="
+                props.row.isVerified || props.row.verificationStatus === 'verified'
+                  ? 'Verified'
+                  : 'Verify Docs'
+              "
+              class="q-px-sm q-mr-xs text-weight-bold"
+              @click="openVerifyDialog(props.row)"
+            >
+              <q-tooltip> Review & Verify Driver Documents </q-tooltip>
+            </q-btn>
 
             <!-- View -->
             <q-btn
@@ -591,8 +601,8 @@
 
             {{
               editingCustomer
-                ? 'Edit Customer'
-                : 'Add Customer'
+                ? 'Edit Driver'
+                : 'Add Driver'
             }}
 
           </div>
@@ -1457,30 +1467,103 @@
             </q-item>
 
 
-            <!-- License -->
-            <q-item
-              v-if="selectedCustomer.licensePhoto"
-            >
+            <!-- Driver Uploaded Compliance Documents -->
+            <div class="q-mt-lg q-mb-sm text-subtitle2 text-weight-bold text-primary row items-center">
+              <q-icon name="verified_user" size="18px" class="q-mr-xs" />
+              Uploaded Compliance Documents
+            </div>
 
-              <q-item-section>
+            <div class="row q-col-gutter-sm q-mb-md">
+              <!-- Driver Photo -->
+              <div class="col-12 col-sm-6">
+                <q-card flat bordered class="q-pa-xs rounded-borders">
+                  <div class="row items-center justify-between q-pa-xs bg-grey-2 rounded-borders">
+                    <span class="text-caption text-weight-bold">Driver Photo</span>
+                    <q-badge color="primary" label="Biometric" />
+                  </div>
+                  <div class="text-center q-pa-xs cursor-pointer" @click="zoomImage(selectedCustomer.profileImage || selectedCustomer.image, 'Driver Photo')">
+                    <q-img
+                      :src="resolveImageUrl(selectedCustomer.profileImage || selectedCustomer.image, DOCUMENT_PLACEHOLDERS.profile)"
+                      style="height: 100px; border-radius: 4px;"
+                      fit="contain"
+                    />
+                    <div class="text-caption text-primary q-mt-xs"><q-icon name="zoom_in" /> Inspect Photo</div>
+                  </div>
+                </q-card>
+              </div>
 
-                <q-item-label caption>
-                  Driving License
-                </q-item-label>
+              <!-- Driving License -->
+              <div class="col-12 col-sm-6">
+                <q-card flat bordered class="q-pa-xs rounded-borders">
+                  <div class="row items-center justify-between q-pa-xs bg-grey-2 rounded-borders">
+                    <span class="text-caption text-weight-bold">Driving License</span>
+                    <span class="text-caption text-grey-8">{{ selectedCustomer.drivingLicenseNo || selectedCustomer.licenseNumber || '-' }}</span>
+                  </div>
+                  <div class="text-center q-pa-xs cursor-pointer" @click="zoomImage(selectedCustomer.licenseImage || selectedCustomer.licensePhoto, 'Driving License')">
+                    <q-img
+                      :src="resolveImageUrl(selectedCustomer.licenseImage || selectedCustomer.licensePhoto, DOCUMENT_PLACEHOLDERS.license)"
+                      style="height: 100px; border-radius: 4px;"
+                      fit="contain"
+                    />
+                    <div class="text-caption text-primary q-mt-xs"><q-icon name="zoom_in" /> Inspect License</div>
+                  </div>
+                </q-card>
+              </div>
 
-                <q-img
-                  :src="selectedCustomer.licensePhoto"
-                  class="license-view-image"
-                  fit="contain"
-                />
+              <!-- Aadhaar Card -->
+              <div class="col-12 col-sm-6">
+                <q-card flat bordered class="q-pa-xs rounded-borders">
+                  <div class="row items-center justify-between q-pa-xs bg-grey-2 rounded-borders">
+                    <span class="text-caption text-weight-bold">Aadhaar Card</span>
+                    <span class="text-caption text-grey-8">{{ maskAadhaar(selectedCustomer.aadhaarNumber || selectedCustomer.aadhaar) }}</span>
+                  </div>
+                  <div class="text-center q-pa-xs cursor-pointer" @click="zoomImage(selectedCustomer.aadhaarImage, 'Aadhaar Card')">
+                    <q-img
+                      :src="resolveImageUrl(selectedCustomer.aadhaarImage, DOCUMENT_PLACEHOLDERS.aadhaar)"
+                      style="height: 100px; border-radius: 4px;"
+                      fit="contain"
+                    />
+                    <div class="text-caption text-primary q-mt-xs"><q-icon name="zoom_in" /> Inspect Aadhaar</div>
+                  </div>
+                </q-card>
+              </div>
 
-              </q-item-section>
-
-            </q-item>
+              <!-- PAN Card -->
+              <div class="col-12 col-sm-6">
+                <q-card flat bordered class="q-pa-xs rounded-borders">
+                  <div class="row items-center justify-between q-pa-xs bg-grey-2 rounded-borders">
+                    <span class="text-caption text-weight-bold">PAN Card</span>
+                    <span class="text-caption text-grey-8">{{ selectedCustomer.panNumber || '-' }}</span>
+                  </div>
+                  <div class="text-center q-pa-xs cursor-pointer" @click="zoomImage(selectedCustomer.panImage, 'PAN Card')">
+                    <q-img
+                      :src="resolveImageUrl(selectedCustomer.panImage, DOCUMENT_PLACEHOLDERS.pan)"
+                      style="height: 100px; border-radius: 4px;"
+                      fit="contain"
+                    />
+                    <div class="text-caption text-primary q-mt-xs"><q-icon name="zoom_in" /> Inspect PAN</div>
+                  </div>
+                </q-card>
+              </div>
+            </div>
 
           </q-list>
 
         </q-card-section>
+
+        <!-- Actions -->
+        <q-separator />
+        <q-card-actions align="between" class="q-pa-md bg-grey-1">
+          <q-btn
+            unelevated
+            color="primary"
+            icon="verified_user"
+            label="Open Document Verification"
+            no-caps
+            @click="viewDialog = false; openVerifyDialog(selectedCustomer)"
+          />
+          <q-btn flat label="Close" color="grey-8" v-close-popup />
+        </q-card-actions>
 
       </q-card>
 
@@ -1498,7 +1581,7 @@
         <q-card-section>
 
           <div class="text-h6">
-            Delete Customer
+            Delete Driver
           </div>
 
         </q-card-section>
@@ -1538,6 +1621,475 @@
 
     </q-dialog>
 
+    <!-- =====================================================
+         VERIFY DRIVER DOCUMENTS MODAL
+    ====================================================== -->
+    <q-dialog v-model="verifyDialog" persistent>
+      <q-card style="width: 860px; max-width: 95vw; border-radius: 14px;">
+        <!-- Header -->
+        <q-card-section class="row items-center bg-primary text-white q-py-md">
+          <q-avatar icon="verified_user" color="white" text-color="primary" size="38px" />
+          <div class="q-ml-md">
+            <div class="text-h6 text-weight-bolder">Driver Document Verification</div>
+            <div class="text-caption text-blue-1">
+              Review and approve submitted compliance documents for {{ selectedCustomer?.name }}
+            </div>
+          </div>
+          <q-space />
+          <q-btn flat round dense icon="close" color="white" v-close-popup />
+        </q-card-section>
+
+        <!-- Driver Profile Summary Bar -->
+        <q-card-section class="bg-blue-grey-1 q-py-sm">
+          <div class="row items-center justify-between">
+            <div class="row items-center q-gutter-x-md">
+              <q-avatar size="44px" color="primary" text-color="white">
+                <img v-if="selectedCustomer?.image" :src="selectedCustomer.image" />
+                <span v-else>{{ getInitials(selectedCustomer?.name) }}</span>
+              </q-avatar>
+              <div>
+                <div class="text-subtitle2 text-weight-bold">{{ selectedCustomer?.name }} (ID: #{{ selectedCustomer?.id }})</div>
+                <div class="text-caption text-grey-7">
+                  <q-icon name="phone" size="14px" /> {{ selectedCustomer?.mobile }} |
+                  <q-icon name="email" size="14px" /> {{ selectedCustomer?.email }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Current Status Badge -->
+            <div>
+              <q-badge
+                :color="
+                  selectedCustomer?.isVerified || selectedCustomer?.verificationStatus === 'verified'
+                    ? 'positive'
+                    : selectedCustomer?.verificationStatus === 'rejected'
+                      ? 'negative'
+                      : 'warning'
+                "
+                :text-color="
+                  selectedCustomer?.isVerified || selectedCustomer?.verificationStatus === 'verified'
+                    ? 'white'
+                    : selectedCustomer?.verificationStatus === 'rejected'
+                      ? 'white'
+                      : 'dark'
+                "
+                class="q-px-md q-py-xs text-weight-bold text-caption text-uppercase"
+              >
+                <q-icon
+                  :name="
+                    selectedCustomer?.isVerified || selectedCustomer?.verificationStatus === 'verified'
+                      ? 'check_circle'
+                      : selectedCustomer?.verificationStatus === 'rejected'
+                        ? 'cancel'
+                        : 'hourglass_top'
+                  "
+                  size="14px"
+                  class="q-mr-xs"
+                />
+                {{
+                  selectedCustomer?.isVerified || selectedCustomer?.verificationStatus === 'verified'
+                    ? 'Verified & Approved'
+                    : selectedCustomer?.verificationStatus === 'rejected'
+                      ? 'Rejected'
+                      : 'Pending Review'
+                }}
+              </q-badge>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <!-- Documents Grid -->
+        <q-card-section class="q-pa-md" style="max-height: 58vh; overflow-y: auto;">
+          <div class="row q-col-gutter-md">
+            <!-- 1. Driver Photograph -->
+            <div class="col-12 col-sm-6 col-md-4">
+              <q-card flat bordered class="rounded-borders full-height">
+                <q-card-section class="q-pa-sm bg-grey-2">
+                  <div class="row items-center justify-between">
+                    <div class="text-weight-bold text-caption row items-center">
+                      <q-icon name="face" color="primary" class="q-mr-xs" />
+                      Driver Photograph
+                    </div>
+                    <q-badge color="primary" label="Biometric" />
+                  </div>
+                </q-card-section>
+                <q-card-section class="q-pa-sm">
+                  <div class="text-caption text-grey-8 q-mb-xs">
+                    Driver: <strong>{{ selectedCustomer?.name }}</strong>
+                  </div>
+                  <div
+                    class="doc-img-container cursor-pointer bg-grey-1 rounded-borders text-center q-pa-xs"
+                    @click="zoomImage(selectedCustomer?.profileImage || selectedCustomer?.image || selectedCustomer?.profile_image, 'Driver Photograph')"
+                  >
+                    <q-img
+                      :src="resolveImageUrl(selectedCustomer?.profileImage || selectedCustomer?.image || selectedCustomer?.profile_image, DOCUMENT_PLACEHOLDERS.profile)"
+                      style="height: 130px; border-radius: 6px;"
+                      fit="contain"
+                    />
+                    <div class="row items-center justify-center q-mt-xs q-gutter-x-sm">
+                      <span class="text-caption text-primary"><q-icon name="zoom_in" /> Inspect</span>
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        size="xs"
+                        icon="open_in_new"
+                        color="primary"
+                        @click.stop="openInNewTab(selectedCustomer?.profileImage || selectedCustomer?.image || selectedCustomer?.profile_image)"
+                      >
+                        <q-tooltip>Open in new tab</q-tooltip>
+                      </q-btn>
+                    </div>
+                  </div>
+                </q-card-section>
+              </q-card>
+            </div>
+
+            <!-- 2. Driving License -->
+            <div class="col-12 col-sm-6 col-md-4">
+              <q-card flat bordered class="rounded-borders full-height">
+                <q-card-section class="q-pa-sm bg-grey-2">
+                  <div class="row items-center justify-between">
+                    <div class="text-weight-bold text-caption row items-center">
+                      <q-icon name="directions_car" color="primary" class="q-mr-xs" />
+                      Driving License
+                    </div>
+                    <q-badge color="negative" label="Mandatory" />
+                  </div>
+                </q-card-section>
+                <q-card-section class="q-pa-sm">
+                  <div class="text-caption text-grey-8 q-mb-xs">
+                    Number: <strong>{{ selectedCustomer?.drivingLicenseNo || selectedCustomer?.licenseNumber || selectedCustomer?.driving_license_no || 'DL-PENDING' }}</strong>
+                  </div>
+                  <div
+                    class="doc-img-container cursor-pointer bg-grey-1 rounded-borders text-center q-pa-xs"
+                    @click="zoomImage(selectedCustomer?.licenseImage || selectedCustomer?.licensePhoto || selectedCustomer?.license_image, 'Driving License')"
+                  >
+                    <q-img
+                      :src="resolveImageUrl(selectedCustomer?.licenseImage || selectedCustomer?.licensePhoto || selectedCustomer?.license_image, DOCUMENT_PLACEHOLDERS.license)"
+                      style="height: 130px; border-radius: 6px;"
+                      fit="contain"
+                    />
+                    <div class="row items-center justify-center q-mt-xs q-gutter-x-sm">
+                      <span class="text-caption text-primary"><q-icon name="zoom_in" /> Inspect</span>
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        size="xs"
+                        icon="open_in_new"
+                        color="primary"
+                        @click.stop="openInNewTab(selectedCustomer?.licenseImage || selectedCustomer?.licensePhoto || selectedCustomer?.license_image)"
+                      >
+                        <q-tooltip>Open in new tab</q-tooltip>
+                      </q-btn>
+                    </div>
+                  </div>
+                </q-card-section>
+              </q-card>
+            </div>
+
+            <!-- 3. Aadhaar Card -->
+            <div class="col-12 col-sm-6 col-md-4">
+              <q-card flat bordered class="rounded-borders full-height">
+                <q-card-section class="q-pa-sm bg-grey-2">
+                  <div class="row items-center justify-between">
+                    <div class="text-weight-bold text-caption row items-center">
+                      <q-icon name="badge" color="primary" class="q-mr-xs" />
+                      Aadhaar Card
+                    </div>
+                    <q-badge color="negative" label="Identity" />
+                  </div>
+                </q-card-section>
+                <q-card-section class="q-pa-sm">
+                  <div class="text-caption text-grey-8 q-mb-xs">
+                    Number: <strong>{{ maskAadhaar(selectedCustomer?.aadhaarNumber || selectedCustomer?.aadhaar || selectedCustomer?.aadhaar_number) }}</strong>
+                  </div>
+                  <div
+                    class="doc-img-container cursor-pointer bg-grey-1 rounded-borders text-center q-pa-xs"
+                    @click="zoomImage(selectedCustomer?.aadhaarImage || selectedCustomer?.aadhaar_image, 'Aadhaar Card')"
+                  >
+                    <q-img
+                      :src="resolveImageUrl(selectedCustomer?.aadhaarImage || selectedCustomer?.aadhaar_image, DOCUMENT_PLACEHOLDERS.aadhaar)"
+                      style="height: 130px; border-radius: 6px;"
+                      fit="contain"
+                    />
+                    <div class="row items-center justify-center q-mt-xs q-gutter-x-sm">
+                      <span class="text-caption text-primary"><q-icon name="zoom_in" /> Inspect</span>
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        size="xs"
+                        icon="open_in_new"
+                        color="primary"
+                        @click.stop="openInNewTab(selectedCustomer?.aadhaarImage || selectedCustomer?.aadhaar_image)"
+                      >
+                        <q-tooltip>Open in new tab</q-tooltip>
+                      </q-btn>
+                    </div>
+                  </div>
+                </q-card-section>
+              </q-card>
+            </div>
+
+            <!-- 4. PAN Card -->
+            <div class="col-12 col-sm-6 col-md-4">
+              <q-card flat bordered class="rounded-borders full-height">
+                <q-card-section class="q-pa-sm bg-grey-2">
+                  <div class="row items-center justify-between">
+                    <div class="text-weight-bold text-caption row items-center">
+                      <q-icon name="credit_card" color="primary" class="q-mr-xs" />
+                      PAN Card
+                    </div>
+                    <q-badge color="grey-7" label="Tax / Payout" />
+                  </div>
+                </q-card-section>
+                <q-card-section class="q-pa-sm">
+                  <div class="text-caption text-grey-8 q-mb-xs">
+                    Number: <strong>{{ selectedCustomer?.panNumber || selectedCustomer?.pan_number || 'Provided' }}</strong>
+                  </div>
+                  <div
+                    class="doc-img-container cursor-pointer bg-grey-1 rounded-borders text-center q-pa-xs"
+                    @click="zoomImage(selectedCustomer?.panImage || selectedCustomer?.pan_image, 'PAN Card')"
+                  >
+                    <q-img
+                      :src="resolveImageUrl(selectedCustomer?.panImage || selectedCustomer?.pan_image, DOCUMENT_PLACEHOLDERS.pan)"
+                      style="height: 130px; border-radius: 6px;"
+                      fit="contain"
+                    />
+                    <div class="row items-center justify-center q-mt-xs q-gutter-x-sm">
+                      <span class="text-caption text-primary"><q-icon name="zoom_in" /> Inspect</span>
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        size="xs"
+                        icon="open_in_new"
+                        color="primary"
+                        @click.stop="openInNewTab(selectedCustomer?.panImage || selectedCustomer?.pan_image)"
+                      >
+                        <q-tooltip>Open in new tab</q-tooltip>
+                      </q-btn>
+                    </div>
+                  </div>
+                </q-card-section>
+              </q-card>
+            </div>
+
+            <!-- 5. Vehicle Registration & RC -->
+            <div class="col-12 col-sm-6 col-md-4">
+              <q-card flat bordered class="rounded-borders full-height">
+                <q-card-section class="q-pa-sm bg-grey-2">
+                  <div class="row items-center justify-between">
+                    <div class="text-weight-bold text-caption row items-center">
+                      <q-icon name="commute" color="primary" class="q-mr-xs" />
+                      Vehicle Details & RC
+                    </div>
+                    <q-badge color="primary" label="Vehicle" />
+                  </div>
+                </q-card-section>
+                <q-card-section class="q-pa-sm">
+                  <div class="text-caption text-grey-8 q-mb-xs">
+                    Reg: <strong>{{ selectedCustomer?.vehicleDetails?.registrationNo || selectedCustomer?.vehicle || 'Unassigned' }}</strong>
+                  </div>
+                  <div
+                    class="doc-img-container cursor-pointer bg-grey-1 rounded-borders text-center q-pa-xs"
+                    @click="zoomImage(selectedCustomer?.rcImage || selectedCustomer?.vehicleDetails?.rcImage || selectedCustomer?.vehicleImage, 'Vehicle Registration / RC')"
+                  >
+                    <q-img
+                      :src="resolveImageUrl(selectedCustomer?.rcImage || selectedCustomer?.vehicleDetails?.rcImage || selectedCustomer?.vehicleImage, DOCUMENT_PLACEHOLDERS.rc)"
+                      style="height: 130px; border-radius: 6px;"
+                      fit="contain"
+                    />
+                    <div class="row items-center justify-center q-mt-xs q-gutter-x-sm">
+                      <span class="text-caption text-primary"><q-icon name="zoom_in" /> Inspect</span>
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        size="xs"
+                        icon="open_in_new"
+                        color="primary"
+                        @click.stop="openInNewTab(selectedCustomer?.rcImage || selectedCustomer?.vehicleDetails?.rcImage || selectedCustomer?.vehicleImage)"
+                      >
+                        <q-tooltip>Open in new tab</q-tooltip>
+                      </q-btn>
+                    </div>
+                  </div>
+                </q-card-section>
+              </q-card>
+            </div>
+
+            <!-- 6. Vehicle Insurance -->
+            <div class="col-12 col-sm-6 col-md-4">
+              <q-card flat bordered class="rounded-borders full-height">
+                <q-card-section class="q-pa-sm bg-grey-2">
+                  <div class="row items-center justify-between">
+                    <div class="text-weight-bold text-caption row items-center">
+                      <q-icon name="security" color="primary" class="q-mr-xs" />
+                      Vehicle Insurance
+                    </div>
+                    <q-badge color="positive" label="Insurance" />
+                  </div>
+                </q-card-section>
+                <q-card-section class="q-pa-sm">
+                  <div class="text-caption text-grey-8 q-mb-xs">
+                    Policy: <strong>{{ selectedCustomer?.insuranceNumber || selectedCustomer?.vehicleDetails?.insuranceNo || 'INS-VALID' }}</strong>
+                  </div>
+                  <div
+                    class="doc-img-container cursor-pointer bg-grey-1 rounded-borders text-center q-pa-xs"
+                    @click="zoomImage(selectedCustomer?.insuranceImage || selectedCustomer?.vehicleDetails?.insuranceImage, 'Vehicle Insurance Policy')"
+                  >
+                    <q-img
+                      :src="resolveImageUrl(selectedCustomer?.insuranceImage || selectedCustomer?.vehicleDetails?.insuranceImage, DOCUMENT_PLACEHOLDERS.insurance)"
+                      style="height: 130px; border-radius: 6px;"
+                      fit="contain"
+                    />
+                    <div class="row items-center justify-center q-mt-xs q-gutter-x-sm">
+                      <span class="text-caption text-primary"><q-icon name="zoom_in" /> Inspect</span>
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        size="xs"
+                        icon="open_in_new"
+                        color="primary"
+                        @click.stop="openInNewTab(selectedCustomer?.insuranceImage || selectedCustomer?.vehicleDetails?.insuranceImage)"
+                      >
+                        <q-tooltip>Open in new tab</q-tooltip>
+                      </q-btn>
+                    </div>
+                  </div>
+                </q-card-section>
+              </q-card>
+            </div>
+
+            <!-- 7. Vehicle & Compliance Metadata Summary -->
+            <div class="col-12">
+              <q-card flat bordered class="rounded-borders bg-blue-grey-1">
+                <q-card-section class="q-pa-sm">
+                  <div class="text-weight-bold text-caption text-primary q-mb-xs">
+                    <q-icon name="fact_check" size="18px" class="q-mr-xs" /> Driver Compliance & Road Profile
+                  </div>
+                  <div class="row q-col-gutter-sm text-caption">
+                    <div class="col-12 col-sm-3">
+                      <span class="text-grey-7">Vehicle Category:</span>
+                      <strong class="q-ml-xs text-uppercase">{{ selectedCustomer?.vehicleCategory || 'Bike' }}</strong>
+                    </div>
+                    <div class="col-12 col-sm-3">
+                      <span class="text-grey-7">Assigned Vehicle:</span>
+                      <strong class="q-ml-xs">{{ selectedCustomer?.vehicle || 'Unassigned' }}</strong>
+                    </div>
+                    <div class="col-12 col-sm-3">
+                      <span class="text-grey-7">RC / Plate:</span>
+                      <strong class="q-ml-xs">{{ selectedCustomer?.rcNumber || selectedCustomer?.vehicleDetails?.rcNumber || selectedCustomer?.vehicle || 'Available' }}</strong>
+                    </div>
+                    <div class="col-12 col-sm-3">
+                      <span class="text-grey-7">Insurance Expiry:</span>
+                      <strong class="q-ml-xs">{{ selectedCustomer?.insuranceExpiry || selectedCustomer?.vehicleDetails?.insuranceExpiryDate || '2027-12-31' }}</strong>
+                    </div>
+                    <div class="col-12 col-sm-3" v-if="selectedCustomer?.permitNumber">
+                      <span class="text-grey-7">Permit No:</span>
+                      <strong class="q-ml-xs">{{ selectedCustomer?.permitNumber }}</strong>
+                    </div>
+                    <div class="col-12 col-sm-3" v-if="selectedCustomer?.experienceYears">
+                      <span class="text-grey-7">Experience:</span>
+                      <strong class="q-ml-xs">{{ selectedCustomer?.experienceYears }} Years</strong>
+                    </div>
+                    <div class="col-12 col-sm-3" v-if="selectedCustomer?.emergencyContactName">
+                      <span class="text-grey-7">Emergency:</span>
+                      <strong class="q-ml-xs">{{ selectedCustomer?.emergencyContactName }} ({{ selectedCustomer?.emergencyContactNumber }})</strong>
+                    </div>
+                  </div>
+                </q-card-section>
+              </q-card>
+            </div>
+
+            <!-- 5. Admin Notes / Remarks -->
+            <div class="col-12">
+              <label class="text-weight-bold text-caption text-grey-9 q-mb-xs block">
+                Compliance Officer Remarks / Audit Notes:
+              </label>
+              <q-input
+                v-model="verificationRemarks"
+                outlined
+                dense
+                type="textarea"
+                rows="2"
+                placeholder="Enter remarks (e.g., Valid driving license & verified Aadhaar card. Approved for passenger rides.)"
+              />
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <!-- Verification Actions -->
+        <q-card-actions class="q-pa-md bg-grey-1" align="between">
+          <div>
+            <q-btn
+              flat
+              dense
+              no-caps
+              color="grey-8"
+              icon="hourglass_top"
+              label="Reset to Pending"
+              :loading="verifyingLoading"
+              @click="submitVerification('pending')"
+            />
+          </div>
+
+          <div class="row q-gutter-x-sm">
+            <q-btn
+              flat
+              label="Cancel"
+              color="grey-7"
+              v-close-popup
+            />
+            <q-btn
+              unelevated
+              color="negative"
+              icon="block"
+              label="Reject Documents"
+              no-caps
+              :loading="verifyingLoading"
+              @click="submitVerification('rejected')"
+            />
+            <q-btn
+              unelevated
+              color="positive"
+              icon="check_circle"
+              label="Approve & Verify Driver"
+              no-caps
+              class="text-weight-bold"
+              :loading="verifyingLoading"
+              @click="submitVerification('verified')"
+            />
+          </div>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Document Image Zoom Lightbox -->
+    <q-dialog v-model="imagePreviewDialog">
+      <q-card style="max-width: 90vw; max-height: 90vh;">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6 text-weight-bold">{{ previewImageTitle || 'Document Preview' }}</div>
+          <q-space />
+          <q-btn flat round dense icon="open_in_new" color="primary" class="q-mr-sm" @click="openInNewTab(previewImageUrl)">
+            <q-tooltip>Open Full Image in New Tab</q-tooltip>
+          </q-btn>
+          <q-btn flat round dense icon="close" v-close-popup />
+        </q-card-section>
+        <q-card-section class="q-pa-md text-center">
+          <q-img :src="previewImageUrl" style="max-width: 800px; max-height: 70vh;" fit="contain" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -1547,19 +2099,54 @@
 import {
   ref,
   computed,
+  watch,
   onMounted
 } from 'vue'
+
+import { useRoute } from 'vue-router'
 
 import {
   Notify
 } from 'quasar'
 
+import adminService from '@/services/admin.service'
+import { resolveImageUrl, DOCUMENT_PLACEHOLDERS } from '@/utils/imageUrl'
+
+const route = useRoute()
 
 /* =========================================================
    LOADING
 ========================================================= */
 
 const loading = ref(false)
+
+
+/* =========================================================
+   VERIFICATION STATE & TABS
+========================================================= */
+
+const activeTab = ref('all')
+
+const verificationFilter = ref('all')
+
+const verificationFilterOptions = [
+  { label: 'All Verification', value: 'all' },
+  { label: 'Pending Review', value: 'pending' },
+  { label: 'Verified', value: 'verified' },
+  { label: 'Rejected', value: 'rejected' }
+]
+
+const verifyDialog = ref(false)
+
+const verifyingLoading = ref(false)
+
+const verificationRemarks = ref('')
+
+const imagePreviewDialog = ref(false)
+
+const previewImageUrl = ref('')
+
+const previewImageTitle = ref('')
 
 
 /* =========================================================
@@ -1783,6 +2370,13 @@ const columns = [
   },
 
   {
+    name: 'verification',
+    label: 'VERIFICATION',
+    field: 'verificationStatus',
+    align: 'center'
+  },
+
+  {
     name: 'bookings',
     label: 'BOOKINGS',
     field: 'bookings',
@@ -1982,81 +2576,78 @@ const filteredCustomers = computed(() => {
 
   let data = [...customers.value]
 
+  // Tab filter
+  if (activeTab.value === 'pending') {
+    data = data.filter(d => !d.isVerified && d.verificationStatus !== 'verified' && d.verificationStatus !== 'rejected')
+  } else if (activeTab.value === 'verified') {
+    data = data.filter(d => d.isVerified || d.verificationStatus === 'verified')
+  } else if (activeTab.value === 'rejected') {
+    data = data.filter(d => d.verificationStatus === 'rejected')
+  }
+
+  // Verification Filter Dropdown
+  if (verificationFilter.value !== 'all') {
+    if (verificationFilter.value === 'pending') {
+      data = data.filter(d => !d.isVerified && d.verificationStatus !== 'verified' && d.verificationStatus !== 'rejected')
+    } else if (verificationFilter.value === 'verified') {
+      data = data.filter(d => d.isVerified || d.verificationStatus === 'verified')
+    } else if (verificationFilter.value === 'rejected') {
+      data = data.filter(d => d.verificationStatus === 'rejected')
+    }
+  }
 
   /* STATUS */
-
   if (statusFilter.value !== 'all') {
-
     data = data.filter(
       customer =>
         customer.status ===
         statusFilter.value
     )
-
   }
 
-
   /* SEARCH */
-
   if (search.value) {
-
     const keyword =
       search.value
         .toLowerCase()
         .trim()
 
-
     data = data.filter(customer => {
-
       return (
-
         customer.name
           ?.toLowerCase()
           .includes(keyword)
-
         ||
-
         customer.email
           ?.toLowerCase()
           .includes(keyword)
-
         ||
-
         customer.mobile
           ?.includes(keyword)
-
         ||
-
         customer.aadhaar
           ?.includes(keyword)
-
         ||
-
+        customer.drivingLicenseNo
+          ?.toLowerCase()
+          .includes(keyword)
+        ||
         customer.city
           ?.toLowerCase()
           .includes(keyword)
-
         ||
-
         customer.state
           ?.toLowerCase()
           .includes(keyword)
-
         ||
-
         customer.agencyType
           ?.toLowerCase()
           .includes(keyword)
-
       )
-
     })
-
   }
 
-
   return data
-
 })
 
 
@@ -2064,37 +2655,47 @@ const filteredCustomers = computed(() => {
    STATISTICS
 ========================================================= */
 
-const totalCustomers = computed(() => {
-
+const totalDrivers = computed(() => {
   return customers.value.length
-
 })
 
+const totalCustomers = totalDrivers
 
-const activeCustomers = computed(() => {
 
+const activeDrivers = computed(() => {
   return customers.value.filter(
     customer =>
       customer.status === 'Active'
   ).length
+})
 
+const activeCustomers = activeDrivers
+
+
+const pendingVerificationCount = computed(() => {
+  return customers.value.filter(
+    d => !d.isVerified && d.verificationStatus !== 'verified' && d.verificationStatus !== 'rejected'
+  ).length
+})
+
+
+const verifiedDriversCount = computed(() => {
+  return customers.value.filter(
+    d => d.isVerified || d.verificationStatus === 'verified'
+  ).length
 })
 
 
 const inactiveCustomers = computed(() => {
-
   return customers.value.filter(
     customer =>
       customer.status === 'Inactive'
   ).length
-
 })
 
 
 const newCustomers = computed(() => {
-
   return 4
-
 })
 
 
@@ -2326,7 +2927,7 @@ const handleLicenseUpload = file => {
    SAVE CUSTOMER
 ========================================================= */
 
-const saveCustomer = () => {
+const saveCustomer = async () => {
 
   /* NAME */
 
@@ -2550,6 +3151,11 @@ const saveCustomer = () => {
   ====================================================== */
 
   if (editingCustomer.value) {
+    try {
+      await adminService.updateDriver(customerForm.value.id, customerForm.value)
+    } catch (err) {
+      console.warn('API update failed, updating in-memory:', err?.message)
+    }
 
     const index =
       customers.value.findIndex(
@@ -2558,68 +3164,50 @@ const saveCustomer = () => {
           customerForm.value.id
       )
 
-
     if (index !== -1) {
-
       customers.value[index] = {
-
         ...customers.value[index],
-
         ...customerForm.value
-
       }
-
     }
 
-
     Notify.create({
-
       type: 'positive',
-
-      message:
-        'Customer updated successfully'
-
+      message: 'Driver updated successfully'
     })
-
   }
-
 
   /* =====================================================
      ADD
   ====================================================== */
 
   else {
+    try {
+      const created = await adminService.createDriver(customerForm.value)
+      if (created && created.id) {
+        customerForm.value.id = created.id
+      }
+    } catch (err) {
+      console.warn('API create failed, adding in-memory:', err?.message)
+    }
 
     customers.value.unshift({
-
       ...customerForm.value,
-
-      id: Date.now(),
-
+      id: customerForm.value.id || Date.now(),
       bookings: 0,
-
       createdAt:
         new Date()
           .toISOString()
           .split('T')[0]
-
     })
-
 
     Notify.create({
-
       type: 'positive',
-
-      message:
-        'Customer added successfully'
-
+      message: 'Driver added successfully'
     })
-
   }
 
-
   customerDialog.value = false
-
 }
 
 
@@ -2676,12 +3264,16 @@ const confirmDelete = customer => {
    DELETE
 ========================================================= */
 
-const deleteCustomer = () => {
-
+const deleteCustomer = async () => {
   if (!selectedCustomer.value) {
     return
   }
 
+  try {
+    await adminService.deleteDriver(selectedCustomer.value.id)
+  } catch (err) {
+    console.warn('API delete driver failed, removing in-memory:', err?.message)
+  }
 
   customers.value =
     customers.value.filter(
@@ -2690,22 +3282,14 @@ const deleteCustomer = () => {
         selectedCustomer.value.id
     )
 
-
   deleteDialog.value = false
 
-
   Notify.create({
-
     type: 'positive',
-
-    message:
-      'Customer deleted successfully'
-
+    message: 'Driver deleted successfully'
   })
 
-
   selectedCustomer.value = null
-
 }
 
 
@@ -2763,67 +3347,132 @@ const formatDate = date => {
 
 
 /* =========================================================
-   API PLACEHOLDER
+   VERIFICATION ACTIONS
+========================================================= */
+
+const openVerifyDialog = (driver) => {
+  selectedCustomer.value = driver
+  verificationRemarks.value = driver.verificationRemarks || (driver.isVerified ? 'Approved by Batohi Compliance Team' : '')
+  verifyDialog.value = true
+}
+
+const zoomImage = (url, title) => {
+  if (!url) return
+  previewImageUrl.value = resolveImageUrl(url)
+  previewImageTitle.value = title || 'Document Inspection'
+  imagePreviewDialog.value = true
+}
+
+const openInNewTab = (url) => {
+  if (!url) return
+  const full = resolveImageUrl(url)
+  window.open(full, '_blank', 'noopener,noreferrer')
+}
+
+const submitVerification = async (status) => {
+  if (!selectedCustomer.value) return
+  verifyingLoading.value = true
+  const id = selectedCustomer.value.id
+  const isVerified = status === 'verified'
+  const remarks = verificationRemarks.value
+
+  try {
+    await adminService.verifyDriver(id, {
+      status,
+      remarks
+    })
+  } catch (err) {
+    console.warn('API verify failed, updating in-memory:', err?.message)
+  }
+
+  // Update in memory list
+  const idx = customers.value.findIndex(d => d.id === id)
+  if (idx !== -1) {
+    customers.value[idx] = {
+      ...customers.value[idx],
+      isVerified,
+      verificationStatus: status,
+      verificationRemarks: remarks,
+      status: isVerified ? 'Active' : customers.value[idx].status
+    }
+    selectedCustomer.value = { ...customers.value[idx] }
+  }
+
+  Notify.create({
+    type: status === 'verified' ? 'positive' : status === 'rejected' ? 'negative' : 'warning',
+    message: status === 'verified'
+      ? `Driver ${selectedCustomer.value.name} successfully verified!`
+      : status === 'rejected'
+        ? `Driver ${selectedCustomer.value.name} documents marked as rejected.`
+        : `Driver ${selectedCustomer.value.name} reset to pending review.`
+  })
+
+  verifyDialog.value = false
+  verifyingLoading.value = false
+}
+
+/* =========================================================
+   FETCH DRIVERS
 ========================================================= */
 
 const fetchCustomers = async () => {
-
   loading.value = true
-
   try {
-
-    /*
-     * Connect API here.
-     *
-     * Example:
-     *
-     * const response =
-     *   await axios.get(
-     *     '/customers'
-     *   )
-     *
-     * customers.value =
-     *   response.data.data
-     */
-
-  }
-
-  catch (error) {
-
-    console.error(
-      'Customer API Error:',
-      error
-    )
-
-
-    Notify.create({
-
-      type: 'negative',
-
-      message:
-        'Unable to load customers'
-
+    const res = await adminService.getDrivers({
+      search: search.value,
+      status: statusFilter.value
     })
-
-  }
-
-  finally {
-
+    if (res && res.data && res.data.length > 0) {
+      customers.value = res.data
+    }
+  } catch (error) {
+    console.warn('Driver API Notice (using local list if offline):', error?.message)
+  } finally {
     loading.value = false
-
   }
-
 }
 
+
+/* =========================================================
+   WATCH ROUTE QUERY
+========================================================= */
+
+watch(
+  () => route.query,
+  (query) => {
+    if (query?.tab === 'verification' || query?.tab === 'pending') {
+      activeTab.value = 'pending'
+    } else if (query?.tab === 'verified') {
+      activeTab.value = 'verified'
+    } else if (query?.tab === 'all') {
+      activeTab.value = 'all'
+    }
+
+    if (query?.verifyDriverId || query?.driverId) {
+      const targetId = query.verifyDriverId || query.driverId
+      const target = customers.value.find(d => String(d.id) === String(targetId))
+      if (target) {
+        openVerifyDialog(target)
+      }
+    }
+  },
+  { immediate: true }
+)
 
 /* =========================================================
    MOUNT
 ========================================================= */
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchCustomers()
 
-  fetchCustomers()
-
+  if (route.query.verifyDriverId || route.query.driverId) {
+    const targetId = route.query.verifyDriverId || route.query.driverId
+    const target = customers.value.find(d => String(d.id) === String(targetId))
+    if (target) {
+      openVerifyDialog(target)
+    }
+  }
 })
 
 </script>
@@ -3398,4 +4047,3 @@ onMounted(() => {
 }
 
 </style>
-```

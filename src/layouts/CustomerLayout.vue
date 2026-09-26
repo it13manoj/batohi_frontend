@@ -257,6 +257,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Notify } from 'quasar'
+import { clearAuthSession } from '@/utils/auth.js'
 
 // =========================================================
 // ROUTER
@@ -313,50 +314,28 @@ const logout = async () => {
   loggingOut.value = true
 
   try {
-    // -------------------------------------------------------
-    // Clear authentication data
-    // -------------------------------------------------------
+    // Thoroughly clear all tokens, storage, and axios headers
+    clearAuthSession()
 
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    localStorage.removeItem('role')
-    localStorage.removeItem('auth')
-
-    // -------------------------------------------------------
-    // Optional: clear all local storage
-    // -------------------------------------------------------
-    // Agar project mein sirf authentication data nahi
-    // balki booking/search data bhi clear karna ho to
-    // localStorage.clear() use kar sakte hain.
-    //
-    // Abhi hum sirf auth-related data clear kar rahe hain.
-
-    // -------------------------------------------------------
     // Close dialog
-    // -------------------------------------------------------
     logoutDialog.value = false
 
-    // -------------------------------------------------------
-    // Show notification
-    // -------------------------------------------------------
     Notify.create({
       type: 'positive',
       message: 'Logged out successfully',
-      position: 'top-right',
+      position: 'top',
       timeout: 1500
     })
 
-    // -------------------------------------------------------
-    // Redirect to login
-    // -------------------------------------------------------
-    await router.replace('/')
+    // Redirect to login page with explicit logout flag
+    await router.replace('/?logout=true')
   } catch (error) {
     console.error('Logout error:', error)
 
     Notify.create({
       type: 'negative',
       message: 'Unable to logout. Please try again.',
-      position: 'top-right'
+      position: 'top'
     })
   } finally {
     loggingOut.value = false

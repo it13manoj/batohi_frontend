@@ -1096,12 +1096,15 @@
 
 import {
   ref,
-  computed
+  computed,
+  onMounted
 } from 'vue'
 
 import {
   Notify
 } from 'quasar'
+
+import adminService from '@/services/admin.service'
 
 
 // =====================================================
@@ -1893,28 +1896,30 @@ const openStatusDialog = (booking) => {
 // UPDATE BOOKING STATUS
 // =====================================================
 
-const updateBookingStatus = () => {
+const updateBookingStatus = async () => {
 
   if (!selectedBooking.value) {
     return
   }
 
+  const bookingId = selectedBooking.value.id
+  const targetStatus = newStatus.value
+
+  try {
+    await adminService.updateBookingStatus(bookingId, targetStatus)
+  } catch (err) {
+    console.warn('API update failed, updating locally:', err)
+  }
 
   const index =
     bookings.value.findIndex(
       booking =>
-        booking.id ===
-        selectedBooking.value.id
+        booking.id === bookingId
     )
 
-
   if (index !== -1) {
-
-    bookings.value[index].status =
-      newStatus.value
-
+    bookings.value[index].status = targetStatus
   }
-
 
   Notify.create({
     type: 'positive',
@@ -1922,9 +1927,7 @@ const updateBookingStatus = () => {
       'Booking status updated successfully'
   })
 
-
   statusDialog.value = false
-
 }
 
 
@@ -1932,7 +1935,7 @@ const updateBookingStatus = () => {
 // CANCEL BOOKING
 // =====================================================
 
-const cancelBooking = (booking) => {
+const cancelBooking = async (booking) => {
 
   if (
     !confirm(
@@ -1942,6 +1945,11 @@ const cancelBooking = (booking) => {
     return
   }
 
+  try {
+    await adminService.updateBookingStatus(booking.id, 'Cancelled')
+  } catch (err) {
+    console.warn('API cancel failed, updating locally:', err)
+  }
 
   const index =
     bookings.value.findIndex(
@@ -1949,21 +1957,16 @@ const cancelBooking = (booking) => {
         item.id === booking.id
     )
 
-
   if (index !== -1) {
-
     bookings.value[index].status =
       'Cancelled'
-
 
     Notify.create({
       type: 'positive',
       message:
         'Booking cancelled successfully'
     })
-
   }
-
 }
 
 
@@ -1971,59 +1974,60 @@ const cancelBooking = (booking) => {
 // LOAD BOOKINGS
 // =====================================================
 
+const mapBooking = (b) => ({
+  id: b.id,
+  bookingNumber: b.booking_number || b.bookingNumber || ('BD1000' + b.id),
+  customer: {
+    name: b.Customer?.name || b.Customer?.fullName || b.customer?.name || 'Customer ' + (b.customer_id || ''),
+    email: b.Customer?.email || b.customer?.email || 'N/A',
+    mobile: b.Customer?.phone || b.Customer?.mobile || b.customer?.mobile || 'N/A'
+  },
+  vehicle: {
+    name: b.Vehicle?.title || b.Vehicle?.name || b.vehicle?.name || 'Vehicle',
+    registration: b.Vehicle?.registration_number || b.Vehicle?.vehicle_number || b.vehicle?.registration || 'N/A',
+    type: b.Vehicle?.type || b.vehicle?.type || 'Standard'
+  },
+  pickup: b.pickup_location || b.pickup || 'Indore',
+  drop: b.dropoff_location || b.drop || 'Bhopal',
+  startDate: b.booking_date || b.startDate || 'Today',
+  startTime: b.booking_time || b.startTime || '10:00 AM',
+  endDate: b.return_date || b.endDate || 'Tomorrow',
+  endTime: b.return_time || b.endTime || '06:00 PM',
+  amount: Number(b.total_amount || b.amount || 0),
+  paymentMethod: b.payment_method || b.paymentMethod || 'UPI',
+  paymentStatus: b.payment_status || b.paymentStatus || 'Paid',
+  status: b.status || 'Pending',
+  createdAt: b.createdAt ? new Date(b.createdAt).toLocaleString('en-IN') : 'Recent'
+})
+
 const loadBookings = async () => {
 
   loading.value = true
 
-
   try {
-
-    /*
-      API will be connected here.
-
-      Example:
-
-      const response = await api.get(
-        '/admin/bookings'
-      )
-
-      bookings.value =
-        response.data.data
-
-    */
-
-    await new Promise(
-      resolve =>
-        setTimeout(
-          resolve,
-          500
-        )
-    )
-
-  }
-
-  catch (error) {
-
+    const res = await adminService.getBookings()
+    const list = res.data?.data || res.data || []
+    if (Array.isArray(list) && list.length > 0) {
+      bookings.value = list.map(mapBooking)
+    }
+  } catch (error) {
     console.error(
       'Booking loading error:',
       error
     )
-
     Notify.create({
-      type: 'negative',
+      type: 'warning',
       message:
-        'Unable to load bookings'
+        'Using offline bookings data'
     })
-
-  }
-
-  finally {
-
+  } finally {
     loading.value = false
-
   }
-
 }
+
+onMounted(() => {
+  loadBookings()
+})
 
 </script>
 

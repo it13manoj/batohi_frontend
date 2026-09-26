@@ -625,6 +625,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import VehicleType from '@/pages/customer/VehicleType.vue'
 import { useDriverOnboarding } from '@/composables/useDriverOnboarding'
+import { clearAuthSession } from '@/utils/auth.js'
 
 const { isSubscribed, isVerified } = useDriverOnboarding()
 
@@ -815,35 +816,21 @@ const confirmLogout = async () => {
   try {
     loggingOut.value = true
 
-    /* -------------------------------------------------------
-       CLEAR AUTHENTICATION DATA
-    ------------------------------------------------------- */
+    // Thoroughly clear all tokens, driver state, storage, and axios headers
+    clearAuthSession()
 
-    localStorage.removeItem('token')
-
-    localStorage.removeItem('accessToken')
-
-    localStorage.removeItem('user')
-
-    localStorage.removeItem('driver')
-
-    localStorage.removeItem('role')
-
-    localStorage.removeItem('auth')
-
-    sessionStorage.removeItem('token')
-
-    /* -------------------------------------------------------
-       CLOSE DIALOG
-    ------------------------------------------------------- */
-
+    // Close dialog
     logoutDialog.value = false
 
-    /* -------------------------------------------------------
-       REDIRECT TO DRIVER LOGIN
-    ------------------------------------------------------- */
+    $q.notify({
+      type: 'positive',
+      message: 'Logged out successfully',
+      position: 'top',
+      timeout: 1500
+    })
 
-    await router.replace('/')
+    // Redirect to login page with explicit logout flag
+    await router.replace('/?logout=true')
   } catch (error) {
     console.error('Logout Error:', error)
   } finally {

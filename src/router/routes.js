@@ -247,6 +247,19 @@ const routes = [
   },
 
   // =====================================================
+  // ADMIN AUTHENTICATION (DEDICATED SEPARATE PORTAL)
+  // =====================================================
+  {
+    path: '/admin/login',
+    name: 'admin-login',
+    component: () => import('@/pages/admin/AdminLoginPage.vue')
+  },
+  {
+    path: '/admin-login',
+    redirect: '/admin/login'
+  },
+
+  // =====================================================
   // ADMIN PANEL
   // =====================================================
   {

@@ -1,4 +1,3 @@
-```vue
 <template>
   <q-page class="reset-password-page flex flex-center q-pa-md">
     <!-- =====================================================
@@ -694,4 +693,3 @@ const resetPassword = () => {
   }
 }
 </style>
-```

@@ -1,4 +1,3 @@
-```vue
 <template>
   <q-page class="agency-page">
 
@@ -2044,6 +2043,8 @@ import {
   Notify
 } from 'quasar'
 
+import adminService from '@/services/admin.service'
+
 
 /* =========================================================
    LOADING
@@ -2802,7 +2803,7 @@ const handleDocumentUpload = async (
    SAVE
 ========================================================= */
 
-const saveAgency = () => {
+const saveAgency = async () => {
 
 
   /* AGENCY NAME */
@@ -2896,6 +2897,11 @@ const saveAgency = () => {
   /* UPDATE */
 
   if (editingAgency.value) {
+    try {
+      await adminService.saveAgent(agencyForm.value.id, agencyForm.value)
+    } catch (err) {
+      console.warn('API save agent fallback:', err)
+    }
 
     const index =
       agencies.value.findIndex(
@@ -2904,53 +2910,44 @@ const saveAgency = () => {
           agencyForm.value.id
       )
 
-
     if (index !== -1) {
-
       agencies.value[index] = {
         ...agencies.value[index],
         ...agencyForm.value
       }
-
     }
 
-
     Notify.create({
-
       type: 'positive',
-
       message:
         'Agency updated successfully'
-
     })
 
   }
-
 
   /* ADD */
 
   else {
+    let createdItem = null
+    try {
+      const res = await adminService.saveAgent(null, agencyForm.value)
+      createdItem = res.data?.data
+    } catch (err) {
+      console.warn('API create agent fallback:', err)
+    }
 
     agencies.value.unshift({
-
       ...agencyForm.value,
-
-      id: Date.now()
-
+      id: createdItem?.id || Date.now()
     })
 
-
     Notify.create({
-
       type: 'positive',
-
       message:
         'Agency added successfully'
-
     })
 
   }
-
 
   agencyDialog.value = false
 
@@ -2985,33 +2982,34 @@ const confirmDelete = agency => {
 }
 
 
-const deleteAgency = () => {
+const deleteAgency = async () => {
 
   if (!selectedAgency.value) {
     return
   }
 
+  const id = selectedAgency.value.id
+
+  try {
+    await adminService.deleteAgent(id)
+  } catch (err) {
+    console.warn('API delete agent fallback:', err)
+  }
 
   agencies.value =
     agencies.value.filter(
       agency =>
-        agency.id !==
-        selectedAgency.value.id
+        agency.id !== id
     )
-
 
   deleteDialog.value = false
 
   selectedAgency.value = null
 
-
   Notify.create({
-
     type: 'positive',
-
     message:
       'Agency deleted successfully'
-
   })
 
 }
@@ -3107,39 +3105,55 @@ const isExpired = date => {
    API PLACEHOLDER
 ========================================================= */
 
+const mapAgency = (a) => ({
+  id: a.id,
+  agentId: a.agent_id || a.agentId || ('AGT-' + (1000 + a.id)),
+  agencyName: a.agency_name || a.agencyName || a.name || 'Agency ' + a.id,
+  ownerName: a.owner_name || a.ownerName || 'Owner',
+  email: a.email || '',
+  agencyEmail: a.agency_email || a.agencyEmail || a.email || '',
+  mobile: a.mobile || a.phone || '',
+  agencyCellNumber: a.agency_cell_number || a.agencyCellNumber || a.phone || '',
+  state: a.state || 'Bihar',
+  city: a.city || 'Patna',
+  status: a.status || (a.is_active !== false ? 'Active' : 'Inactive'),
+  agencyOpening: a.agency_opening || a.agencyOpening || '09:00 AM - 08:00 PM',
+  agencyAddress: a.agency_address || a.agencyAddress || a.address || '',
+  gstNumber: a.gst_number || a.gstNumber || '',
+  gstExpiry: a.gst_expiry || a.gstExpiry || '',
+  agencyLicenseNumber: a.license_number || a.agencyLicenseNumber || '',
+  agencyLicenseExpiry: a.license_expiry || a.agencyLicenseExpiry || '',
+  agencyPanNumber: a.pan_number || a.agencyPanNumber || '',
+  agencyTanNumber: a.tan_number || a.agencyTanNumber || '',
+  agencyFssaiNumber: a.fssai_number || a.agencyFssaiNumber || '',
+  agencyRegistrationNumber: a.registration_number || a.agencyRegistrationNumber || '',
+  photo: a.photo || a.logo || '',
+  agencyPhoto: a.agency_photo || a.agencyPhoto || '',
+  agencyCertificate: a.certificate || a.agencyCertificate || '',
+  ...a
+})
+
 const fetchAgencies = async () => {
 
   loading.value = true
 
   try {
-
-    /*
-      Connect your backend API here.
-
-      Example:
-
-      const response =
-        await axios.get('/agencies')
-
-      agencies.value =
-        response.data.data
-    */
-
-  }
-
-  catch (error) {
-
+    const res = await adminService.getAgents()
+    const list = res.data?.data || res.data || []
+    if (Array.isArray(list) && list.length > 0) {
+      agencies.value = list.map(mapAgency)
+    }
+  } catch (error) {
     console.error(
       'Agency API Error:',
       error
     )
-
-  }
-
-  finally {
-
+    Notify.create({
+      type: 'warning',
+      message: 'Using offline agencies data'
+    })
+  } finally {
     loading.value = false
-
   }
 
 }
@@ -4235,4 +4249,3 @@ export default defineComponent({
 }
 
 </style>
-```

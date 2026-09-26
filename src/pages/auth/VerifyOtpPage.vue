@@ -5,30 +5,37 @@
         <img
           src="../../assets/images/logo3.png"
           alt="batohiDrive Logo"
-          style="height: 150px; object-fit: contain"
+          style="height: 100px; object-fit: contain"
         />
       </div>
 
-      <h4>Verify OTP</h4>
+      <h4>OTP Verification</h4>
 
       <p class="subtitle">
-        Enter the 6-digit OTP sent to your registered email.
+        Enter the 6-digit OTP code sent to:
+        <br />
+        <strong class="text-primary">{{ targetEmail || 'your registered email' }}</strong>
       </p>
 
       <form @submit.prevent="verifyOtp">
         <div class="form-group">
-          <label>Enter OTP</label>
+          <label>Enter 6-Digit OTP</label>
 
           <input
             v-model="otp"
             type="text"
             maxlength="6"
-            placeholder="Enter 6-digit OTP"
+            inputmode="numeric"
+            placeholder="••••••"
             required
+            class="otp-field"
           />
         </div>
 
-        <button type="submit" class="btn"> Verify OTP </button>
+        <button type="submit" class="btn" :disabled="loading">
+          <span v-if="!loading">Verify OTP & Continue</span>
+          <span v-else>Verifying...</span>
+        </button>
       </form>
 
       <p v-if="message" class="success">
@@ -42,13 +49,13 @@
       <div class="resend">
         <span>Didn't receive OTP?</span>
 
-        <button type="button" @click="resendOtp" :disabled="timer > 0">
-          {{ timer > 0 ? `Resend in ${timer}s` : 'Resend OTP' }}
+        <button type="button" @click="resendOtp" :disabled="timer > 0 || resending">
+          {{ resending ? 'Sending...' : timer > 0 ? `Resend in ${timer}s` : 'Resend OTP' }}
         </button>
       </div>
 
       <div class="bottom-link">
-        <router-link to="/forgot-password"> ← Change Email </router-link>
+        <router-link to="/"> ← Return to Login </router-link>
       </div>
     </div>
   </div>
@@ -56,14 +63,28 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import api from '@/config/api'
+import { saveAuthSession, getDashboardRoute } from '@/utils/auth.js'
 
 const router = useRouter()
+const route = useRoute()
 
 const otp = ref('')
 const message = ref('')
 const error = ref('')
-const timer = ref(30)
+const timer = ref(60)
+const loading = ref(false)
+const resending = ref(false)
+
+const targetEmail = ref(
+  route.query.email ||
+    localStorage.getItem('pendingAuthEmail') ||
+    localStorage.getItem('resetEmail') ||
+    ''
+)
+const targetUserId = ref(route.query.userId || localStorage.getItem('pendingAuthUserId') || null)
+const isResetMode = ref(route.query.mode === 'reset' || (!route.query.mode && !!localStorage.getItem('resetEmail')))
 
 let interval
 
@@ -79,43 +100,79 @@ onUnmounted(() => {
   clearInterval(interval)
 })
 
-const verifyOtp = () => {
+const verifyOtp = async () => {
   message.value = ''
   error.value = ''
 
-  if (otp.value.length !== 6) {
+  if (otp.value.trim().length !== 6) {
     error.value = 'Please enter a valid 6-digit OTP.'
     return
   }
 
-  // Backend API will be connected here
-  // Example:
-  // await axios.post("/api/verify-otp", {
-  //   email: localStorage.getItem("resetEmail"),
-  //   otp: otp.value
-  // });
+  loading.value = true
 
-  localStorage.setItem('otpVerified', 'true')
+  try {
+    const response = await api.post('/users/verify-otp', {
+      user_id: targetUserId.value,
+      email: targetEmail.value,
+      otp: otp.value.trim()
+    })
 
-  message.value = 'OTP verified successfully.'
+    const data = response.data
 
-  setTimeout(() => {
-    router.push('/reset-password')
-  }, 1000)
+    if (isResetMode.value && !data.token) {
+      localStorage.setItem('otpVerified', 'true')
+      message.value = 'OTP verified successfully. Proceeding to password reset.'
+      setTimeout(() => {
+        router.push('/reset-password')
+      }, 1000)
+      return
+    }
+
+    if (data.token) {
+      saveAuthSession(data.token, data.user, true)
+      api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
+      message.value = 'OTP verified! Entering your dashboard...'
+
+      localStorage.removeItem('pendingAuthEmail')
+      localStorage.removeItem('pendingAuthUserId')
+
+      setTimeout(() => {
+        const targetRoute = getDashboardRoute(data.user?.user_type || data.user?.role)
+        router.push(targetRoute)
+      }, 1000)
+    } else {
+      localStorage.setItem('otpVerified', 'true')
+      router.push('/reset-password')
+    }
+
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Invalid or expired OTP code. Please try again.'
+  } finally {
+    loading.value = false
+  }
 }
 
-const resendOtp = () => {
-  if (timer.value > 0) return
+const resendOtp = async () => {
+  if (timer.value > 0 || resending.value) return
 
-  message.value = 'A new OTP has been sent.'
+  resending.value = true
+  message.value = ''
   error.value = ''
 
-  timer.value = 30
+  try {
+    await api.post('/users/resend-otp', {
+      user_id: targetUserId.value,
+      email: targetEmail.value
+    })
 
-  // Backend API:
-  // await axios.post("/api/resend-otp", {
-  //   email: localStorage.getItem("resetEmail")
-  // });
+    message.value = 'A new OTP has been sent to your email.'
+    timer.value = 60
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Failed to resend OTP. Please try again.'
+  } finally {
+    resending.value = false
+  }
 }
 </script>
 
@@ -131,113 +188,136 @@ const resendOtp = () => {
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: #fff;
   padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  text-align: center;
 }
 
 .logo {
-  text-align: center;
-  color: #1976d2;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 h4 {
-  text-align: center;
-  color: #222;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 .subtitle {
-  text-align: center;
-  color: #777;
+  color: #64748b;
   font-size: 14px;
-  line-height: 1.5;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  text-align: left;
+  margin-bottom: 16px;
 }
 
-label {
+.form-group label {
   display: block;
-  margin-bottom: 8px;
   font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #334155;
 }
 
-input {
+.otp-field {
   width: 100%;
-  padding: 13px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-sizing: border-box;
-  font-size: 18px;
+  padding: 14px;
+  border-radius: 8px;
+  border: 2px solid #cbd5e1;
+  font-size: 22px;
+  letter-spacing: 8px;
   text-align: center;
-  letter-spacing: 6px;
+  font-weight: 700;
+  box-sizing: border-box;
+  outline: none;
 }
 
-input:focus {
-  outline: none;
+.otp-field:focus {
   border-color: #1976d2;
+}
+
+.demo-tip {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 18px;
+  background: #f1f5f9;
+  padding: 6px;
+  border-radius: 6px;
 }
 
 .btn {
   width: 100%;
-  padding: 13px;
+  padding: 14px;
   background: #1976d2;
-  color: white;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
   border: none;
-  border-radius: 6px;
-  font-size: 16px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
 .btn:hover {
-  background: #125ca5;
+  background: #1565c0;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .success {
-  color: #2e7d32;
-  text-align: center;
-  margin-top: 15px;
+  color: #16a34a;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .error {
-  color: #d32f2f;
-  text-align: center;
-  margin-top: 15px;
+  color: #dc2626;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .resend {
-  text-align: center;
-  margin-top: 25px;
-  font-size: 14px;
-  color: #666;
+  margin-top: 24px;
+  font-size: 13px;
+  color: #64748b;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 
 .resend button {
-  display: block;
-  margin: 10px auto;
+  background: none;
   border: none;
-  background: transparent;
   color: #1976d2;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .resend button:disabled {
-  color: #999;
+  color: #94a3b8;
   cursor: not-allowed;
 }
 
 .bottom-link {
-  text-align: center;
   margin-top: 20px;
 }
 
 .bottom-link a {
-  color: #1976d2;
+  color: #64748b;
   text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
 }
 </style>
