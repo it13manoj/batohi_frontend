@@ -9,11 +9,12 @@ export interface JwtPayload {
   exp: number
 }
 
-export const decodeToken = (token: string): JwtPayload | null => {
-  try {
-    return jwtDecode<JwtPayload>(token)
-  } catch (error) {
-    console.error('Invalid JWT:', error)
-    return null
-  }
-}
+export {
+  decodeToken,
+  getToken,
+  isTokenValid,
+  getUserRole,
+  getDashboardRoute,
+  saveAuthSession,
+  clearAuthSession
+} from './auth.js'

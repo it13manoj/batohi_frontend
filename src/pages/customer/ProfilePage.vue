@@ -200,7 +200,15 @@
                 :readonly="!editMode"
                 :bg-color="editMode ? 'white' : 'grey-1'"
               >
-                <template #prepend>
+
+                 <template #append>
+                      <q-icon name="event" class="cursor-pointer">
+                        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                          <q-date v-model="form.dateOfBirth" mask="YYYY-MM-DD" />
+                        </q-popup-proxy>
+                      </q-icon>
+                    </template>
+                    <template #prepend>
                   <q-icon name="calendar_month" color="primary" />
                 </template>
               </q-input>

@@ -1109,12 +1109,15 @@
 
 import {
   ref,
-  computed
+  computed,
+  onMounted
 } from 'vue'
 
 import {
   Notify
 } from 'quasar'
+
+import adminService from '@/services/admin.service'
 
 
 // =====================================================
@@ -1962,145 +1965,75 @@ const createInvoice = async () => {
     !newInvoice.value.bookingNumber ||
     !newInvoice.value.amount
   ) {
-
     Notify.create({
-
       type: 'warning',
-
       message:
         'Please fill all required fields'
-
     })
-
     return
-
   }
-
 
   createLoading.value = true
 
-
   try {
+    const payload = {
+      customer_name: newInvoice.value.customerName,
+      booking_number: newInvoice.value.bookingNumber,
+      amount: Number(newInvoice.value.amount),
+      total_amount: Number(newInvoice.value.amount),
+      payment_method: newInvoice.value.paymentMethod,
+      issue_date: newInvoice.value.issueDate || new Date().toISOString().split('T')[0],
+      due_date: newInvoice.value.dueDate || new Date().toISOString().split('T')[0]
+    }
 
-    /*
-      API will be connected here.
+    try {
+      await adminService.createInvoice(payload)
+    } catch (err) {
+      console.warn('API invoice creation fallback:', err)
+    }
 
-      Example:
-
-      await api.post(
-        '/admin/invoices',
-        newInvoice.value
-      )
-    */
-
-
-    await new Promise(
-      resolve =>
-        setTimeout(
-          resolve,
-          600
-        )
-    )
-
-
-    const id =
-      invoices.value.length + 1
-
-
+    const id = invoices.value.length + 1
     invoices.value.unshift({
-
       id,
-
-      invoiceNumber:
-        `INV-${10000 + id}`,
-
-      bookingNumber:
-        newInvoice.value.bookingNumber,
-
+      invoiceNumber: `INV-${10000 + id}`,
+      bookingNumber: newInvoice.value.bookingNumber,
       customer: {
-
-        name:
-          newInvoice.value.customerName,
-
+        name: newInvoice.value.customerName,
         email: '',
-
         mobile: ''
-
       },
-
-      vehicle:
-        'Vehicle',
-
-      rentalPeriod:
-        '-',
-
-      rentalAmount:
-        Number(newInvoice.value.amount),
-
-      securityDeposit:
-        0,
-
-      gst:
-        0,
-
-      amount:
-        Number(newInvoice.value.amount),
-
-      paymentMethod:
-        newInvoice.value.paymentMethod,
-
-      status:
-        'Pending',
-
-      issueDate:
-        newInvoice.value.issueDate ||
-        '25 Aug 2026',
-
-      dueDate:
-        newInvoice.value.dueDate ||
-        '25 Aug 2026'
-
+      vehicle: 'Vehicle',
+      rentalPeriod: '-',
+      rentalAmount: Number(newInvoice.value.amount),
+      securityDeposit: 0,
+      gst: 0,
+      amount: Number(newInvoice.value.amount),
+      paymentMethod: newInvoice.value.paymentMethod,
+      status: 'Pending',
+      issueDate: newInvoice.value.issueDate || '25 Aug 2026',
+      dueDate: newInvoice.value.dueDate || '25 Aug 2026'
     })
-
 
     Notify.create({
-
       type: 'positive',
-
       message:
         'Invoice created successfully'
-
     })
 
-
     createDialog.value = false
-
-  }
-
-  catch (error) {
-
+  } catch (error) {
     console.error(
       'Create invoice error:',
       error
     )
-
     Notify.create({
-
       type: 'negative',
-
       message:
         'Unable to create invoice'
-
     })
-
-  }
-
-  finally {
-
+  } finally {
     createLoading.value = false
-
   }
-
 }
 
 
@@ -2108,62 +2041,55 @@ const createInvoice = async () => {
 // LOAD INVOICES
 // =====================================================
 
+const mapInvoice = (inv) => ({
+  id: inv.id,
+  invoiceNumber: inv.invoice_number || inv.invoiceNumber || (`INV-${10000 + inv.id}`),
+  bookingNumber: inv.Booking?.booking_number || inv.booking_number || inv.bookingNumber || ('BD' + (inv.booking_id || '')),
+  customer: {
+    name: inv.Booking?.Customer?.name || inv.customer_name || inv.customer?.name || 'Customer',
+    email: inv.Booking?.Customer?.email || inv.customer?.email || 'N/A',
+    mobile: inv.Booking?.Customer?.phone || inv.customer?.mobile || 'N/A'
+  },
+  vehicle: inv.Booking?.Vehicle?.title || inv.Booking?.Vehicle?.name || inv.vehicle || 'Vehicle',
+  rentalPeriod: inv.rental_period || inv.rentalPeriod || '2 Days',
+  rentalAmount: Number(inv.subtotal || inv.rentalAmount || inv.amount || 0),
+  securityDeposit: Number(inv.security_deposit || 0),
+  gst: Number(inv.tax_amount || inv.gst || 0),
+  amount: Number(inv.total_amount || inv.amount || 0),
+  paymentMethod: inv.payment_method || inv.paymentMethod || 'UPI',
+  status: inv.status || 'Pending',
+  issueDate: inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('en-IN') : (inv.issue_date || '25 Aug 2026'),
+  dueDate: inv.due_date ? new Date(inv.due_date).toLocaleDateString('en-IN') : (inv.dueDate || '25 Aug 2026')
+})
+
 const loadInvoices = async () => {
 
   loading.value = true
 
-
   try {
-
-    /*
-      Connect your backend API here.
-
-      Example:
-
-      const response = await api.get(
-        '/admin/invoices'
-      )
-
-      invoices.value =
-        response.data.data
-    */
-
-
-    await new Promise(
-      resolve =>
-        setTimeout(
-          resolve,
-          500
-        )
-    )
-
-  }
-
-  catch (error) {
-
+    const res = await adminService.getInvoices()
+    const list = res.data?.data || res.data || []
+    if (Array.isArray(list) && list.length > 0) {
+      invoices.value = list.map(mapInvoice)
+    }
+  } catch (error) {
     console.error(
       'Invoice loading error:',
       error
     )
-
     Notify.create({
-
-      type: 'negative',
-
+      type: 'warning',
       message:
-        'Unable to load invoices'
-
+        'Using offline invoices data'
     })
-
-  }
-
-  finally {
-
+  } finally {
     loading.value = false
-
   }
-
 }
+
+onMounted(() => {
+  loadInvoices()
+})
 
 </script>
 

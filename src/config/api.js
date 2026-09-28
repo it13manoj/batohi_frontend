@@ -16,7 +16,16 @@ if (Capacitor.isNativePlatform()) {
 }
 
 // Endpoints that do NOT require an Authorization token
-const PUBLIC_ENDPOINTS = ['/users/login', '/users/create', '/users/register']
+const PUBLIC_ENDPOINTS = [
+  '/users/login',
+  '/users/create',
+  '/users/register',
+  '/users/verify-otp',
+  '/users/verifyotp',
+  '/users/resend-otp',
+  '/driver/login',
+  '/admin/login'
+]
 
 api.interceptors.request.use(
   config => {
@@ -40,7 +49,7 @@ api.interceptors.request.use(
     // Only attach token if available and endpoint is NOT public
     if (token && !isPublicEndpoint) {
       config.headers.Authorization = `Bearer ${token}`
-    } else {
+    } else if (isPublicEndpoint) {
       delete config.headers.Authorization
     }
 
@@ -54,6 +63,27 @@ api.interceptors.request.use(
     return config
   },
   error => Promise.reject(error)
+)
+
+// Response interceptor: handle token expiration or unauthorized requests
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      const requestUrl = error.config?.url ? error.config.url.toLowerCase() : ''
+      const isPublic = PUBLIC_ENDPOINTS.some(endpoint =>
+        requestUrl.includes(endpoint.toLowerCase())
+      )
+
+      // If token is invalid on a protected endpoint, clean up session
+      if (!isPublic) {
+        console.warn(
+          'API returned 401 Unauthorized for protected route. Session might be expired.'
+        )
+      }
+    }
+    return Promise.reject(error)
+  }
 )
 
 export default api

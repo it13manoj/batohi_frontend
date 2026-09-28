@@ -1,4 +1,3 @@
-```vue
 <template>
   <q-page class="login-page">
     <div class="login-container">
@@ -195,7 +194,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 
 import { useRouter } from 'vue-router'
 
@@ -203,6 +202,7 @@ import { useQuasar } from 'quasar'
 
 import axios from 'axios'
 import api from '@/config/api'
+import { isTokenValid, getUserRole, getDashboardRoute, saveAuthSession } from '@/utils/auth.js'
 
 // ===============================
 // Router
@@ -215,6 +215,17 @@ const router = useRouter()
 // ===============================
 
 const $q = useQuasar()
+
+// Check if driver is already logged in with valid token (valid up to 1 month)
+onMounted(() => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+  if (token && isTokenValid(token)) {
+    const role = getUserRole(token)
+    if (role === 'DRIVER') {
+      router.replace(getDashboardRoute('DRIVER'))
+    }
+  }
+})
 
 // ===============================
 // Form Reference
@@ -243,7 +254,7 @@ const form = reactive({
 
   password: '',
 
-  remember: false
+  remember: true
 })
 
 // ===============================
@@ -269,7 +280,7 @@ const handleLogin = async () => {
       password: form.password
     }
 
-    const response = await api.post('/driver/', requestData)
+    const response = await api.post('/driver/login', requestData)
 
     // Get response data
 
@@ -277,14 +288,10 @@ const handleLogin = async () => {
 
     console.log(data)
 
-    // Save token
-
+    // Save 30-day token
     if (data.token) {
-      if (form.remember) {
-        localStorage.setItem('token', data.token)
-      } else {
-        sessionStorage.setItem('token', data.token)
-      }
+      saveAuthSession(data.token, { email: form.email, user_type: 'DRIVER' }, form.remember)
+      api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
     }
 
     // Success notification
@@ -652,4 +659,3 @@ const goToForgotPassword = () => {
   text-decoration: underline;
 }
 </style>
-```

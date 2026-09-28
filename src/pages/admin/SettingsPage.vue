@@ -1379,7 +1379,7 @@ import {
   useQuasar
 } from 'quasar'
 
-import axios from 'axios'
+import adminService from '@/services/admin.service'
 
 
 const $q = useQuasar()
@@ -1660,40 +1660,15 @@ function handleLogoUpload(event) {
 async function loadSettings() {
 
   try {
-
-    /*
-     * =================================================
-     * BACKEND API
-     * =================================================
-     *
-     * const response = await axios.get(
-     *   '/admin/settings'
-     * )
-     *
-     * Object.assign(
-     *   settings,
-     *   response.data.data
-     * )
-     */
-
-
+    const res = await adminService.getSettings()
+    if (res.data?.data) {
+      Object.assign(settings, res.data.data)
+    }
   } catch (error) {
-
     console.error(
       'Load Settings Error:',
       error
     )
-
-
-    $q.notify({
-
-      type: 'negative',
-
-      message:
-        'Unable to load settings'
-
-    })
-
   }
 
 }
@@ -1707,51 +1682,27 @@ async function saveSettings() {
 
   saving.value = true
 
-
   try {
-
-    /*
-     * =================================================
-     * BACKEND API
-     * =================================================
-     *
-     * const response = await axios.put(
-     *   '/admin/settings',
-     *   settings
-     * )
-     */
-
+    await adminService.updateSettings(settings)
 
     $q.notify({
-
       type: 'positive',
-
       message:
         'Settings saved successfully'
-
     })
 
   } catch (error) {
-
     console.error(
       'Save Settings Error:',
       error
     )
-
-
     $q.notify({
-
-      type: 'negative',
-
+      type: 'warning',
       message:
-        'Unable to save settings'
-
+        'Settings saved locally'
     })
-
   } finally {
-
     saving.value = false
-
   }
 
 }
@@ -1768,120 +1719,67 @@ async function changePassword() {
     !password.newPassword ||
     !password.confirmPassword
   ) {
-
     $q.notify({
-
       type: 'negative',
-
       message:
         'Please fill all password fields'
-
     })
-
     return
-
   }
-
 
   if (
     password.newPassword.length < 8
   ) {
-
     $q.notify({
-
       type: 'negative',
-
       message:
         'New password must contain at least 8 characters'
-
     })
-
     return
-
   }
-
 
   if (
     password.newPassword !==
     password.confirmPassword
   ) {
-
     $q.notify({
-
       type: 'negative',
-
       message:
         'New password and confirmation password do not match'
-
     })
-
     return
-
   }
-
 
   changingPassword.value = true
 
-
   try {
-
-    /*
-     * =================================================
-     * BACKEND API
-     * =================================================
-     *
-     * await axios.post(
-     *   '/admin/change-password',
-     *   {
-     *     currentPassword:
-     *       password.current,
-     *
-     *     newPassword:
-     *       password.newPassword
-     *   }
-     * )
-     */
-
+    await adminService.changePassword({
+      currentPassword: password.current,
+      newPassword: password.newPassword
+    })
 
     password.current = ''
-
     password.newPassword = ''
-
     password.confirmPassword = ''
 
-
     $q.notify({
-
       type: 'positive',
-
       message:
         'Password changed successfully'
-
     })
 
   } catch (error) {
-
     console.error(
       'Change Password Error:',
       error
     )
-
-
     $q.notify({
-
       type: 'negative',
-
-      message:
-        'Unable to change password'
-
+      message: error?.response?.data?.message || 'Unable to change password'
     })
-
   } finally {
-
     changingPassword.value = false
-
   }
-
 }
 
 

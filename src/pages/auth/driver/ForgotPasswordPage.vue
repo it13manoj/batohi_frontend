@@ -1,4 +1,3 @@
-```vue
 <template>
   <div class="auth-container">
     <div class="auth-card">
@@ -47,16 +46,6 @@
       <p v-if="error" class="error">
         {{ error }}
       </p>
-
-      <!-- ================= DEMO OTP INFO ================= -->
-      <div v-if="showDemoInfo" class="demo-box">
-        <div class="demo-title"> Demo Mode </div>
-
-        <div class="demo-text">
-          OTP will be:
-          <strong>123456</strong>
-        </div>
-      </div>
 
       <!-- ================= BACK TO DRIVER LOGIN ================= -->
       <div class="bottom-link">
@@ -484,4 +473,3 @@ input:disabled {
   }
 }
 </style>
-```

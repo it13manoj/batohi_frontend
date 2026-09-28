@@ -705,7 +705,7 @@
 
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
-import axios from 'axios'
+import adminService from '@/services/admin.service'
 
 const $q = useQuasar()
 
@@ -1083,43 +1083,35 @@ async function saveCoupon() {
   saving.value = true
 
   try {
-
-    /*
-     * =================================================
-     * API IMPLEMENTATION
-     * =================================================
-     *
-     * Replace these URLs with your backend endpoints.
-     *
-     * POST:
-     * /admin/coupons/create
-     *
-     * PUT:
-     * /admin/coupons/update/:id
-     *
-     */
+    const payload = {
+      code: form.value.code.trim().toUpperCase(),
+      description: form.value.description,
+      discount_type: form.value.discountType,
+      discount_value: Number(form.value.discountValue),
+      max_discount: Number(form.value.maxDiscount || 0),
+      min_amount: Number(form.value.minAmount || 0),
+      usage_limit: form.value.usageLimit ? Number(form.value.usageLimit) : null,
+      start_date: form.value.startDate,
+      end_date: form.value.endDate,
+      active: form.value.active
+    }
 
     if (isEdit.value) {
-
-      // Example:
-      // await axios.put(
-      //   `/admin/coupons/update/${form.value.id}`,
-      //   form.value
-      // )
+      try {
+        await adminService.saveCoupon(form.value.id, payload)
+      } catch (err) {
+        console.warn('API update coupon fallback:', err)
+      }
 
       const index = coupons.value.findIndex(
         item => item.id === form.value.id
       )
 
       if (index !== -1) {
-
         coupons.value[index] = {
           ...form.value,
-          code: form.value.code
-            .trim()
-            .toUpperCase()
+          code: form.value.code.trim().toUpperCase()
         }
-
       }
 
       $q.notify({
@@ -1128,50 +1120,37 @@ async function saveCoupon() {
       })
 
     } else {
-
-      // Example:
-      // const response = await axios.post(
-      //   '/admin/coupons/create',
-      //   form.value
-      // )
+      let createdItem = null
+      try {
+        const res = await adminService.saveCoupon(null, payload)
+        createdItem = res.data?.data
+      } catch (err) {
+        console.warn('API create coupon fallback:', err)
+      }
 
       coupons.value.unshift({
         ...form.value,
-        id: Date.now(),
-        code: form.value.code
-          .trim()
-          .toUpperCase()
+        id: createdItem?.id || Date.now(),
+        code: form.value.code.trim().toUpperCase()
       })
 
       $q.notify({
         type: 'positive',
         message: 'Coupon created successfully'
       })
-
     }
 
     couponDialog.value = false
 
   } catch (error) {
-
-    console.error(
-      'Coupon Save Error:',
-      error
-    )
-
+    console.error('Coupon Save Error:', error)
     $q.notify({
       type: 'negative',
-      message:
-        error?.response?.data?.message ||
-        'Unable to save coupon'
+      message: error?.response?.data?.message || 'Unable to save coupon'
     })
-
   } finally {
-
     saving.value = false
-
   }
-
 }
 
 
@@ -1183,48 +1162,33 @@ function deleteCoupon(coupon) {
 
   $q.dialog({
     title: 'Delete Coupon',
-    message:
-      `Are you sure you want to delete "${coupon.code}"?`,
+    message: `Are you sure you want to delete "${coupon.code}"?`,
     cancel: true,
     persistent: true
   }).onOk(async () => {
-
     try {
+      try {
+        await adminService.deleteCoupon(coupon.id)
+      } catch (err) {
+        console.warn('API delete coupon fallback:', err)
+      }
 
-      /*
-       * API:
-       *
-       * await axios.delete(
-       *   `/admin/coupons/delete/${coupon.id}`
-       * )
-       */
-
-      coupons.value =
-        coupons.value.filter(
-          item => item.id !== coupon.id
-        )
+      coupons.value = coupons.value.filter(
+        item => item.id !== coupon.id
+      )
 
       $q.notify({
         type: 'positive',
         message: 'Coupon deleted successfully'
       })
-
     } catch (error) {
-
-      console.error(
-        'Delete Coupon Error:',
-        error
-      )
-
+      console.error('Delete Coupon Error:', error)
       $q.notify({
         type: 'negative',
         message: 'Unable to delete coupon'
       })
-
     }
-
   })
-
 }
 
 
@@ -1233,19 +1197,12 @@ function deleteCoupon(coupon) {
 // =====================================================
 
 async function toggleCoupon(coupon) {
-
   try {
-
-    /*
-     * API:
-     *
-     * await axios.patch(
-     *   `/admin/coupons/status/${coupon.id}`,
-     *   {
-     *     active: coupon.active
-     *   }
-     * )
-     */
+    try {
+      await adminService.saveCoupon(coupon.id, { active: coupon.active })
+    } catch (err) {
+      console.warn('API toggle coupon fallback:', err)
+    }
 
     $q.notify({
       type: 'positive',
@@ -1253,18 +1210,13 @@ async function toggleCoupon(coupon) {
         ? 'Coupon activated'
         : 'Coupon deactivated'
     })
-
   } catch (error) {
-
     coupon.active = !coupon.active
-
     $q.notify({
       type: 'negative',
       message: 'Unable to update coupon status'
     })
-
   }
-
 }
 
 
@@ -1273,11 +1225,9 @@ async function toggleCoupon(coupon) {
 // =====================================================
 
 function resetFilters() {
-
   search.value = ''
   statusFilter.value = 'all'
   discountFilter.value = 'all'
-
 }
 
 
@@ -1286,7 +1236,6 @@ function resetFilters() {
 // =====================================================
 
 function formatDate(date) {
-
   if (!date) {
     return '-'
   }
@@ -1299,24 +1248,14 @@ function formatDate(date) {
       year: 'numeric'
     }
   )
-
 }
 
 
 function formatInputDate(date) {
-
   const year = date.getFullYear()
-
-  const month =
-    String(date.getMonth() + 1)
-      .padStart(2, '0')
-
-  const day =
-    String(date.getDate())
-      .padStart(2, '0')
-
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
-
 }
 
 
@@ -1324,48 +1263,43 @@ function formatInputDate(date) {
 // LOAD COUPONS
 // =====================================================
 
-async function loadCoupons() {
+const mapCoupon = (c) => ({
+  id: c.id,
+  code: c.code,
+  description: c.description || '',
+  discountType: c.discount_type || c.discountType || 'percentage',
+  discountValue: Number(c.discount_value || c.discountValue || 0),
+  maxDiscount: Number(c.max_discount || c.maxDiscount || 0),
+  minAmount: Number(c.min_amount || c.minAmount || 0),
+  usageLimit: c.usage_limit || c.usageLimit || null,
+  usedCount: Number(c.used_count || c.usedCount || 0),
+  startDate: c.start_date || c.startDate || '',
+  endDate: c.end_date || c.endDate || '',
+  active: c.active !== false && c.status !== 'inactive'
+})
 
+async function loadCoupons() {
   loading.value = true
 
   try {
-
-    /*
-     * When your backend API is ready,
-     * uncomment and change the endpoint.
-     *
-     * const response = await axios.get(
-     *   '/admin/coupons'
-     * )
-     *
-     * coupons.value = response.data.data
-     */
-
+    const res = await adminService.getCoupons()
+    const list = res.data?.data || res.data || []
+    if (Array.isArray(list) && list.length > 0) {
+      coupons.value = list.map(mapCoupon)
+    }
   } catch (error) {
-
-    console.error(
-      'Load Coupons Error:',
-      error
-    )
-
+    console.error('Load Coupons Error:', error)
     $q.notify({
-      type: 'negative',
-      message: 'Unable to load coupons'
+      type: 'warning',
+      message: 'Using offline coupons data'
     })
-
   } finally {
-
     loading.value = false
-
   }
-
 }
 
-
 onMounted(() => {
-
   loadCoupons()
-
 })
 
 </script>

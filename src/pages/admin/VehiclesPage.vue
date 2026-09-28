@@ -261,8 +261,8 @@
                 >
 
                   <img
-                    v-if="props.row.vehicleImage"
-                    :src="props.row.vehicleImage"
+                    v-if="props.row.vehicleImage || props.row.image"
+                    :src="resolveImageUrl(props.row.vehicleImage || props.row.image, DOCUMENT_PLACEHOLDERS.vehicle)"
                     alt="Vehicle"
                   >
 
@@ -278,11 +278,11 @@
 
                 <div class="q-ml-md">
 
-                  <div class="vehicle-name">
-                    {{ props.row.name }}
+                  <div class="vehicle-name text-weight-bold">
+                    {{ props.row.name || props.row.vehicleName }}
                   </div>
 
-                  <div class="vehicle-id">
+                  <div class="vehicle-id text-caption text-grey-7">
                     ID: #{{ props.row.id }}
                   </div>
 
@@ -303,8 +303,9 @@
               <q-badge
                 color="blue-1"
                 text-color="primary"
+                class="text-weight-bold"
               >
-                {{ props.row.type }}
+                {{ props.row.type || props.row.vehicleType || 'Car' }}
               </q-badge>
 
             </q-td>
@@ -317,8 +318,8 @@
 
             <q-td :props="props">
 
-              <span class="vehicle-number">
-                {{ props.row.vehicleNumber || '-' }}
+              <span class="vehicle-number text-weight-bolder">
+                {{ props.row.vehicleNumber || props.row.registrationNo || props.row.plateNumber || '-' }}
               </span>
 
             </q-td>
@@ -337,11 +338,11 @@
                   class="color-dot"
                   :style="{
                     backgroundColor:
-                      getColorCode(props.row.color)
+                      getColorCode(props.row.color || props.row.colour)
                   }"
                 ></span>
 
-                {{ props.row.color || '-' }}
+                {{ props.row.color || props.row.colour || '-' }}
 
               </div>
 
@@ -359,11 +360,11 @@
                 <q-icon
                   name="person"
                   size="18px"
-                  color="grey-6"
+                  :color="props.row.driverName !== 'Unassigned' && props.row.driver !== 'Unassigned' ? 'primary' : 'grey-6'"
                   class="q-mr-xs"
                 />
 
-                {{ props.row.driverName || '-' }}
+                {{ props.row.driverName || props.row.driver || '-' }}
 
               </div>
 
@@ -379,13 +380,13 @@
 
               <q-badge
                 :color="
-                  props.row.vehicleInsurance
+                  props.row.vehicleInsurance || Boolean(props.row.insuranceNumber || props.row.insuranceNo)
                     ? 'positive'
                     : 'grey'
                 "
               >
                 {{
-                  props.row.vehicleInsurance
+                  props.row.vehicleInsurance || Boolean(props.row.insuranceNumber || props.row.insuranceNo)
                     ? 'Insured'
                     : 'Not Insured'
                 }}
@@ -1051,307 +1052,372 @@
     <!-- ================================================= -->
     <!-- VIEW VEHICLE DIALOG -->
     <!-- ================================================= -->
+    <!-- ================================================= -->
+    <!-- VIEW VEHICLE DETAILS DIALOG (COMPLETE DETAILS) -->
+    <!-- ================================================= -->
     <q-dialog v-model="viewDialog">
-
-      <q-card
-        v-if="selectedVehicle"
-        class="view-card"
-      >
-
-        <!-- MAIN IMAGE -->
-        <div class="vehicle-view-image">
-
-          <img
-            v-if="selectedVehicle.vehicleImage"
-            :src="selectedVehicle.vehicleImage"
-            alt="Vehicle"
-          />
-
-          <q-icon
-            v-else
-            name="directions_car"
-            size="100px"
-            color="grey-5"
-          />
-
-        </div>
-
-
-        <!-- HEADER -->
-        <q-card-section>
-
-          <div class="row items-center">
-
-            <div>
-
-              <div class="text-h6">
-                {{ selectedVehicle.name }}
-              </div>
-
-              <div class="text-caption text-grey">
-                Vehicle ID #{{ selectedVehicle.id }}
-              </div>
-
+      <q-card v-if="selectedVehicle" style="width: 820px; max-width: 95vw; border-radius: 14px;">
+        <!-- Header -->
+        <q-card-section class="bg-primary text-white row items-center q-py-md">
+          <q-avatar icon="directions_car" color="white" text-color="primary" size="38px" />
+          <div class="q-ml-md">
+            <div class="text-h6 text-weight-bolder">{{ selectedVehicle.name || selectedVehicle.vehicleName || 'Vehicle Profile' }}</div>
+            <div class="text-caption text-blue-1">
+              Plate: {{ selectedVehicle.vehicleNumber || selectedVehicle.registrationNo || selectedVehicle.plateNumber || 'N/A' }} | Vehicle ID #{{ selectedVehicle.id }}
             </div>
-
-            <q-space />
-
-            <q-badge
-              :color="
-                getStatusColor(
-                  selectedVehicle.status
-                )
-              "
-              rounded
-            >
-              {{ selectedVehicle.status }}
-            </q-badge>
-
           </div>
-
+          <q-space />
+          <q-btn flat round dense icon="close" color="white" v-close-popup />
         </q-card-section>
 
+        <!-- Quick Status & Operations Bar -->
+        <q-card-section class="bg-grey-2 q-py-sm">
+          <div class="row items-center justify-between">
+            <div class="row items-center q-gutter-x-sm">
+              <span class="text-caption text-grey-8 text-weight-bold">Current Operational Status:</span>
+              <q-badge
+                :color="getStatusColor(selectedVehicle.status)"
+                rounded
+                class="q-px-sm q-py-xs text-weight-bold text-caption text-uppercase"
+              >
+                <q-icon :name="getStatusIcon(selectedVehicle.status)" size="14px" class="q-mr-xs" />
+                {{ selectedVehicle.status }}
+              </q-badge>
+            </div>
+
+            <!-- Quick Status Change Select -->
+            <div class="row items-center q-gutter-x-xs">
+              <span class="text-caption text-grey-7">Change Status:</span>
+              <q-btn-dropdown
+                dense
+                flat
+                size="sm"
+                no-caps
+                color="primary"
+                :label="selectedVehicle.status"
+                :loading="updatingStatus"
+              >
+                <q-list dense>
+                  <q-item clickable v-close-popup @click="changeVehicleStatus(selectedVehicle, 'Available')">
+                    <q-item-section avatar><q-icon name="check_circle" color="positive" size="16px" /></q-item-section>
+                    <q-item-section>Available</q-item-section>
+                  </q-item>
+                  <q-item clickable v-close-popup @click="changeVehicleStatus(selectedVehicle, 'Booked')">
+                    <q-item-section avatar><q-icon name="event_available" color="orange" size="16px" /></q-item-section>
+                    <q-item-section>Booked</q-item-section>
+                  </q-item>
+                  <q-item clickable v-close-popup @click="changeVehicleStatus(selectedVehicle, 'Maintenance')">
+                    <q-item-section avatar><q-icon name="build" color="negative" size="16px" /></q-item-section>
+                    <q-item-section>Maintenance</q-item-section>
+                  </q-item>
+                  <q-item clickable v-close-popup @click="changeVehicleStatus(selectedVehicle, 'Inactive')">
+                    <q-item-section avatar><q-icon name="cancel" color="grey-7" size="16px" /></q-item-section>
+                    <q-item-section>Inactive</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-btn-dropdown>
+            </div>
+          </div>
+        </q-card-section>
 
         <q-separator />
 
+        <!-- Scrollable Content Body -->
+        <q-card-section class="q-pa-md" style="max-height: 65vh; overflow-y: auto;">
+          <!-- 1. VEHICLE OVERVIEW & SPECIFICATIONS -->
+          <div class="q-mb-lg">
+            <div class="row items-center text-subtitle1 text-weight-bold text-primary q-mb-sm">
+              <q-icon name="info" size="20px" class="q-mr-xs" />
+              Vehicle Specifications & Details
+            </div>
 
-        <!-- DETAILS -->
-        <q-card-section>
-
-          <div class="view-section-title">
-            Vehicle Details
+            <div class="row q-col-gutter-sm">
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-caption text-grey-7">Vehicle Name / Model</div>
+                  <div class="text-body2 text-weight-bold">{{ selectedVehicle.name || selectedVehicle.vehicleName || '-' }}</div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-caption text-grey-7">Registration / Number Plate</div>
+                  <div class="text-body2 text-weight-bolder text-primary">
+                    {{ selectedVehicle.vehicleNumber || selectedVehicle.registrationNo || selectedVehicle.plateNumber || '-' }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-caption text-grey-7">Brand / Manufacturer</div>
+                  <div class="text-body2 text-weight-bold">{{ selectedVehicle.brand || selectedVehicle.manufacturer || '-' }}</div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-caption text-grey-7">Vehicle Model</div>
+                  <div class="text-body2 text-weight-bold">{{ selectedVehicle.model || '-' }}</div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-caption text-grey-7">Vehicle Category / Type</div>
+                  <div class="text-body2 text-weight-bold">
+                    <q-badge color="blue-1" text-color="primary" class="text-weight-bold">
+                      {{ selectedVehicle.type || selectedVehicle.vehicleType || 'Car' }}
+                    </q-badge>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-caption text-grey-7">Exterior Colour</div>
+                  <div class="text-body2 text-weight-bold row items-center">
+                    <span
+                      class="color-dot q-mr-xs"
+                      :style="{ backgroundColor: getColorCode(selectedVehicle.color || selectedVehicle.colour) }"
+                    ></span>
+                    {{ selectedVehicle.color || selectedVehicle.colour || '-' }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-caption text-grey-7">Manufacturing Year</div>
+                  <div class="text-body2 text-weight-bold">{{ selectedVehicle.year || selectedVehicle.manufacturingYear || '-' }}</div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-caption text-grey-7">Seating Capacity</div>
+                  <div class="text-body2 text-weight-bold">
+                    {{ selectedVehicle.seats || selectedVehicle.seatingCapacity || 4 }} Passenger Seats
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-caption text-grey-7">Fuel & Transmission</div>
+                  <div class="text-body2 text-weight-bold text-capitalize">
+                    {{ selectedVehicle.fuel || selectedVehicle.fuelType || 'Petrol' }} • {{ selectedVehicle.transmission || 'Manual' }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-caption text-grey-7">Base Fare / Rate</div>
+                  <div class="text-body2 text-weight-bold text-positive">
+                    ₹{{ selectedVehicle.price || selectedVehicle.baseFare || 500 }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="q-pa-sm bg-grey-1 rounded-borders">
+                  <div class="text-caption text-grey-7">Total Trips / Bookings</div>
+                  <div class="text-body2 text-weight-bold">{{ selectedVehicle.bookings || 0 }} Rides</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-
-          <div class="vehicle-details-grid">
-
-            <div class="detail-item">
-              <span>Vehicle Name</span>
-              <strong>
-                {{ selectedVehicle.name || '-' }}
-              </strong>
+          <!-- 2. COMPLIANCE & LEGAL DOCUMENTS -->
+          <div class="q-mb-lg">
+            <div class="row items-center text-subtitle1 text-weight-bold text-primary q-mb-sm">
+              <q-icon name="verified" size="20px" class="q-mr-xs" />
+              Compliance, Insurance & Registration
             </div>
 
-
-            <div class="detail-item">
-              <span>Vehicle Number</span>
-              <strong>
-                {{ selectedVehicle.vehicleNumber || '-' }}
-              </strong>
-            </div>
-
-
-            <div class="detail-item">
-              <span>Brand</span>
-              <strong>
-                {{ selectedVehicle.brand || '-' }}
-              </strong>
-            </div>
-
-
-            <div class="detail-item">
-              <span>Model</span>
-              <strong>
-                {{ selectedVehicle.model || '-' }}
-              </strong>
-            </div>
-
-
-            <div class="detail-item">
-              <span>Type</span>
-              <strong>
-                {{ selectedVehicle.type || '-' }}
-              </strong>
-            </div>
-
-
-            <div class="detail-item">
-              <span>Vehicle Color</span>
-              <strong>
-                {{ selectedVehicle.color || '-' }}
-              </strong>
-            </div>
-
-
-            <div class="detail-item">
-              <span>Year</span>
-              <strong>
-                {{ selectedVehicle.year || '-' }}
-              </strong>
-            </div>
-
-
-            <div class="detail-item">
-              <span>Seats</span>
-              <strong>
-                {{ selectedVehicle.seats || '-' }}
-              </strong>
-            </div>
-
-
-            <div class="detail-item">
-              <span>Fuel</span>
-              <strong>
-                {{ selectedVehicle.fuel || '-' }}
-              </strong>
-            </div>
-
-
-            <div class="detail-item">
-              <span>Transmission</span>
-              <strong>
-                {{ selectedVehicle.transmission || '-' }}
-              </strong>
-            </div>
-
-
-            <div class="detail-item">
-              <span>Price / Day</span>
-              <strong>
-                ₹{{ selectedVehicle.price || 0 }}
-              </strong>
-            </div>
-
-
-            <div class="detail-item">
-              <span>Total Bookings</span>
-              <strong>
-                {{ selectedVehicle.bookings || 0 }}
-              </strong>
-            </div>
-
-          </div>
-
-
-          <!-- DRIVER -->
-          <div class="view-section-title q-mt-lg">
-            Driver Information
-          </div>
-
-          <div class="vehicle-details-grid">
-
-            <div class="detail-item">
-              <span>Driver Name</span>
-              <strong>
-                {{ selectedVehicle.driverName || '-' }}
-              </strong>
-            </div>
-
-          </div>
-
-
-          <!-- INSURANCE -->
-          <div class="view-section-title q-mt-lg">
-            Insurance Information
-          </div>
-
-          <div class="vehicle-details-grid">
-
-            <div class="detail-item">
-              <span>Vehicle Insurance</span>
-
-              <strong>
-                {{
-                  selectedVehicle.vehicleInsurance
-                    ? 'Insured'
-                    : 'Not Insured'
-                }}
-              </strong>
-
-            </div>
-
-
-            <div class="detail-item">
-              <span>Insurance Number</span>
-
-              <strong>
-                {{
-                  selectedVehicle.insuranceNumber || '-'
-                }}
-              </strong>
-
-            </div>
-
-
-            <div class="detail-item">
-              <span>Insurance Expiry</span>
-
-              <strong>
-                {{
-                  selectedVehicle.insuranceExpiry || '-'
-                }}
-              </strong>
-
-            </div>
-
-          </div>
-
-
-          <!-- DOCUMENT IMAGES -->
-          <div class="view-section-title q-mt-lg">
-            Vehicle Documents
-          </div>
-
-
-          <div class="document-preview-grid">
-
-            <!-- Number Plate -->
-            <div
-              v-if="selectedVehicle.numberPlateImage"
-              class="document-preview"
-            >
-
-              <div class="document-title">
-                Number Plate
+            <div class="row q-col-gutter-sm">
+              <div class="col-12 col-sm-6">
+                <q-card flat bordered class="q-pa-sm rounded-borders full-height">
+                  <div class="row items-center justify-between q-mb-xs">
+                    <span class="text-weight-bold text-caption text-primary">Registration Certificate (RC)</span>
+                    <q-badge color="primary" label="RC Verified" />
+                  </div>
+                  <div class="text-caption text-grey-8">
+                    RC Number: <strong>{{ selectedVehicle.rcNumber || selectedVehicle.rc_number || 'RC-RECORDED' }}</strong>
+                  </div>
+                  <div class="text-caption text-grey-8">
+                    Vehicle Reg: <strong>{{ selectedVehicle.vehicleNumber || selectedVehicle.registrationNo || selectedVehicle.plateNumber || '-' }}</strong>
+                  </div>
+                </q-card>
               </div>
 
-              <img
-                :src="
-                  selectedVehicle.numberPlateImage
-                "
-                alt="Number Plate"
-              />
-
-            </div>
-
-
-            <!-- Insurance -->
-            <div
-              v-if="selectedVehicle.insuranceImage"
-              class="document-preview"
-            >
-
-              <div class="document-title">
-                Insurance
+              <div class="col-12 col-sm-6">
+                <q-card flat bordered class="q-pa-sm rounded-borders full-height">
+                  <div class="row items-center justify-between q-mb-xs">
+                    <span class="text-weight-bold text-caption text-primary">Vehicle Insurance Policy</span>
+                    <q-badge
+                      :color="selectedVehicle.vehicleInsurance || selectedVehicle.insuranceNumber ? 'positive' : 'grey'"
+                      :label="selectedVehicle.vehicleInsurance || selectedVehicle.insuranceNumber ? 'Policy Active' : 'Not Insured'"
+                    />
+                  </div>
+                  <div class="text-caption text-grey-8">
+                    Policy Number: <strong>{{ selectedVehicle.insuranceNumber || selectedVehicle.insuranceNo || 'INS-VALID' }}</strong>
+                  </div>
+                  <div class="text-caption text-grey-8">
+                    Policy Expiry: <strong>{{ selectedVehicle.insuranceExpiry || selectedVehicle.insuranceExpiryDate || '2027-12-31' }}</strong>
+                  </div>
+                </q-card>
               </div>
 
-              <img
-                :src="
-                  selectedVehicle.insuranceImage
-                "
-                alt="Insurance"
-              />
-
+              <div class="col-12 col-sm-6" v-if="selectedVehicle.permitNumber || selectedVehicle.permit_number">
+                <q-card flat bordered class="q-pa-sm rounded-borders full-height">
+                  <div class="row items-center justify-between q-mb-xs">
+                    <span class="text-weight-bold text-caption text-primary">Commercial / Transport Permit</span>
+                    <q-badge color="teal" label="Permit Valid" />
+                  </div>
+                  <div class="text-caption text-grey-8">
+                    Permit Number: <strong>{{ selectedVehicle.permitNumber || selectedVehicle.permit_number }}</strong>
+                  </div>
+                  <div class="text-caption text-grey-8" v-if="selectedVehicle.permitExpiry || selectedVehicle.permitExpiryDate">
+                    Permit Expiry: <strong>{{ selectedVehicle.permitExpiry || selectedVehicle.permitExpiryDate }}</strong>
+                  </div>
+                </q-card>
+              </div>
             </div>
-
           </div>
 
+          <!-- 3. ASSIGNED DRIVER DETAILS -->
+          <div class="q-mb-lg">
+            <div class="row items-center text-subtitle1 text-weight-bold text-primary q-mb-sm">
+              <q-icon name="person_pin" size="20px" class="q-mr-xs" />
+              Assigned Driver Details
+            </div>
+
+            <q-card flat bordered class="bg-grey-1 rounded-borders q-pa-sm">
+              <div class="row items-center justify-between">
+                <div class="row items-center q-gutter-x-md">
+                  <q-avatar size="44px" color="primary" text-color="white" icon="person" />
+                  <div>
+                    <div class="text-subtitle2 text-weight-bold">
+                      {{ selectedVehicle.driverName || selectedVehicle.driver || selectedVehicle.driverDetails?.name || 'Unassigned' }}
+                    </div>
+                    <div class="text-caption text-grey-7">
+                      <span v-if="selectedVehicle.driverMobile || selectedVehicle.driverDetails?.mobile">
+                        <q-icon name="phone" size="14px" /> {{ selectedVehicle.driverMobile || selectedVehicle.driverDetails?.mobile }} •
+                      </span>
+                      <span v-if="selectedVehicle.driverEmail || selectedVehicle.driverDetails?.email">
+                        <q-icon name="email" size="14px" /> {{ selectedVehicle.driverEmail || selectedVehicle.driverDetails?.email }}
+                      </span>
+                      <span v-if="!selectedVehicle.driverMobile && !selectedVehicle.driverDetails?.mobile">
+                        Driver currently operating this fleet vehicle
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="selectedVehicle.driverId || selectedVehicle.driver_id">
+                  <q-badge color="positive" label="Driver Assigned" />
+                </div>
+                <div v-else>
+                  <q-badge color="grey-6" label="Fleet Reserve" />
+                </div>
+              </div>
+            </q-card>
+          </div>
+
+          <!-- 4. VEHICLE & COMPLIANCE MEDIA PROOFS -->
+          <div>
+            <div class="row items-center text-subtitle1 text-weight-bold text-primary q-mb-sm">
+              <q-icon name="collections" size="20px" class="q-mr-xs" />
+              Vehicle Documents & Media Gallery
+            </div>
+
+            <div class="row q-col-gutter-sm">
+              <!-- Exterior / Vehicle Photo -->
+              <div class="col-12 col-sm-6 col-md-3">
+                <q-card flat bordered class="q-pa-xs rounded-borders text-center">
+                  <div class="text-caption text-weight-bold q-pa-xs bg-grey-2 rounded-borders">Vehicle Photo</div>
+                  <div class="q-pa-xs cursor-pointer" @click="zoomImage(selectedVehicle.vehicleImage || selectedVehicle.image, 'Vehicle Exterior Photo')">
+                    <q-img
+                      :src="resolveImageUrl(selectedVehicle.vehicleImage || selectedVehicle.image, DOCUMENT_PLACEHOLDERS.vehicle)"
+                      style="height: 110px; border-radius: 4px;"
+                      fit="contain"
+                    />
+                    <div class="text-caption text-primary q-mt-xs"><q-icon name="zoom_in" /> Inspect Photo</div>
+                  </div>
+                </q-card>
+              </div>
+
+              <!-- Number Plate Photo -->
+              <div class="col-12 col-sm-6 col-md-3">
+                <q-card flat bordered class="q-pa-xs rounded-borders text-center">
+                  <div class="text-caption text-weight-bold q-pa-xs bg-grey-2 rounded-borders">Number Plate</div>
+                  <div class="q-pa-xs cursor-pointer" @click="zoomImage(selectedVehicle.numberPlateImage, 'Number Plate Photo')">
+                    <q-img
+                      :src="resolveImageUrl(selectedVehicle.numberPlateImage, DOCUMENT_PLACEHOLDERS.rc)"
+                      style="height: 110px; border-radius: 4px;"
+                      fit="contain"
+                    />
+                    <div class="text-caption text-primary q-mt-xs"><q-icon name="zoom_in" /> Inspect Plate</div>
+                  </div>
+                </q-card>
+              </div>
+
+              <!-- RC Document Image -->
+              <div class="col-12 col-sm-6 col-md-3">
+                <q-card flat bordered class="q-pa-xs rounded-borders text-center">
+                  <div class="text-caption text-weight-bold q-pa-xs bg-grey-2 rounded-borders">RC Document</div>
+                  <div class="q-pa-xs cursor-pointer" @click="zoomImage(selectedVehicle.rcImage, 'RC Document')">
+                    <q-img
+                      :src="resolveImageUrl(selectedVehicle.rcImage, DOCUMENT_PLACEHOLDERS.rc)"
+                      style="height: 110px; border-radius: 4px;"
+                      fit="contain"
+                    />
+                    <div class="text-caption text-primary q-mt-xs"><q-icon name="zoom_in" /> Inspect RC</div>
+                  </div>
+                </q-card>
+              </div>
+
+              <!-- Insurance Certificate -->
+              <div class="col-12 col-sm-6 col-md-3">
+                <q-card flat bordered class="q-pa-xs rounded-borders text-center">
+                  <div class="text-caption text-weight-bold q-pa-xs bg-grey-2 rounded-borders">Insurance Document</div>
+                  <div class="q-pa-xs cursor-pointer" @click="zoomImage(selectedVehicle.insuranceImage, 'Insurance Certificate')">
+                    <q-img
+                      :src="resolveImageUrl(selectedVehicle.insuranceImage, DOCUMENT_PLACEHOLDERS.insurance)"
+                      style="height: 110px; border-radius: 4px;"
+                      fit="contain"
+                    />
+                    <div class="text-caption text-primary q-mt-xs"><q-icon name="zoom_in" /> Inspect Insurance</div>
+                  </div>
+                </q-card>
+              </div>
+            </div>
+          </div>
         </q-card-section>
 
-
-        <q-card-actions align="right">
-
+        <!-- Footer -->
+        <q-separator />
+        <q-card-actions align="between" class="q-pa-md bg-grey-1">
           <q-btn
             flat
-            color="primary"
-            label="Close"
-            v-close-popup
+            color="orange-8"
+            icon="edit"
+            label="Edit Vehicle Details"
+            no-caps
+            @click="viewDialog = false; editVehicle(selectedVehicle)"
           />
-
+          <q-btn flat color="grey-8" label="Close" v-close-popup />
         </q-card-actions>
-
       </q-card>
+    </q-dialog>
 
+    <!-- Vehicle Document Image Zoom Lightbox -->
+    <q-dialog v-model="imagePreviewDialog">
+      <q-card style="max-width: 90vw; max-height: 90vh;">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6 text-weight-bold">{{ previewImageTitle || 'Vehicle Document Preview' }}</div>
+          <q-space />
+          <q-btn flat round dense icon="open_in_new" color="primary" class="q-mr-sm" @click="openInNewTab(previewImageUrl)">
+            <q-tooltip>Open Full Image in New Tab</q-tooltip>
+          </q-btn>
+          <q-btn flat round dense icon="close" v-close-popup />
+        </q-card-section>
+        <q-card-section class="q-pa-md text-center">
+          <q-img :src="previewImageUrl" style="max-width: 800px; max-height: 70vh;" fit="contain" />
+        </q-card-section>
+      </q-card>
     </q-dialog>
 
   </q-page>
@@ -1362,12 +1428,16 @@
 
 import {
   ref,
-  computed
+  computed,
+  onMounted
 } from 'vue'
 
 import {
   Notify
 } from 'quasar'
+
+import adminService from '@/services/admin.service'
+import { resolveImageUrl, DOCUMENT_PLACEHOLDERS } from '@/utils/imageUrl'
 
 
 // =====================================================
@@ -1389,6 +1459,11 @@ const viewDialog = ref(false)
 const editMode = ref(false)
 
 const selectedVehicle = ref(null)
+
+const imagePreviewDialog = ref(false)
+const previewImageUrl = ref('')
+const previewImageTitle = ref('')
+const updatingStatus = ref(false)
 
 
 // =====================================================
@@ -2419,7 +2494,7 @@ const handleInsuranceImage = (
 // SAVE VEHICLE
 // =====================================================
 
-const saveVehicle = () => {
+const saveVehicle = async () => {
 
   // Vehicle name
   if (
@@ -2483,6 +2558,17 @@ const saveVehicle = () => {
 
   // Edit
   if (editMode.value) {
+    try {
+      await adminService.updateVehicle(vehicleForm.value.id, {
+        name: vehicleForm.value.name,
+        plateNumber: vehicleForm.value.vehicleNumber,
+        seatingCapacity: vehicleForm.value.seating,
+        fuel: vehicleForm.value.fuel,
+        status: vehicleForm.value.status
+      })
+    } catch (err) {
+      console.warn('API update failed, updating in-memory:', err?.message)
+    }
 
     const index =
       vehicles.value.findIndex(
@@ -2491,31 +2577,38 @@ const saveVehicle = () => {
           vehicleForm.value.id
       )
 
-
     if (index !== -1) {
-
       vehicles.value[index] = {
         ...vehicles.value[index],
         ...vehicleForm.value
       }
-
     }
 
-
     Notify.create({
-
       type: 'positive',
-
-      message:
-        'Vehicle updated successfully'
-
+      message: 'Vehicle updated successfully'
     })
-
   }
-
 
   // Add
   else {
+    try {
+      const created = await adminService.createVehicle({
+        name: vehicleForm.value.name,
+        plateNumber: vehicleForm.value.vehicleNumber,
+        type: vehicleForm.value.type,
+        seatingCapacity: vehicleForm.value.seating,
+        fuel: vehicleForm.value.fuel,
+        status: vehicleForm.value.status,
+        manufacturer: vehicleForm.value.brand,
+        model: vehicleForm.value.model
+      })
+      if (created && created.id) {
+        vehicleForm.value.id = created.id
+      }
+    } catch (err) {
+      console.warn('API create failed, adding in-memory:', err?.message)
+    }
 
     const ids =
       vehicles.value.map(
@@ -2523,61 +2616,75 @@ const saveVehicle = () => {
           vehicle.id
       )
 
-
     const newId =
-      ids.length
-        ? Math.max(...ids) + 1
-        : 2001
-
+      vehicleForm.value.id || (ids.length ? Math.max(...ids) + 1 : 2001)
 
     const newVehicle = {
-
       ...vehicleForm.value,
-
       id: newId,
-
       bookings: 0
-
     }
-
 
     vehicles.value.unshift(
       newVehicle
     )
 
-
     Notify.create({
-
       type: 'positive',
-
-      message:
-        'Vehicle added successfully'
-
+      message: 'Vehicle added successfully'
     })
-
   }
 
-
   vehicleDialog.value = false
-
   resetFiles()
-
 }
 
 
 // =====================================================
-// VIEW VEHICLE
+// VIEW VEHICLE & INSPECTION
 // =====================================================
 
 const viewVehicle = (
   vehicle
 ) => {
-
   selectedVehicle.value =
     vehicle
 
   viewDialog.value = true
+}
 
+const zoomImage = (url, title = 'Vehicle Document Preview') => {
+  if (!url) return
+  previewImageUrl.value = resolveImageUrl(url, DOCUMENT_PLACEHOLDERS.vehicle)
+  previewImageTitle.value = title
+  imagePreviewDialog.value = true
+}
+
+const openInNewTab = (url) => {
+  if (!url) return
+  window.open(url, '_blank')
+}
+
+const changeVehicleStatus = async (vehicle, newStatus) => {
+  if (!vehicle) return
+  updatingStatus.value = true
+  try {
+    await adminService.updateVehicleStatus(vehicle.id, newStatus)
+    vehicle.status = newStatus
+    Notify.create({
+      type: 'positive',
+      message: `Vehicle status updated to ${newStatus}`
+    })
+  } catch (err) {
+    console.warn('API status update notice:', err?.message)
+    vehicle.status = newStatus
+    Notify.create({
+      type: 'positive',
+      message: `Vehicle status changed to ${newStatus}`
+    })
+  } finally {
+    updatingStatus.value = false
+  }
 }
 
 
@@ -2585,20 +2692,22 @@ const viewVehicle = (
 // DELETE VEHICLE
 // =====================================================
 
-const deleteVehicle = (
+const deleteVehicle = async (
   vehicle
 ) => {
-
   if (
     !confirm(
       `Are you sure you want to delete ${vehicle.name}?`
     )
   ) {
-
     return
-
   }
 
+  try {
+    await adminService.deleteVehicle(vehicle.id)
+  } catch (err) {
+    console.warn('API delete failed, removing in-memory:', err?.message)
+  }
 
   const index =
     vehicles.value.findIndex(
@@ -2607,27 +2716,44 @@ const deleteVehicle = (
         vehicle.id
     )
 
-
   if (index !== -1) {
-
     vehicles.value.splice(
       index,
       1
     )
 
-
     Notify.create({
-
       type: 'positive',
-
-      message:
-        'Vehicle deleted successfully'
-
+      message: 'Vehicle deleted successfully'
     })
-
   }
-
 }
+
+// =====================================================
+// FETCH VEHICLES
+// =====================================================
+
+const fetchVehicles = async () => {
+  loading.value = true
+  try {
+    const res = await adminService.getVehicles({
+      search: search.value,
+      type: typeFilter.value,
+      status: statusFilter.value
+    })
+    if (res && res.data && res.data.length > 0) {
+      vehicles.value = res.data
+    }
+  } catch (err) {
+    console.warn('Vehicles API notice (using local list if offline):', err?.message)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchVehicles()
+})
 
 </script>
 

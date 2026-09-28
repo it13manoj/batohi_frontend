@@ -1,4 +1,3 @@
-```vue
 <template>
   <q-page class="privacy-page q-pa-md">
 
@@ -1195,4 +1194,3 @@ function getCurrentDate() {
 }
 
 </style>
-```

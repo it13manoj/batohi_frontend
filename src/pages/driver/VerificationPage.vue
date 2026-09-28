@@ -79,7 +79,50 @@
     </div>
 
     <!-- =====================================================
-         STATE 2: DOCUMENTS UNDER VERIFICATION (WAITING)
+         STATE 2: DOCUMENTS REJECTED / NEEDS REVISION
+    ====================================================== -->
+    <div v-else-if="onboardingState.verificationStatus === 'rejected'" class="rejected-state-container q-mb-xl">
+      <q-card class="rejected-card text-center q-pa-xl" flat bordered>
+        <div class="rejected-icon-circle q-mx-auto q-mb-md">
+          <q-icon name="error_outline" size="54px" color="negative" />
+        </div>
+        <q-badge color="negative" text-color="white" class="text-weight-bold q-px-md q-py-xs q-mb-sm text-uppercase">
+          Action Required: Verification Rejected
+        </q-badge>
+        <div class="text-h4 text-weight-bolder text-negative">
+          Documents Require Revision
+        </div>
+        <div class="text-subtitle1 text-grey-8 q-mt-sm max-w-600 q-mx-auto">
+          {{ onboardingState.verificationNotes || 'One or more of your uploaded documents could not be verified by the Batohi compliance team. Please re-upload clear and valid documents.' }}
+        </div>
+
+        <div class="q-mt-lg row justify-center q-gutter-md">
+          <q-btn
+            color="primary"
+            icon="edit"
+            label="Re-upload Documents"
+            size="md"
+            no-caps
+            unelevated
+            class="text-weight-bold q-px-lg"
+            @click="goToProfile"
+          />
+          <q-btn
+            outline
+            color="primary"
+            icon="refresh"
+            label="Check Status Again"
+            size="md"
+            no-caps
+            :loading="refreshing"
+            @click="refreshVerificationStatus"
+          />
+        </div>
+      </q-card>
+    </div>
+
+    <!-- =====================================================
+         STATE 3: DOCUMENTS UNDER VERIFICATION (WAITING)
     ====================================================== -->
     <div v-else class="pending-state-container q-mb-xl">
       <q-card class="pending-card text-center q-pa-xl" flat bordered>
@@ -102,9 +145,23 @@
             <q-icon name="info" size="24px" class="q-mr-sm" />
             <div class="text-body2">
               <strong>Ride Acceptance is Temporarily Gated:</strong><br />
-              For customer safety, the "Go Online" toggle will unlock immediately once your documents are approved.
+              For customer safety, the "Go Online" toggle will unlock immediately once your documents are approved by the admin.
             </div>
           </div>
+        </div>
+
+        <!-- Refresh Button -->
+        <div class="q-mt-lg row justify-center">
+          <q-btn
+            outline
+            color="primary"
+            icon="sync"
+            label="Check Approval Status"
+            :loading="refreshing"
+            no-caps
+            class="text-weight-bold"
+            @click="refreshVerificationStatus"
+          />
         </div>
 
         <!-- Review Timeline Steps -->
@@ -153,15 +210,27 @@
           <div class="text-h6 text-weight-bold">Submitted Documents Status</div>
           <div class="text-caption text-grey-7">Track verification progress for each submitted document</div>
         </div>
-        <q-btn
-          flat
-          dense
-          no-caps
-          color="primary"
-          icon="edit"
-          label="Update Documents"
-          @click="goToProfile"
-        />
+        <div class="row items-center q-gutter-x-sm">
+          <q-btn
+            flat
+            dense
+            no-caps
+            color="primary"
+            icon="refresh"
+            label="Refresh Status"
+            :loading="refreshing"
+            @click="refreshVerificationStatus"
+          />
+          <q-btn
+            flat
+            dense
+            no-caps
+            color="primary"
+            icon="edit"
+            label="Update Documents"
+            @click="goToProfile"
+          />
+        </div>
       </div>
 
       <div class="row q-col-gutter-md">
@@ -175,8 +244,8 @@
                   <div class="text-weight-bold">Aadhaar Card</div>
                 </div>
                 <q-badge
-                  :color="isVerified ? 'positive' : 'warning'"
-                  :label="isVerified ? 'Verified' : 'Under Review'"
+                  :color="isVerified ? 'positive' : (onboardingState.verificationStatus === 'rejected' ? 'negative' : 'warning')"
+                  :label="isVerified ? 'Verified' : (onboardingState.verificationStatus === 'rejected' ? 'Action Required' : 'Under Review')"
                   rounded
                 />
               </div>
@@ -197,8 +266,8 @@
                   <div class="text-weight-bold">PAN Card</div>
                 </div>
                 <q-badge
-                  :color="isVerified ? 'positive' : 'warning'"
-                  :label="isVerified ? 'Verified' : 'Under Review'"
+                  :color="isVerified ? 'positive' : (onboardingState.verificationStatus === 'rejected' ? 'negative' : 'warning')"
+                  :label="isVerified ? 'Verified' : (onboardingState.verificationStatus === 'rejected' ? 'Action Required' : 'Under Review')"
                   rounded
                 />
               </div>
@@ -219,8 +288,8 @@
                   <div class="text-weight-bold">Driving License</div>
                 </div>
                 <q-badge
-                  :color="isVerified ? 'positive' : 'warning'"
-                  :label="isVerified ? 'Verified' : 'Under Review'"
+                  :color="isVerified ? 'positive' : (onboardingState.verificationStatus === 'rejected' ? 'negative' : 'warning')"
+                  :label="isVerified ? 'Verified' : (onboardingState.verificationStatus === 'rejected' ? 'Action Required' : 'Under Review')"
                   rounded
                 />
               </div>
@@ -241,8 +310,8 @@
                   <div class="text-weight-bold">Vehicle Insurance</div>
                 </div>
                 <q-badge
-                  :color="isVerified ? 'positive' : 'warning'"
-                  :label="isVerified ? 'Verified' : 'Under Review'"
+                  :color="isVerified ? 'positive' : (onboardingState.verificationStatus === 'rejected' ? 'negative' : 'warning')"
+                  :label="isVerified ? 'Verified' : (onboardingState.verificationStatus === 'rejected' ? 'Action Required' : 'Under Review')"
                   rounded
                 />
               </div>
@@ -263,8 +332,8 @@
                   <div class="text-weight-bold">Vehicle Details & RC</div>
                 </div>
                 <q-badge
-                  :color="isVerified ? 'positive' : 'warning'"
-                  :label="isVerified ? 'Verified' : 'Under Review'"
+                  :color="isVerified ? 'positive' : (onboardingState.verificationStatus === 'rejected' ? 'negative' : 'warning')"
+                  :label="isVerified ? 'Verified' : (onboardingState.verificationStatus === 'rejected' ? 'Action Required' : 'Under Review')"
                   rounded
                 />
               </div>
@@ -285,8 +354,8 @@
                   <div class="text-weight-bold">Driver Photograph</div>
                 </div>
                 <q-badge
-                  :color="isVerified ? 'positive' : 'warning'"
-                  :label="isVerified ? 'Verified' : 'Under Review'"
+                  :color="isVerified ? 'positive' : (onboardingState.verificationStatus === 'rejected' ? 'negative' : 'warning')"
+                  :label="isVerified ? 'Verified' : (onboardingState.verificationStatus === 'rejected' ? 'Action Required' : 'Under Review')"
                   rounded
                 />
               </div>
@@ -299,51 +368,6 @@
       </div>
     </div>
 
-    <!-- =====================================================
-         TESTING & DEMO SIMULATOR PANEL
-    ====================================================== -->
-    <q-card class="admin-simulator-card q-mt-xl" flat bordered>
-      <q-card-section class="q-pa-md bg-grey-2">
-        <div class="row items-center justify-between">
-          <div class="row items-center">
-            <q-avatar size="28px" color="dark" text-color="white" icon="build" class="q-mr-sm" />
-            <div>
-              <div class="text-subtitle2 text-weight-bold text-dark">Admin Verification Simulator (Testing Controls)</div>
-              <div class="text-caption text-grey-7">Simulate the backend admin approval in real-time to test the complete flow</div>
-            </div>
-          </div>
-          <div class="row q-gutter-sm">
-            <q-btn
-              v-if="!isVerified"
-              color="positive"
-              icon="verified"
-              label="Simulate Admin Approval (Verify Documents)"
-              no-caps
-              unelevated
-              @click="handleSimulateApproval(true)"
-            />
-            <q-btn
-              v-else
-              color="warning"
-              text-color="dark"
-              icon="hourglass_top"
-              label="Reset to Pending Verification"
-              no-caps
-              unelevated
-              @click="handleSimulateApproval(false)"
-            />
-            <q-btn
-              flat
-              color="negative"
-              icon="refresh"
-              label="Reset Flow"
-              no-caps
-              @click="handleResetAll"
-            />
-          </div>
-        </div>
-      </q-card-section>
-    </q-card>
   </q-page>
 </template>
 <script setup>
@@ -438,63 +462,28 @@ const goToProfile = () => {
   router.push({ name: 'DriverProfile' })
 }
 
-// Simulate / Perform Admin Approval via API
-const handleSimulateApproval = async (approved) => {
-  const status = approved ? 'verified' : 'pending'
-  const remarks = approved ? 'Approved by Batohi Verification Team' : 'Pending Verification'
+const refreshing = ref(false)
 
+// Refresh live verification status from server
+const refreshVerificationStatus = async () => {
+  refreshing.value = true
   try {
-    const response = await api.post('/driver/update-verification', {
-      ...(driverId.value ? { driverId: driverId.value } : {}),
-      status,
-      remarks
-    })
-
-    if (response.data.success) {
-      setVerificationStatus(status, remarks)
-
-      $q.notify({
-        type: approved ? 'positive' : 'warning',
-        message: response.data.message || (approved ? 'Admin approval verified!' : 'Status set to pending verification.'),
-        position: 'top'
-      })
-
-      // Refresh current state from server
-      await fetchDriverStatus()
-    }
-  } catch (error) {
+    await fetchDriverStatus()
     $q.notify({
-      type: 'negative',
-      message: error.response?.data?.message || 'Error updating verification status',
-      position: 'top'
+      type: 'info',
+      message: isVerified.value
+        ? 'Documents are verified and approved!'
+        : onboardingState.value.verificationStatus === 'rejected'
+          ? 'Verification requires document revision.'
+          : 'Verification is currently in review by admin.',
+      position: 'top',
+      timeout: 2000
     })
+  } catch (err) {
+    console.error('Failed to refresh status:', err)
+  } finally {
+    refreshing.value = false
   }
-}
-
-// Reset entire flow via API call
-const handleResetAll = () => {
-  $q.dialog({
-    title: 'Reset Onboarding Flow?',
-    message: 'This will reset your profile step, subscription, and verification status for testing purposes.',
-    cancel: true,
-    persistent: true
-  }).onOk(async () => {
-    try {
-      const response = await api.post('/driver/reset-onboarding', (driverId.value ? { driverId: driverId.value } : {}))
-
-      if (response.data.success) {
-        resetOnboarding()
-        $q.notify({ type: 'info', message: 'Onboarding reset successfully. Redirecting to Profile...' })
-        router.push({ name: 'DriverProfile' })
-      }
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: error.response?.data?.message || 'Failed to reset onboarding',
-        position: 'top'
-      })
-    }
-  })
 }
 
 // Fetch live verification data on component load

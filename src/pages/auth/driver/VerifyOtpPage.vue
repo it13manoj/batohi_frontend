@@ -1,4 +1,3 @@
-```vue
 <template>
   <q-page class="verify-otp-page">
     <!-- ================= BACKGROUND ================= -->
@@ -56,11 +55,6 @@
             @update:model-value="clearError"
             @keyup.enter="verifyOtp"
           />
-
-          <div class="demo-hint">
-            Demo OTP:
-            <strong>123456</strong>
-          </div>
         </div>
 
         <!-- ================= SUCCESS ================= -->
@@ -132,6 +126,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
+import api from '@/config/api'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -153,12 +148,6 @@ const successMessage = ref('')
 const resendTimer = ref(0)
 
 let timer = null
-
-// =====================================================
-// DEMO OTP
-// =====================================================
-
-const DEMO_OTP = '123456'
 
 // =====================================================
 // ON MOUNTED
@@ -195,10 +184,10 @@ const clearError = () => {
 }
 
 // =====================================================
-// VERIFY OTP
+// VERIFY OTP (REAL API)
 // =====================================================
 
-const verifyOtp = () => {
+const verifyOtp = async () => {
   clearError()
 
   // Remove spaces
@@ -218,76 +207,68 @@ const verifyOtp = () => {
 
   loading.value = true
 
-  // ===================================================
-  // DEMO VERIFICATION
-  // No API required
-  // ===================================================
-
-  setTimeout(() => {
-    if (enteredOtp !== DEMO_OTP) {
-      loading.value = false
-
-      otpError.value = 'Invalid OTP. Please enter 123456.'
-
-      errorMessage.value = 'The OTP you entered is incorrect.'
-
-      return
-    }
-
-    // =================================================
-    // OTP VERIFIED
-    // =================================================
+  try {
+    const response = await api.post('/users/verify-otp', {
+      email: email.value.trim(),
+      otp: enteredOtp
+    })
 
     sessionStorage.setItem('driverOtpVerified', 'true')
-
     sessionStorage.setItem('driverResetToken', 'driver-reset-verified')
-
-    // Make sure email exists
     if (email.value) {
-      sessionStorage.setItem('driverResetEmail', email.value)
+      sessionStorage.setItem('driverResetEmail', email.value.trim())
     }
 
-    successMessage.value = 'OTP verified successfully.'
+    successMessage.value = response.data?.message || 'OTP verified successfully.'
 
-    loading.value = false
-
-    // =================================================
-    // REDIRECT TO RESET PASSWORD
-    // =================================================
+    $q.notify({
+      type: 'positive',
+      message: 'OTP verified successfully.',
+      position: 'top'
+    })
 
     setTimeout(() => {
       router.push('/driver-reset-password')
-    }, 500)
-  }, 700)
+    }, 600)
+
+  } catch (err) {
+    otpError.value = err.response?.data?.message || 'Invalid or expired OTP. Please check your email.'
+    errorMessage.value = err.response?.data?.message || 'The OTP you entered is incorrect.'
+  } finally {
+    loading.value = false
+  }
 }
 
 // =====================================================
-// RESEND OTP
+// RESEND OTP (REAL API)
 // =====================================================
 
-const resendOtp = () => {
+const resendOtp = async () => {
   if (resendTimer.value > 0) {
     return
   }
 
   resendLoading.value = true
-
   clearError()
 
-  setTimeout(() => {
-    resendLoading.value = false
+  try {
+    const response = await api.post('/users/resend-otp', {
+      email: email.value.trim()
+    })
 
-    successMessage.value =
-      'A new OTP has been sent. Use 123456 for demo verification.'
-
+    successMessage.value = response.data?.message || 'A new OTP has been sent to your email.'
     startResendTimer()
 
     $q.notify({
       type: 'positive',
-      message: 'OTP resent successfully.',
+      message: response.data?.message || 'A new OTP code has been sent to your email.',
       position: 'top'
     })
-  }, 700)
+  } catch (err) {
+    errorMessage.value = err.response?.data?.message || 'Failed to resend OTP. Please try again.'
+  } finally {
+    resendLoading.value = false
+  }
 }
 
 // =====================================================
@@ -584,4 +565,3 @@ onUnmounted(() => {
   }
 }
 </style>
-```

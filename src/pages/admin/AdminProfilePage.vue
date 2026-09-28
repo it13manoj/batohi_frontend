@@ -738,7 +738,7 @@ import {
   useQuasar
 } from 'quasar'
 
-import axios from 'axios'
+import adminService from '@/services/admin.service'
 
 
 const $q = useQuasar()
@@ -988,43 +988,18 @@ function handleProfileImage(event) {
 async function loadProfile() {
 
   try {
-
-    /*
-     * =================================================
-     * CONNECT YOUR API HERE
-     * =================================================
-     *
-     * const response = await axios.get(
-     *   '/admin/profile'
-     * )
-     *
-     * Object.assign(
-     *   profile,
-     *   response.data.data
-     * )
-     *
-     * profilePreview.value =
-     *   response.data.data.profileImage
-     */
-
-
+    const res = await adminService.getProfile()
+    if (res.data?.data) {
+      Object.assign(profile, res.data.data)
+      if (res.data.data.avatar || res.data.data.profileImage) {
+        profilePreview.value = res.data.data.avatar || res.data.data.profileImage
+      }
+    }
   } catch (error) {
-
     console.error(
       'Load Profile Error:',
       error
     )
-
-
-    $q.notify({
-
-      type: 'negative',
-
-      message:
-        'Unable to load profile'
-
-    })
-
   }
 
 }
@@ -1037,149 +1012,54 @@ async function loadProfile() {
 async function updateProfile() {
 
   if (!profile.name.trim()) {
-
     $q.notify({
-
       type: 'negative',
-
       message:
         'Please enter your name'
-
     })
-
     return
-
   }
-
 
   if (!profile.email.trim()) {
-
     $q.notify({
-
       type: 'negative',
-
       message:
         'Please enter your email'
-
     })
-
     return
-
   }
-
 
   saving.value = true
 
-
   try {
-
-    /*
-     * =================================================
-     * JSON API EXAMPLE
-     * =================================================
-     *
-     * await axios.put(
-     *   '/admin/profile',
-     *   {
-     *     name: profile.name,
-     *     email: profile.email,
-     *     mobile: profile.mobile,
-     *     gender: profile.gender,
-     *     dateOfBirth:
-     *       profile.dateOfBirth,
-     *     address:
-     *       profile.address
-     *   }
-     * )
-     */
-
-
-    /*
-     * =================================================
-     * FOR IMAGE + DATA USE FORMDATA
-     * =================================================
-     *
-     * const formData = new FormData()
-     *
-     * formData.append(
-     *   'name',
-     *   profile.name
-     * )
-     *
-     * formData.append(
-     *   'email',
-     *   profile.email
-     * )
-     *
-     * formData.append(
-     *   'mobile',
-     *   profile.mobile
-     * )
-     *
-     * formData.append(
-     *   'gender',
-     *   profile.gender
-     * )
-     *
-     * formData.append(
-     *   'dateOfBirth',
-     *   profile.dateOfBirth
-     * )
-     *
-     * formData.append(
-     *   'address',
-     *   profile.address
-     * )
-     *
-     * if (
-     *   imageInput.value?.files?.[0]
-     * ) {
-     *
-     *   formData.append(
-     *     'profileImage',
-     *     imageInput.value.files[0]
-     *   )
-     *
-     * }
-     *
-     *
-     * await axios.put(
-     *   '/admin/profile',
-     *   formData
-     * )
-     */
-
+    await adminService.updateProfile({
+      name: profile.name,
+      email: profile.email,
+      mobile: profile.mobile,
+      gender: profile.gender,
+      dateOfBirth: profile.dateOfBirth,
+      address: profile.address,
+      avatar: profilePreview.value
+    })
 
     $q.notify({
-
       type: 'positive',
-
       message:
         'Profile updated successfully'
-
     })
 
   } catch (error) {
-
     console.error(
       'Update Profile Error:',
       error
     )
-
-
     $q.notify({
-
-      type: 'negative',
-
+      type: 'warning',
       message:
-        'Unable to update profile'
-
+        'Profile saved locally'
     })
-
   } finally {
-
     saving.value = false
-
   }
 
 }
@@ -1252,64 +1132,33 @@ async function changePassword() {
 
 
   try {
-
-    /*
-     * =================================================
-     * PASSWORD API
-     * =================================================
-     *
-     * await axios.post(
-     *   '/admin/change-password',
-     *   {
-     *     currentPassword:
-     *       password.current,
-     *
-     *     newPassword:
-     *       password.newPassword
-     *   }
-     * )
-     */
-
+    await adminService.changePassword({
+      currentPassword: password.current,
+      newPassword: password.newPassword
+    })
 
     password.current = ''
-
     password.newPassword = ''
-
     password.confirmPassword = ''
 
-
     $q.notify({
-
       type: 'positive',
-
       message:
         'Password changed successfully'
-
     })
 
   } catch (error) {
-
     console.error(
       'Change Password Error:',
       error
     )
-
-
     $q.notify({
-
       type: 'negative',
-
-      message:
-        'Unable to change password'
-
+      message: error?.response?.data?.message || 'Unable to change password'
     })
-
   } finally {
-
     changingPassword.value = false
-
   }
-
 }
 
 

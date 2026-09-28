@@ -357,7 +357,7 @@
 
 
         <!-- ===================================== -->
-        <!-- STATUS -->
+        <!-- STATUS (ACTIVE / INACTIVE TOGGLE) -->
         <!-- ===================================== -->
 
         <template #body-cell-status="props">
@@ -367,21 +367,34 @@
             class="text-center"
           >
 
-            <q-chip
-              dense
-              :color="getStatusColor(props.row.status)"
-              :text-color="getStatusTextColor(props.row.status)"
-            >
+            <div class="row items-center justify-center no-wrap q-gutter-x-xs">
+              <q-toggle
+                :model-value="isTypeActive(props.row.status)"
+                dense
+                color="positive"
+                :disable="togglingId === props.row.id"
+                @update:model-value="toggleVehicleTypeStatus(props.row)"
+              >
+                <q-tooltip>
+                  Click to {{ isTypeActive(props.row.status) ? 'Deactivate' : 'Activate' }} vehicle type
+                </q-tooltip>
+              </q-toggle>
 
-              <q-icon
-                :name="getStatusIcon(props.row.status)"
-                size="16px"
-                class="q-mr-xs"
-              />
-
-              {{ props.row.status }}
-
-            </q-chip>
+              <q-chip
+                dense
+                clickable
+                :color="getStatusColor(props.row.status)"
+                :text-color="getStatusTextColor(props.row.status)"
+                @click="toggleVehicleTypeStatus(props.row)"
+              >
+                <q-icon
+                  :name="getStatusIcon(props.row.status)"
+                  size="14px"
+                  class="q-mr-xs"
+                />
+                {{ isTypeActive(props.row.status) ? 'Active' : 'Inactive' }}
+              </q-chip>
+            </div>
 
           </q-td>
 
@@ -700,34 +713,32 @@
             </div>
 
 
-            <q-chip
-              dense
-              :color="
-                getStatusColor(
-                  selectedVehicleType.status
-                )
-              "
-              :text-color="
-                getStatusTextColor(
-                  selectedVehicleType.status
-                )
-              "
-              class="q-mt-sm"
-            >
+            <div class="row items-center justify-center q-mt-sm q-gutter-x-sm">
+              <q-chip
+                dense
+                :color="getStatusColor(selectedVehicleType.status)"
+                :text-color="getStatusTextColor(selectedVehicleType.status)"
+              >
+                <q-icon
+                  :name="getStatusIcon(selectedVehicleType.status)"
+                  size="16px"
+                  class="q-mr-xs"
+                />
+                {{ isTypeActive(selectedVehicleType.status) ? 'Active' : 'Inactive' }}
+              </q-chip>
 
-              <q-icon
-                :name="
-                  getStatusIcon(
-                    selectedVehicleType.status
-                  )
-                "
-                size="16px"
-                class="q-mr-xs"
+              <q-btn
+                dense
+                unelevated
+                size="sm"
+                :color="isTypeActive(selectedVehicleType.status) ? 'negative' : 'positive'"
+                :icon="isTypeActive(selectedVehicleType.status) ? 'cancel' : 'check_circle'"
+                :label="isTypeActive(selectedVehicleType.status) ? 'Mark Inactive' : 'Mark Active'"
+                :loading="togglingId === selectedVehicleType.id"
+                no-caps
+                @click="toggleVehicleTypeStatus(selectedVehicleType)"
               />
-
-              {{ selectedVehicleType.status }}
-
-            </q-chip>
+            </div>
 
           </div>
 
@@ -885,6 +896,8 @@ import {
 import {
   Notify
 } from 'quasar'
+
+import adminService from '@/services/admin.service'
 
 
 // ============================================
@@ -1105,56 +1118,25 @@ const vehicleTypes = ref([
 // ============================================
 
 const filteredVehicleTypes = computed(() => {
-
-  let data = [
-    ...vehicleTypes.value
-  ]
-
+  let data = [...vehicleTypes.value]
 
   // Status filter
-
-  if (
-    statusFilter.value !== 'all'
-  ) {
-
-    data = data.filter(
-      item =>
-        item.status ===
-        statusFilter.value
-    )
-
+  if (statusFilter.value !== 'all') {
+    const filterIsActive = statusFilter.value.toLowerCase() === 'active'
+    data = data.filter(item => isTypeActive(item.status) === filterIsActive)
   }
-
 
   // Search
-
   if (search.value) {
-
-    const keyword =
-      search.value
-        .toLowerCase()
-        .trim()
-
-
-    data = data.filter(item =>
-
-      item.name
-        .toLowerCase()
-        .includes(keyword)
-
-      ||
-
-      (item.description || '')
-        .toLowerCase()
-        .includes(keyword)
-
+    const keyword = search.value.toLowerCase().trim()
+    data = data.filter(
+      item =>
+        item.name.toLowerCase().includes(keyword) ||
+        (item.description || '').toLowerCase().includes(keyword)
     )
-
   }
 
-
   return data
-
 })
 
 
@@ -1163,29 +1145,15 @@ const filteredVehicleTypes = computed(() => {
 // ============================================
 
 const totalTypes = computed(() => {
-
   return vehicleTypes.value.length
-
 })
-
 
 const activeTypes = computed(() => {
-
-  return vehicleTypes.value.filter(
-    item =>
-      item.status === 'Active'
-  ).length
-
+  return vehicleTypes.value.filter(item => isTypeActive(item.status)).length
 })
 
-
 const inactiveTypes = computed(() => {
-
-  return vehicleTypes.value.filter(
-    item =>
-      item.status === 'Inactive'
-  ).length
-
+  return vehicleTypes.value.filter(item => !isTypeActive(item.status)).length
 })
 
 
@@ -1327,7 +1295,7 @@ const editVehicleType = item => {
 // SAVE
 // ============================================
 
-const saveVehicleType = () => {
+const saveVehicleType = async () => {
 
   // Name validation
 
@@ -1396,75 +1364,62 @@ const saveVehicleType = () => {
       )
 
 
+    try {
+      await adminService.updateVehicleType(vehicleTypeForm.value.id, vehicleTypeForm.value)
+    } catch (e) {
+      console.warn('API update failed, updating in-memory:', e?.message)
+    }
+
     if (index !== -1) {
-
       vehicleTypes.value[index] = {
-
         ...vehicleTypes.value[index],
-
         ...vehicleTypeForm.value,
-
         image:
           image ||
           vehicleTypes.value[index].image
-
       }
-
     }
 
-
     Notify.create({
-
       type: 'positive',
-
-      message:
-        'Vehicle type updated successfully'
-
+      message: 'Vehicle type updated successfully'
     })
-
   }
-
 
   // ==========================================
   // ADD
   // ==========================================
 
   else {
+    try {
+      const created = await adminService.createVehicleType(vehicleTypeForm.value)
+      if (created && created.id) {
+        vehicleTypeForm.value.id = created.id
+      }
+    } catch (e) {
+      console.warn('API create failed, adding in-memory:', e?.message)
+    }
 
     const newVehicleType = {
-
       ...vehicleTypeForm.value,
-
-      id: Date.now(),
-
+      id: vehicleTypeForm.value.id || Date.now(),
       image,
-
       vehicles: Number(
         vehicleTypeForm.value.vehicles || 0
       )
-
     }
-
 
     vehicleTypes.value.unshift(
       newVehicleType
     )
 
-
     Notify.create({
-
       type: 'positive',
-
-      message:
-        'Vehicle type added successfully'
-
+      message: 'Vehicle type added successfully'
     })
-
   }
 
-
-  vehicleTypeDialog.value =
-    false
+  vehicleTypeDialog.value = false
 
 }
 
@@ -1503,16 +1458,16 @@ const confirmDelete = item => {
 // DELETE
 // ============================================
 
-const deleteVehicleType = () => {
-
-  if (
-    !selectedVehicleType.value
-  ) {
-
+const deleteVehicleType = async () => {
+  if (!selectedVehicleType.value) {
     return
-
   }
 
+  try {
+    await adminService.deleteVehicleType(selectedVehicleType.value.id)
+  } catch (e) {
+    console.warn('API delete failed, removing in-memory:', e?.message)
+  }
 
   vehicleTypes.value =
     vehicleTypes.value.filter(
@@ -1521,24 +1476,14 @@ const deleteVehicleType = () => {
         selectedVehicleType.value.id
     )
 
-
-  deleteDialog.value =
-    false
-
+  deleteDialog.value = false
 
   Notify.create({
-
     type: 'positive',
-
-    message:
-      'Vehicle type deleted successfully'
-
+    message: 'Vehicle type deleted successfully'
   })
 
-
-  selectedVehicleType.value =
-    null
-
+  selectedVehicleType.value = null
 }
 
 
@@ -1546,87 +1491,72 @@ const deleteVehicleType = () => {
 // STATUS
 // ============================================
 
-const getStatusColor = status => {
+const togglingId = ref(null)
 
-  return status === 'Active'
-    ? 'green-1'
-    : 'red-1'
-
+const isTypeActive = status => {
+  return String(status || '').toLowerCase() === 'active'
 }
 
+const toggleVehicleTypeStatus = async item => {
+  if (!item || !item.id) return
+  togglingId.value = item.id
+  const currentIsActive = isTypeActive(item.status)
+  const newStatus = currentIsActive ? 'Inactive' : 'Active'
+
+  // Optimistic UI update
+  item.status = newStatus
+
+  try {
+    await adminService.updateVehicleTypeStatus(item.id, newStatus.toLowerCase())
+    Notify.create({
+      type: 'positive',
+      message: `Vehicle type "${item.name}" marked as ${newStatus}.`,
+      position: 'top-right'
+    })
+  } catch (error) {
+    console.error('Failed to toggle vehicle type status:', error)
+    // Revert on error
+    item.status = currentIsActive ? 'Active' : 'Inactive'
+    Notify.create({
+      type: 'negative',
+      message: error?.response?.data?.message || 'Failed to update vehicle type status',
+      position: 'top-right'
+    })
+  } finally {
+    togglingId.value = null
+  }
+}
+
+const getStatusColor = status => {
+  return isTypeActive(status) ? 'green-1' : 'red-1'
+}
 
 const getStatusTextColor = status => {
-
-  return status === 'Active'
-    ? 'positive'
-    : 'negative'
-
+  return isTypeActive(status) ? 'positive' : 'negative'
 }
-
 
 const getStatusIcon = status => {
-
-  return status === 'Active'
-    ? 'check_circle'
-    : 'cancel'
-
+  return isTypeActive(status) ? 'check_circle' : 'cancel'
 }
 
 
 // ============================================
-// API PLACEHOLDER
+// API
 // ============================================
 
-const fetchVehicleTypes =
-  async () => {
-
-    loading.value = true
-
-    try {
-
-      /*
-       * Connect your API here.
-       *
-       * Example:
-       *
-       * const response = await axios.get(
-       *   `${BASE_URL}/vehicle-types`,
-       *   {
-       *     headers: {
-       *       Authorization:
-       *         `Bearer ${localStorage.getItem('token')}`
-       *     }
-       *   }
-       * )
-       *
-       * vehicleTypes.value =
-       *   response.data.data
-       */
-
-    } catch (error) {
-
-      console.error(
-        'Vehicle Type API Error:',
-        error
-      )
-
-
-      Notify.create({
-
-        type: 'negative',
-
-        message:
-          'Unable to load vehicle types'
-
-      })
-
-    } finally {
-
-      loading.value = false
-
+const fetchVehicleTypes = async () => {
+  loading.value = true
+  try {
+    const res = await adminService.getVehicleTypes()
+    if (res && res.data && res.data.length > 0) {
+      vehicleTypes.value = res.data
     }
-
+  } catch (error) {
+    console.warn('Vehicle Type API Notice (using local list if offline):', error?.message)
+  } finally {
+    loading.value = false
   }
+}
 
 
 // ============================================

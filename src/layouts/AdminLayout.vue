@@ -40,9 +40,9 @@
           </q-avatar>
 
           <div class="q-ml-sm gt-xs">
-            <div class="admin-name"> Admin </div>
+            <div class="admin-name">{{ currentUser?.name || 'Administrator' }}</div>
 
-            <div class="admin-role"> Administrator </div>
+            <div class="admin-role">{{ currentUser?.email || 'Administrator' }}</div>
           </div>
 
           <q-icon name="keyboard_arrow_down" class="q-ml-xs" />
@@ -174,6 +174,24 @@
             </q-item-section>
 
             <q-item-section> Drivers </q-item-section>
+          </q-item>
+
+          <!-- DRIVER DOCUMENT VERIFICATION -->
+          <q-item
+            clickable
+            v-ripple
+            to="/admin/drivers?tab=pending"
+            active-class="admin-menu-active"
+            class="admin-menu-item q-pl-md"
+          >
+            <q-item-section avatar>
+              <q-icon name="verified_user" color="warning" />
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label>Driver Verification</q-item-label>
+              <q-item-label caption class="text-grey-6">Review Documents</q-item-label>
+            </q-item-section>
           </q-item>
 
           <!-- AGENTS -->
@@ -554,17 +572,41 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 import { useRouter } from 'vue-router'
 
 import { Notify } from 'quasar'
+import { clearAuthSession } from '@/utils/auth.js'
 
 // =========================================================
-// ROUTER
+// ROUTER & USER STATE
 // =========================================================
 
 const router = useRouter()
+const currentUser = ref(null)
+
+onMounted(() => {
+  try {
+    const rawUser = localStorage.getItem('user')
+    if (rawUser) {
+      currentUser.value = JSON.parse(rawUser)
+    }
+  } catch (e) {
+    console.warn('Could not parse user info:', e)
+  }
+
+  const token = localStorage.getItem('token')
+  if (!token) {
+    Notify.create({
+      type: 'warning',
+      message: 'Please login to access the Admin Panel',
+      position: 'top',
+      timeout: 2000
+    })
+    router.replace('/admin/login')
+  }
+})
 
 // =========================================================
 // LEFT DRAWER
@@ -608,51 +650,27 @@ const logout = async () => {
   loggingOut.value = true
 
   try {
-    // -----------------------------------------------------
-    // REMOVE AUTHENTICATION DATA
-    // -----------------------------------------------------
+    // Thoroughly clear all tokens, storage, and axios headers
+    clearAuthSession()
 
-    localStorage.removeItem('token')
-
-    localStorage.removeItem('user')
-
-    localStorage.removeItem('role')
-
-    localStorage.removeItem('auth')
-
-    // -----------------------------------------------------
-    // CLOSE DIALOG
-    // -----------------------------------------------------
-
+    // Close dialog
     logoutDialog.value = false
-
-    // -----------------------------------------------------
-    // NOTIFICATION
-    // -----------------------------------------------------
 
     Notify.create({
       type: 'positive',
-
       message: 'Logged out successfully',
-
-      position: 'top-right',
-
+      position: 'top',
       timeout: 1500
     })
 
-    // -----------------------------------------------------
-    // REDIRECT TO LOGIN
-    // -----------------------------------------------------
-
-    await router.replace('/')
+    // Redirect to admin login with explicit logout flag
+    await router.replace('/admin/login?logout=true')
   } catch (error) {
     console.error('Logout error:', error)
 
     Notify.create({
       type: 'negative',
-
       message: 'Unable to logout. Please try again.',
-
       position: 'top-right'
     })
   } finally {

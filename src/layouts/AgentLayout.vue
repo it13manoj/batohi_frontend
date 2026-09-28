@@ -432,6 +432,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 import { useQuasar } from 'quasar'
+import { clearAuthSession } from '@/utils/auth.js'
 
 // ======================================================
 // ROUTER
@@ -556,24 +557,18 @@ function logout() {
       flat: true
     }
   }).onOk(() => {
-    // Remove authentication data
-    localStorage.removeItem('token')
+    // Thoroughly clear all tokens, storage, and axios headers
+    clearAuthSession()
 
-    localStorage.removeItem('accessToken')
+    $q.notify({
+      type: 'positive',
+      message: 'Logged out successfully',
+      position: 'top',
+      timeout: 1500
+    })
 
-    localStorage.removeItem('user')
-
-    localStorage.removeItem('agent')
-
-    localStorage.removeItem('driver')
-
-    // Clear session storage
-    sessionStorage.removeItem('token')
-
-    sessionStorage.removeItem('accessToken')
-
-    // Redirect to login
-    router.push('/')
+    // Redirect to login with explicit logout flag
+    router.replace('/?logout=true')
   })
 }
 

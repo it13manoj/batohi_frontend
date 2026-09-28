@@ -212,7 +212,7 @@ const canCancelRide = computed(() => {
   return ['pending', 'accepted'].includes(String(bookingStatus.value).toLowerCase())
 })
 
-const otpCode = computed(() => rideDetails.value?.otp?.otp || null)
+const otpCode = computed(() => rideDetails.value?.bookOtp?.[0]?.otp || null)
 const driverDetails = computed(() => rideDetails.value?.driver?.driver || null)
 const vehicleDetails = computed(() => driverDetails.value?.vehicle || null)
 
