@@ -814,11 +814,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
 import driverService from '@/services/driver.service'
 import invoiceService from '@/services/invoice.service'
+import liveTrackingService from '@/services/liveTracking.service'
 
 const $q = useQuasar()
 const router = useRouter()
@@ -839,6 +840,10 @@ const otpInput = ref('')
 const showCancelDialog = ref(false)
 const cancelActionType = ref('cancel')
 const cancelReason = ref('')
+
+// ─── GPS Live Broadcasting (for 'started' trips) ───────────────────
+let gpsWatcherId = null
+const isGpsBroadcasting = ref(false)
 
 // Extract Trip ID from route parameters or query
 const tripId = computed(() => {
@@ -1161,6 +1166,64 @@ function downloadReceiptAction() {
   })
 }
 
+// ─── GPS Live Broadcasting ────────────────────────────────────────
+function startGpsBroadcasting() {
+  if (!trip.value?.id || gpsWatcherId !== null) return
+  if (!navigator.geolocation) {
+    console.warn('Geolocation not supported by this browser/device')
+    return
+  }
+
+  isGpsBroadcasting.value = true
+  gpsWatcherId = navigator.geolocation.watchPosition(
+    async (position) => {
+      const { latitude, longitude, heading, speed, accuracy } = position.coords
+      try {
+        await liveTrackingService.updateDriverLocation(trip.value.id, latitude, longitude, {
+          heading,
+          speed,
+          accuracy
+        })
+      } catch (err) {
+        console.warn('GPS broadcast error:', err?.message)
+      }
+    },
+    (err) => {
+      console.warn('Geolocation watch error:', err.message)
+      isGpsBroadcasting.value = false
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 3000,
+      timeout: 10000
+    }
+  )
+
+  $q.notify({
+    type: 'positive',
+    message: 'Live GPS tracking started. Your location is being shared.',
+    icon: 'gps_fixed',
+    timeout: 3000
+  })
+}
+
+function stopGpsBroadcasting() {
+  if (gpsWatcherId !== null) {
+    navigator.geolocation.clearWatch(gpsWatcherId)
+    gpsWatcherId = null
+    isGpsBroadcasting.value = false
+  }
+}
+
+// Watch trip status and auto-start/stop GPS
+watch(() => trip.value?.status, (newStatus) => {
+  if (newStatus === 'started') {
+    startGpsBroadcasting()
+  } else if (['completed', 'cancelled', 'rejected'].includes(newStatus)) {
+    stopGpsBroadcasting()
+  }
+}, { immediate: false })
+
 // Navigation back
 function goBack() {
   router.push({ name: 'DriverDashboard' })
@@ -1168,6 +1231,10 @@ function goBack() {
 
 onMounted(() => {
   loadTrip()
+})
+
+onUnmounted(() => {
+  stopGpsBroadcasting()
 })
 </script>
 

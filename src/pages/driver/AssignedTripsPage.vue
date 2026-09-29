@@ -921,9 +921,10 @@
 
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useQuasar } from 'quasar'
 import api from '@/config/api'
+import liveTrackingService from '@/services/liveTracking.service'
 
 const $q = useQuasar()
 
@@ -943,6 +944,8 @@ const actionTripId = ref(null)
 const showOtpDialog = ref(false)
 const otpInput = ref('')
 const isVerifyingOtp = ref(false)
+const gpsTrackingInterval = ref(null)
+const activeBookingId = ref(null)
 
 
 // =====================================================
@@ -1221,6 +1224,43 @@ function startTrip(trip) {
   showOtpDialog.value = true
 }
 
+// =====================================================
+// GPS LIVE TRACKING
+// =====================================================
+
+const startGpsTracking = (bookingId) => {
+  activeBookingId.value = bookingId
+  if (gpsTrackingInterval.value) clearInterval(gpsTrackingInterval.value)
+
+  // Broadcast driver location every 5 seconds during active ride
+  gpsTrackingInterval.value = setInterval(async () => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude, heading, speed, accuracy } = position.coords
+        await liveTrackingService.updateDriverLocation(
+          bookingId,
+          latitude,
+          longitude,
+          { heading, speed, accuracy }
+        )
+      },
+      (err) => console.warn('GPS error:', err.message),
+      { enableHighAccuracy: true, timeout: 5000 }
+    )
+  }, 5000)
+
+  $q.notify({ type: 'info', message: 'Live tracking started for this ride', position: 'top-right', timeout: 2000 })
+}
+
+const stopGpsTracking = () => {
+  if (gpsTrackingInterval.value) {
+    clearInterval(gpsTrackingInterval.value)
+    gpsTrackingInterval.value = null
+  }
+  activeBookingId.value = null
+}
+
 const verifyOtpAndStart = async () => {
   if (otpInput.value.trim().length < 4 || !selectedTrip.value?.id) return
   isVerifyingOtp.value = true
@@ -1231,6 +1271,7 @@ const verifyOtpAndStart = async () => {
     })
     if (response.data?.success || response.status === 200) {
       selectedTrip.value.status = 'started'
+      startGpsTracking(selectedTrip.value.id)
       showOtpDialog.value = false
       showDetails.value = false
       $q.notify({ type: 'positive', message: 'OTP verified. Trip started successfully.' })
@@ -1256,6 +1297,8 @@ async function completeTrip(trip) {
     const response = await api.put(`/driver/complete-ride/${trip.id}`, { booking_id: trip.id })
     if (response.data?.success || response.status === 200) {
       trip.status = 'completed'
+      stopGpsTracking()
+      await liveTrackingService.completeTracking(trip.id)
       showDetails.value = false
       $q.notify({ type: 'positive', message: 'Trip completed successfully', position: 'top-right' })
     } else {
@@ -1280,6 +1323,10 @@ async function refreshTrips() {
 
 onMounted(() => {
   fetchTrips()
+})
+
+onUnmounted(() => {
+  stopGpsTracking()
 })
 
 
