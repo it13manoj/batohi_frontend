@@ -10,7 +10,7 @@
         <div v-if="bookingStatus === 'pending'" class="text-center q-py-sm">
           <q-spinner-dots color="primary" size="40px" />
           <div class="text-h6 text-primary q-mt-sm">Waiting for Driver to Accept...</div>
-          <div class="text-caption text-grey-7 q-mb-xs">Tracking driver approach to your location.</div>
+          <div class="text-caption text-grey-7 q-mb-xs">Your booking has been placed. A driver will accept shortly.</div>
 
           <!-- OTP Box for Pending State -->
           <div v-if="otpCode" class="otp-box q-mt-md q-pa-sm rounded-borders">
@@ -23,14 +23,15 @@
         </div>
 
         <!-- Status: Confirmed / Accepted (Driver & Vehicle Info Display) -->
-        <div v-else-if="bookingStatus === 'confirmed' || bookingStatus === 'accepted'" class="driver-info-container">
+        <div v-else-if="isActiveRide" class="driver-info-container">
           <div class="row items-center justify-between q-mb-xs">
             <div class="text-subtitle2 text-positive text-weight-bold row items-center">
               <q-icon name="check_circle" color="positive" size="20px" class="q-mr-xs" />
-              Ride {{ bookingStatus === 'confirmed' ? 'Confirmed' : 'Accepted' }} • Driver On The Way
+              <span v-if="bookingStatus === 'started'">Ride In Progress 🚗</span>
+              <span v-else>Ride Confirmed • Driver On The Way</span>
             </div>
             <!-- OTP Badge Display -->
-            <q-badge v-if="otpCode" color="amber-10" class="text-subtitle1 q-px-sm text-weight-bold">
+            <q-badge v-if="otpCode && bookingStatus !== 'started'" color="amber-10" class="text-subtitle1 q-px-sm text-weight-bold">
               OTP: {{ otpCode }}
             </q-badge>
           </div>
@@ -99,7 +100,40 @@
           <q-btn color="primary" label="Back to Search" @click="goBack" class="full-width" />
         </div>
 
+        <!-- Status: Completed -->
+        <div v-else-if="bookingStatus === 'completed'" class="text-center q-py-sm">
+          <q-icon name="check_circle" color="positive" size="48px" />
+          <div class="text-h6 text-positive q-mt-sm">Ride Completed!</div>
+          <div class="text-body2 text-grey-8 q-mb-md">You have reached your destination. Thank you for riding with us!</div>
+          <q-btn color="primary" label="Back to Dashboard" @click="goBack" class="full-width" />
+        </div>
+
         <q-separator class="q-my-md" />
+
+        <!-- Live Tracking ETA / Progress -->
+        <div v-if="liveTrackingData?.trip_progress" class="q-mb-sm">
+          <div class="row justify-between items-center">
+            <div class="row items-center text-caption text-grey-8">
+              <q-icon name="near_me" color="primary" size="16px" class="q-mr-xs" />
+              <span v-if="liveTrackingData.trip_progress.distance_remaining_km">
+                {{ liveTrackingData.trip_progress.distance_remaining_km }} km remaining
+              </span>
+            </div>
+            <div class="row items-center text-caption text-positive text-weight-bold">
+              <q-icon name="schedule" size="16px" class="q-mr-xs" />
+              <span v-if="liveTrackingData.trip_progress.estimated_arrival_minutes">
+                ETA: ~{{ liveTrackingData.trip_progress.estimated_arrival_minutes }} min
+              </span>
+            </div>
+          </div>
+          <q-linear-progress
+            v-if="tripProgressValue !== null"
+            :value="tripProgressValue"
+            color="primary"
+            class="q-mt-xs"
+            rounded
+          />
+        </div>
 
         <!-- Ride Details Summary -->
         <div v-if="rideDetails" class="q-gutter-y-xs">
@@ -141,6 +175,7 @@ import { useQuasar, Notify, Dialog } from 'quasar'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import api from '@/config/api'
+import liveTrackingService from '@/services/liveTracking.service'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -150,13 +185,36 @@ const bookingId = route.params.bookingId
 const bookingStatus = ref('pending')
 const rideDetails = ref(null)
 const cancelling = ref(false)
+const liveTrackingData = ref(null)
+const driverMarker = ref(null)
+
+// Track initial total distance for progress calculation
+const initialTotalDistance = ref(null)
 
 let map = null
 let pollTimer = null
 let currentPolyline = null
 let markersGroup = null
+let pickupMarkerInstance = null
+let dropMarkerInstance = null
 
-// Custom Leaflet Icons
+// ─── Status helpers ───────────────────────────────────────────────
+const ACTIVE_STATUSES = ['confirmed', 'accepted', 'started', 'in_transit', 'in_progress', 'on_trip']
+const TERMINAL_STATUSES = ['rejected', 'cancelled', 'completed']
+
+const normalizeStatus = (s) => {
+  const v = String(s || '').toLowerCase().trim()
+  if (['accept', 'accepted', 'driver_accepted', 'confirmed'].includes(v)) return 'accepted'
+  if (['start', 'started', 'in_progress', 'ongoing', 'on_trip', 'in_transit'].includes(v)) return 'started'
+  if (['complete', 'completed'].includes(v)) return 'completed'
+  if (['cancel', 'cancelled', 'canceled'].includes(v)) return 'cancelled'
+  if (['reject', 'rejected'].includes(v)) return 'rejected'
+  return v
+}
+
+const isActiveRide = computed(() => ACTIVE_STATUSES.includes(bookingStatus.value))
+
+// ─── Custom Leaflet Icons ─────────────────────────────────────────
 const vehicleBikeIcon = L.divIcon({
   className: 'custom-map-icon',
   html: `
@@ -172,15 +230,39 @@ const vehicleBikeIcon = L.divIcon({
       border: 2px solid white;">
       <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#ffffff">
         <path d="M0 0h24v24H0z" fill="none"/>
-        <path d="M19.44 9.03L15.42 5.01c-.39-.39-1.02-.39-1.41 0l-1.06 1.06 2.12 2.12c.39.39.39 1.02 0 1.41l-4.24 4.24c-.39.39-1.02.39-1.41 0L7.3 11.72 6.24 12.78c-.39.39-.39 1.02 0 1.41l4.02 4.02c.39.39 1.02.39 1.41 0l1.06-1.06-2.12-2.12c-.39-.39-.39-1.02 0-1.41l4.24-4.24c.39-.39 1.02-.39 1.41 0l2.12 2.12 1.06-1.06c.39-.39.39-1.03 0-1.42z"/>
-        <path d="M19 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-14 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
-        <path d="M5 18c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm14 0c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-6.27-5h-3.46l-1.54-3.5h7.27l-2.27 3.5z"/>
+        <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-5h14v5z"/>
+        <circle cx="7.5" cy="14.5" r="1.5"/>
+        <circle cx="16.5" cy="14.5" r="1.5"/>
       </svg>
     </div>
   `,
   iconSize: [40, 40],
   iconAnchor: [20, 20],
   popupAnchor: [0, -20]
+})
+
+const pickupPinIcon = L.divIcon({
+  className: 'custom-map-icon',
+  html: `
+    <div style="
+      background-color: #027be3;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+      border: 2px solid white;">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 0 24 24" width="20px" fill="#ffffff">
+        <path d="M0 0h24v24H0z" fill="none"/>
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+      </svg>
+    </div>
+  `,
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
+  popupAnchor: [0, -18]
 })
 
 const dropPinIcon = L.divIcon({
@@ -207,9 +289,9 @@ const dropPinIcon = L.divIcon({
   popupAnchor: [0, -20]
 })
 
-// Computed Helpers for Driver, Vehicle & Cancel Option
+// ─── Computed Helpers ─────────────────────────────────────────────
 const canCancelRide = computed(() => {
-  return ['pending', 'accepted'].includes(String(bookingStatus.value).toLowerCase())
+  return ['pending', 'accepted'].includes(bookingStatus.value)
 })
 
 const otpCode = computed(() => rideDetails.value?.bookOtp?.[0]?.otp || null)
@@ -244,33 +326,65 @@ const driverProfileImage = computed(() => {
   return `${baseURL}${path}`
 })
 
-// Base Map Initialization
+// Dynamic trip progress value (0.0 → 1.0)
+const tripProgressValue = computed(() => {
+  const progress = liveTrackingData.value?.trip_progress
+  if (!progress) return null
+
+  const remaining = parseFloat(progress.distance_remaining_km)
+  const total = parseFloat(progress.total_distance_km)
+
+  if (!isNaN(remaining) && !isNaN(total) && total > 0) {
+    return Math.max(0, Math.min(1, (total - remaining) / total))
+  }
+
+  // Fallback: use initialTotalDistance
+  if (!isNaN(remaining) && initialTotalDistance.value > 0) {
+    return Math.max(0, Math.min(1, (initialTotalDistance.value - remaining) / initialTotalDistance.value))
+  }
+
+  return 0.5 // indeterminate fallback
+})
+
+// ─── Map Initialization ───────────────────────────────────────────
 const initMapContainer = () => {
   if (map) return
   map = L.map('tracking-map').setView([25.6033, 85.1092], 13)
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
   }).addTo(map)
 
   markersGroup = L.layerGroup().addTo(map)
 }
 
-// Render Route via OSRM
-const renderRoute = async (start, end, startLabel, endLabel) => {
+// ─── Route Rendering via OSRM ────────────────────────────────────
+const renderRoute = async (start, end, startLabel, endLabel, color = '#007bff') => {
   if (!map) initMapContainer()
 
-  markersGroup.clearLayers()
+  // Clear old polyline
   if (currentPolyline) {
     map.removeLayer(currentPolyline)
     currentPolyline = null
   }
 
-  L.marker([start.lat, start.lng], { icon: vehicleBikeIcon })
+  // Clear old pickup/drop markers but keep driver marker
+  if (pickupMarkerInstance) {
+    markersGroup.removeLayer(pickupMarkerInstance)
+    pickupMarkerInstance = null
+  }
+  if (dropMarkerInstance) {
+    markersGroup.removeLayer(dropMarkerInstance)
+    dropMarkerInstance = null
+  }
+
+  // Add pickup and drop markers
+  pickupMarkerInstance = L.marker([start.lat, start.lng], { icon: bookingStatus.value === 'started' ? pickupPinIcon : vehicleBikeIcon })
     .addTo(markersGroup)
     .bindPopup(startLabel)
 
-  L.marker([end.lat, end.lng], { icon: dropPinIcon })
+  dropMarkerInstance = L.marker([end.lat, end.lng], { icon: dropPinIcon })
     .addTo(markersGroup)
     .bindPopup(endLabel)
 
@@ -282,8 +396,13 @@ const renderRoute = async (start, end, startLabel, endLabel) => {
     if (data.routes && data.routes.length) {
       const coordinates = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]])
 
+      // Store initial total distance if not set
+      if (!initialTotalDistance.value && data.routes[0].distance) {
+        initialTotalDistance.value = data.routes[0].distance / 1000 // convert m → km
+      }
+
       currentPolyline = L.polyline(coordinates, {
-        color: (bookingStatus.value === 'confirmed' || bookingStatus.value === 'accepted') ? '#28a745' : '#007bff',
+        color,
         weight: 5,
         opacity: 0.8
       }).addTo(map)
@@ -292,15 +411,23 @@ const renderRoute = async (start, end, startLabel, endLabel) => {
     }
   } catch (err) {
     console.error('Failed to load OSRM route line:', err)
+    // Fallback: just fit the two markers
+    const bounds = L.latLngBounds([
+      [start.lat, start.lng],
+      [end.lat, end.lng]
+    ])
+    map.fitBounds(bounds, { padding: [60, 60] })
   }
 }
 
-// Dynamic Route Switcher based on Booking Status
+// ─── Dynamic Route based on Status ───────────────────────────────
 const updateMapRoute = () => {
   if (!rideDetails.value) return
 
-  // Generate full pickup-to-dropoff route ON CONFIRMED / ACCEPTED status
-  if (bookingStatus.value === 'confirmed' || bookingStatus.value === 'accepted') {
+  const status = bookingStatus.value
+
+  if (status === 'started' || status === 'in_transit' || status === 'in_progress' || status === 'on_trip') {
+    // Trip in progress: show pickup → dropoff route
     const pickupLoc = {
       lat: Number(rideDetails.value.latitude_from),
       lng: Number(rideDetails.value.longitude_from)
@@ -309,44 +436,72 @@ const updateMapRoute = () => {
       lat: Number(rideDetails.value.latitude_to),
       lng: Number(rideDetails.value.longitude_to)
     }
-
     if (pickupLoc.lat && dropLoc.lat) {
-      renderRoute(pickupLoc, dropLoc, 'Pickup Point', 'Destination Drop Point')
+      renderRoute(pickupLoc, dropLoc, 'Pickup Point', 'Destination Drop', '#28a745')
     }
-  } else {
-    // Default/Pending: Track Driver approach to Rider Pickup Location
-    const driverLoc = {
-      lat: Number(rideDetails.value.driver?.latitude),
-      lng: Number(rideDetails.value.driver?.longitude)
-    }
-    const riderLoc = {
-      lat: Number(rideDetails.value.rider?.latitude),
-      lng: Number(rideDetails.value.rider?.longitude)
-    }
+  } else if (status === 'accepted' || status === 'confirmed') {
+    // Driver accepted: show driver → pickup route
+    const driverLocLat = Number(rideDetails.value.driver?.latitude || rideDetails.value.driver?.driver?.latitude)
+    const driverLocLng = Number(rideDetails.value.driver?.longitude || rideDetails.value.driver?.driver?.longitude)
+    const riderLat = Number(rideDetails.value.latitude_from)
+    const riderLng = Number(rideDetails.value.longitude_from)
 
-    if (driverLoc.lat && riderLoc.lat) {
-      renderRoute(driverLoc, riderLoc, 'Driver Vehicle', 'Your Pickup Location')
+    if (driverLocLat && riderLat) {
+      renderRoute(
+        { lat: driverLocLat, lng: driverLocLng },
+        { lat: riderLat, lng: riderLng },
+        'Driver Vehicle',
+        'Your Pickup Location',
+        '#007bff'
+      )
+    } else {
+      // Fallback: show full route pickup → drop
+      const pickupLoc = { lat: riderLat || 25.6033, lng: riderLng || 85.1092 }
+      const dropLoc = {
+        lat: Number(rideDetails.value.latitude_to),
+        lng: Number(rideDetails.value.longitude_to)
+      }
+      if (pickupLoc.lat && dropLoc.lat) {
+        renderRoute(pickupLoc, dropLoc, 'Pickup Point', 'Destination Drop', '#007bff')
+      }
     }
   }
 }
 
-// Polling API for Booking Status and OTP
+// ─── Live Driver Marker Update ────────────────────────────────────
+const updateDriverMarkerPosition = (lat, lng) => {
+  if (!map || !markersGroup) return
+  if (driverMarker.value) {
+    driverMarker.value.setLatLng([lat, lng])
+  } else {
+    driverMarker.value = L.marker([lat, lng], { icon: vehicleBikeIcon })
+      .addTo(markersGroup)
+      .bindPopup('Driver Location')
+  }
+}
+
+// ─── Booking Status Polling ───────────────────────────────────────
 const checkBookingStatus = async () => {
   try {
     const res = await api.get(`/driver/bookings/status/${bookingId}`)
     if (res.data.success) {
-      const newStatus = res.data.data.status
+      const raw = res.data.data
+      const newStatus = normalizeStatus(raw.status)
       const statusChanged = bookingStatus.value !== newStatus
 
       bookingStatus.value = newStatus
-      rideDetails.value = res.data.data
+      rideDetails.value = raw
 
       if (statusChanged || !currentPolyline) {
         updateMapRoute()
       }
 
-      if (bookingStatus.value !== 'pending' && bookingStatus.value !== 'accepted' && bookingStatus.value !== 'confirmed') {
-        clearInterval(pollTimer)
+      // Stop polling on terminal statuses
+      if (TERMINAL_STATUSES.includes(newStatus)) {
+        if (pollTimer) {
+          clearInterval(pollTimer)
+          pollTimer = null
+        }
       }
     }
   } catch (err) {
@@ -354,7 +509,37 @@ const checkBookingStatus = async () => {
   }
 }
 
-// Cancel Ride Handlers
+// ─── Live Tracking Polling ────────────────────────────────────────
+const checkLiveTracking = async () => {
+  if (!bookingId) return
+  if (!ACTIVE_STATUSES.includes(bookingStatus.value)) return
+
+  try {
+    const res = await liveTrackingService.getLiveTracking(bookingId)
+    if (res?.success && res?.data) {
+      liveTrackingData.value = res.data
+      const loc = res.data.current_location
+
+      if (loc?.latitude && loc?.longitude) {
+        updateDriverMarkerPosition(Number(loc.latitude), Number(loc.longitude))
+
+        // For started rides: continuously update route from driver current pos → drop
+        if (bookingStatus.value === 'started' && rideDetails.value) {
+          const dropLat = Number(rideDetails.value.latitude_to)
+          const dropLng = Number(rideDetails.value.longitude_to)
+          if (dropLat && dropLng) {
+            // Only redraw polyline every ~10s to avoid constant OSRM calls
+            // Just move the marker; route stays drawn
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Live tracking fetch error:', err?.message)
+  }
+}
+
+// ─── Cancel Ride Handlers ─────────────────────────────────────────
 const confirmCancelRide = () => {
   Dialog.create({
     title: 'Cancel Ride',
@@ -372,8 +557,10 @@ const cancelRide = async () => {
     const res = await api.put(`/driver/cancel/${bookingId}`)
     if (res.data.success || res.status === 200) {
       bookingStatus.value = 'cancelled'
-      if (pollTimer) clearInterval(pollTimer)
-
+      if (pollTimer) {
+        clearInterval(pollTimer)
+        pollTimer = null
+      }
       Notify.create({
         type: 'positive',
         message: 'Your ride has been cancelled.'
@@ -395,19 +582,31 @@ const cancelRide = async () => {
   }
 }
 
+// ─── Lifecycle ────────────────────────────────────────────────────
 onMounted(async () => {
   initMapContainer()
   await checkBookingStatus()
+  await checkLiveTracking()
 
-  pollTimer = setInterval(checkBookingStatus, 3000)
+  pollTimer = setInterval(async () => {
+    await checkBookingStatus()
+    await checkLiveTracking()
+  }, 4000) // Poll every 4 seconds
 })
 
 onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer)
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+  if (map) {
+    map.remove()
+    map = null
+  }
 })
 
 const goBack = () => {
-  router.push('/customer/vehicle-type')
+  router.push('/customer/dashboard')
 }
 </script>
 
@@ -426,6 +625,8 @@ const goBack = () => {
   z-index: 1000;
   border-radius: 16px;
   background-color: #ffffff;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .vehicle-card {
