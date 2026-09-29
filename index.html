@@ -3,7 +3,7 @@
   <head>
     <title><%= productName %></title>
 
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="description" content="<%= productDescription %>" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="msapplication-tap-highlight" content="no" />
@@ -16,9 +16,9 @@
       content="
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://unpkg.com;
-    style-src 'self' 'unsafe-inline' https://unpkg.com;
+    style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com;
     img-src 'self' data: blob: http://localhost:3300 https://*.tile.openstreetmap.org https://unpkg.com https://placehold.co https://*.placehold.co;
-    font-src 'self' data:;
+    font-src 'self' data: https://fonts.gstatic.com;
     connect-src 'self'
       http://localhost:3300
       ws://localhost:3300
@@ -64,6 +64,14 @@
       href="icons/favicon-16x16.png"
     />
     <link rel="icon" type="image/ico" href="favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Load Noto Sans Devanagari & Poppins -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <!-- quasar:entry-point -->

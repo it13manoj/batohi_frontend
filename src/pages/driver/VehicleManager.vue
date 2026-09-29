@@ -804,7 +804,7 @@ const onToggleStatus = async (row) => {
     persistent: true
   }).onOk(async () => {
     try {
-      await api.put(`/vehicles/${row.id}`, { status: newStatus })
+      await api.put(`/vehicle/${row.id}`, { status: newStatus })
       row.status = newStatus
       $q.notify({
         type: 'positive',
@@ -862,7 +862,7 @@ const onSubmit = async () => {
 
   try {
     if (isEditing.value) {
-      await api.put(`/vehicles/${currentEditId.value}`, payload)
+      await api.put(`/vehicle/${currentEditId.value}`, payload)
       $q.notify({ type: 'positive', message: 'Vehicle updated successfully!', position: 'top' })
     } else {
       await api.post('/vehicle/create', payload)
