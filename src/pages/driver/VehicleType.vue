@@ -645,11 +645,11 @@ const currentEditId = ref(null)
 const filterSearch = ref('')
 
 // Dropdown options
-const categoryOptions = [
+const categoryOptions = ref([
   { label: 'Bike (Two-wheeler)', value: 'bike' },
   { label: 'Auto (Three-wheeler)', value: 'auto' },
   { label: 'Car (Four-wheeler)', value: 'car' }
-]
+])
 
 // Default blank state matching backend keys
 const initialTypeState = {
@@ -692,6 +692,41 @@ const getCategoryIcon = (cat) => {
   if (c === 'auto') return 'electric_rickshaw'
   return 'directions_car'
 }
+
+const subscriptedPlan = async () => {
+  try {
+    const response = await api.get('/vehicleType/subscripted/plan');
+
+    // 1. Extract array of subscribed categories into a Set for fast lookup
+    const subscribedCategories = new Set(
+      response.data.data.map(item => item.vehicleCategory)
+    );
+
+    // 2. Map over your existing categoryOptions.value array
+    categoryOptions.value = response.data.data.map(type => {
+      // Handles both object types { vehicleCategory: 'auto' } or string 'auto'
+      const categoryName = type.vehicleCategory || type.value || type;
+      const isSubscribed = subscribedCategories.has(categoryName);
+
+      return {
+        ...type,
+        label: type.label || categoryName,
+        value: categoryName,
+        isSubscribed: isSubscribed // Boolean flag for UI (true/false)
+      };
+    });
+
+    console.log(categoryOptions);
+
+  } catch (error) {
+    console.error('Failed to fetch subscribed plans:', error);
+  }
+};
+
+
+onMounted(()=>{
+    subscriptedPlan()
+})
 
 // Category color helper
 const getCategoryColor = (cat) => {
