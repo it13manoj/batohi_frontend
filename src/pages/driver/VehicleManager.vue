@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="q-pa-md q-gutter-y-md">
 
     <!-- PAGE HEADER -->
@@ -83,11 +83,11 @@
         class="no-border"
       >
         <!-- Top Toolbar -->
-        <template v-[#top-left]>
+        <template #top-left>
           <div class="text-h6 text-weight-medium">Registered Vehicles</div>
         </template>
 
-        <template v-[#top-right]>
+        <template #top-right>
           <div class="row q-gutter-sm items-center">
             <q-input
               v-model="filterSearch"
@@ -97,7 +97,7 @@
               placeholder="Search registration, name, model..."
               style="min-width: 280px"
             >
-              <template v-[#prepend]>
+              <template #prepend>
                 <q-icon name="search" />
               </template>
             </q-input>
@@ -116,7 +116,7 @@
         </template>
 
         <!-- Registration No Column -->
-        <template v-[#body-cell-registration_no]="props">
+        <template #body-cell-registration_no="props">
           <q-td :props="props">
             <q-chip outline color="primary" dense class="text-weight-bold text-uppercase">
               {{ props.value }}
@@ -125,7 +125,7 @@
         </template>
 
         <!-- Vehicle Type Display -->
-        <template v-[#body-cell-vehicle_type_id]="props">
+        <template #body-cell-vehicle_type_id="props">
           <q-td :props="props">
             <q-badge color="purple-2" text-color="purple-10" class="q-px-sm">
               {{ getVehicleTypeLabel(props.value) }}
@@ -134,7 +134,7 @@
         </template>
 
         <!-- Manufacturer & Model Column -->
-        <template v-[#body-cell-manufacturer]="props">
+        <template #body-cell-manufacturer="props">
           <q-td :props="props">
             <div>{{ props.row.manufacturer || '-' }}</div>
             <div class="text-caption text-grey-7">{{ props.row.model || '-' }}</div>
@@ -142,7 +142,7 @@
         </template>
 
         <!-- Seating & Fuel Column -->
-        <template v-[#body-cell-seating_capacity]="props">
+        <template #body-cell-seating_capacity="props">
           <q-td :props="props">
             <q-badge color="blue-2" text-color="blue-10" class="q-mr-xs">
               <q-icon name="event_seat" class="q-mr-xs" /> {{ props.value }}
@@ -154,7 +154,7 @@
         </template>
 
         <!-- Status Column -->
-        <template v-[#body-cell-status]="props">
+        <template #body-cell-status="props">
           <q-td :props="props">
             <q-chip
               :color="getStatusColor(props.value)"
@@ -169,7 +169,7 @@
         </template>
 
         <!-- Actions Column -->
-        <template v-[#body-cell-actions]="props">
+        <template #body-cell-actions="props">
           <q-td :props="props" style="white-space: nowrap">
             <!-- View Button -->
             <q-btn
@@ -377,7 +377,7 @@
                   lazy-rules
                   :rules="[val => !!val || 'Select vehicle type']"
                 >
-                  <template v-[#prepend]><q-icon name="category" /></template>
+                  <template #prepend><q-icon name="category" /></template>
                 </q-select>
               </div>
 
@@ -393,7 +393,7 @@
                   lazy-rules
                   :rules="[val => !!val && val.trim().length > 0 || 'Required']"
                 >
-                  <template v-[#prepend]><q-icon name="pin" /></template>
+                  <template #prepend><q-icon name="pin" /></template>
                 </q-input>
               </div>
 
@@ -408,7 +408,7 @@
                   lazy-rules
                   :rules="[val => !!val && val.trim().length > 0 || 'Required']"
                 >
-                  <template v-[#prepend]><q-icon name="badge" /></template>
+                  <template #prepend><q-icon name="badge" /></template>
                 </q-input>
               </div>
 
@@ -421,7 +421,7 @@
                   outlined
                   dense
                 >
-                  <template v-[#prepend]><q-icon name="precision_manufacturing" /></template>
+                  <template #prepend><q-icon name="precision_manufacturing" /></template>
                 </q-input>
               </div>
 
@@ -434,7 +434,7 @@
                   outlined
                   dense
                 >
-                  <template v-[#prepend]><q-icon name="car_repair" /></template>
+                  <template #prepend><q-icon name="car_repair" /></template>
                 </q-input>
               </div>
 
@@ -449,7 +449,7 @@
                   dense
                   :rules="[val => !val || (val >= 1900 && val <= currentYear) || 'Invalid year']"
                 >
-                  <template v-[#prepend]><q-icon name="calendar_today" /></template>
+                  <template #prepend><q-icon name="calendar_today" /></template>
                 </q-input>
               </div>
             </div>
@@ -471,7 +471,7 @@
                   outlined
                   dense
                 >
-                  <template v-[#prepend]><q-icon name="palette" /></template>
+                  <template #prepend><q-icon name="palette" /></template>
                 </q-input>
               </div>
 
@@ -489,7 +489,7 @@
                     val => val > 0 || 'Must be > 0'
                   ]"
                 >
-                  <template v-[#prepend]><q-icon name="event_seat" /></template>
+                  <template #prepend><q-icon name="event_seat" /></template>
                 </q-input>
               </div>
 
@@ -504,7 +504,7 @@
                   lazy-rules
                   :rules="[val => !!val || 'Select fuel type']"
                 >
-                  <template v-[#prepend]><q-icon name="local_gas_station" /></template>
+                  <template #prepend><q-icon name="local_gas_station" /></template>
                 </q-select>
               </div>
             </div>
@@ -526,7 +526,7 @@
                   dense
                   class="text-uppercase"
                 >
-                  <template v-[#prepend]><q-icon name="description" /></template>
+                  <template #prepend><q-icon name="description" /></template>
                 </q-input>
               </div>
 
@@ -538,7 +538,7 @@
                   outlined
                   dense
                 >
-                  <template v-[#prepend]><q-icon name="health_and_safety" /></template>
+                  <template #prepend><q-icon name="health_and_safety" /></template>
                 </q-input>
               </div>
 
@@ -551,7 +551,7 @@
                   dense
                   readonly
                 >
-                  <template v-[#prepend]>
+                  <template #prepend>
                     <q-icon name="event" class="cursor-pointer">
                       <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                         <q-date v-model="form.insurance_expiry_date" mask="YYYY-MM-DD">
@@ -587,7 +587,7 @@
                   outlined
                   dense
                 >
-                  <template v-[#prepend]><q-icon name="verified_user" /></template>
+                  <template #prepend><q-icon name="verified_user" /></template>
                 </q-input>
               </div>
 
@@ -600,7 +600,7 @@
                   dense
 
                 >
-                  <template v-[#prepend]>
+                  <template #prepend>
                     <q-icon name="event" class="cursor-pointer">
                       <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                         <q-date v-model="form.permit_expiry_date" mask="YYYY-MM-DD">
@@ -639,7 +639,7 @@
                   emit-value
                   map-options
                 >
-                  <template v-[#prepend]><q-icon name="toggle_on" /></template>
+                  <template #prepend><q-icon name="toggle_on" /></template>
                 </q-select>
               </div>
             </div>
@@ -915,3 +915,4 @@ onMounted(() => {
   fetchVehicleTypes()
 })
 </script>
+

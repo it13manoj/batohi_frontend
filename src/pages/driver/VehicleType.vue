@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="q-pa-md q-gutter-y-md vehicle-type-page">
 
     <!-- PAGE HEADER -->
@@ -38,10 +38,10 @@
         <q-icon name="stars" size="36px" color="amber" />
       </template>
       <div class="text-subtitle1 text-weight-bold">
-        🎉 1st Month FREE Subscription for All Vehicles!
+        ðŸŽ‰ 1st Month FREE Subscription for All Vehicles!
       </div>
       <div class="text-body2 q-mt-xs">
-        Every driver gets their <strong>1st Month Subscription 100% FREE (₹0)</strong> for any vehicle.
+        Every driver gets their <strong>1st Month Subscription 100% FREE (â‚¹0)</strong> for any vehicle.
         Second month onwards, subscription applies. Plus, take <strong>3 Months</strong> and get <strong>15 Days Always Free</strong>,
         take <strong>6 Months</strong> and get <strong>1 Month Always Free</strong>, or take <strong>1 Year</strong> and get <strong>3 Months Always Free</strong>!
       </div>
@@ -82,26 +82,26 @@
             <div class="pricing-list q-gutter-y-xs">
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">1 Month (2nd mo onwards):</span>
-                <span class="text-weight-bold text-primary">₹800 <small class="text-grey-6">/ 30 days</small></span>
+                <span class="text-weight-bold text-primary">â‚¹800 <small class="text-grey-6">/ 30 days</small></span>
               </div>
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">3 Months:</span>
                 <div class="text-right">
-                  <span class="text-weight-bold text-primary">₹2,300</span>
+                  <span class="text-weight-bold text-primary">â‚¹2,300</span>
                   <q-badge color="positive" size="xs" class="q-ml-xs">+15d FREE</q-badge>
                 </div>
               </div>
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">6 Months:</span>
                 <div class="text-right">
-                  <span class="text-weight-bold text-primary">₹4,500</span>
+                  <span class="text-weight-bold text-primary">â‚¹4,500</span>
                   <q-badge color="positive" size="xs" class="q-ml-xs">+1mo FREE</q-badge>
                 </div>
               </div>
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">1 Year:</span>
                 <div class="text-right">
-                  <span class="text-weight-bold text-primary">₹8,500</span>
+                  <span class="text-weight-bold text-primary">â‚¹8,500</span>
                   <q-badge color="positive" size="xs" class="q-ml-xs">+3mo FREE</q-badge>
                 </div>
               </div>
@@ -154,26 +154,26 @@
             <div class="pricing-list q-gutter-y-xs">
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">1 Month (2nd mo onwards):</span>
-                <span class="text-weight-bold text-primary">₹1,000 <small class="text-grey-6">/ 30 days</small></span>
+                <span class="text-weight-bold text-primary">â‚¹1,000 <small class="text-grey-6">/ 30 days</small></span>
               </div>
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">3 Months:</span>
                 <div class="text-right">
-                  <span class="text-weight-bold text-primary">₹2,800</span>
+                  <span class="text-weight-bold text-primary">â‚¹2,800</span>
                   <q-badge color="positive" size="xs" class="q-ml-xs">+15d FREE</q-badge>
                 </div>
               </div>
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">6 Months:</span>
                 <div class="text-right">
-                  <span class="text-weight-bold text-primary">₹5,500</span>
+                  <span class="text-weight-bold text-primary">â‚¹5,500</span>
                   <q-badge color="positive" size="xs" class="q-ml-xs">+1mo FREE</q-badge>
                 </div>
               </div>
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">1 Year:</span>
                 <div class="text-right">
-                  <span class="text-weight-bold text-primary">₹10,000</span>
+                  <span class="text-weight-bold text-primary">â‚¹10,000</span>
                   <q-badge color="positive" size="xs" class="q-ml-xs">+3mo FREE</q-badge>
                 </div>
               </div>
@@ -226,26 +226,26 @@
             <div class="pricing-list q-gutter-y-xs">
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">1 Month (2nd mo onwards):</span>
-                <span class="text-weight-bold text-primary">₹1,200 <small class="text-grey-6">/ 30 days</small></span>
+                <span class="text-weight-bold text-primary">â‚¹1,200 <small class="text-grey-6">/ 30 days</small></span>
               </div>
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">3 Months:</span>
                 <div class="text-right">
-                  <span class="text-weight-bold text-primary">₹3,500</span>
+                  <span class="text-weight-bold text-primary">â‚¹3,500</span>
                   <q-badge color="positive" size="xs" class="q-ml-xs">+15d FREE</q-badge>
                 </div>
               </div>
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">6 Months:</span>
                 <div class="text-right">
-                  <span class="text-weight-bold text-primary">₹6,500</span>
+                  <span class="text-weight-bold text-primary">â‚¹6,500</span>
                   <q-badge color="positive" size="xs" class="q-ml-xs">+1mo FREE</q-badge>
                 </div>
               </div>
               <div class="row justify-between items-center pricing-row">
                 <span class="text-caption text-weight-medium">1 Year:</span>
                 <div class="text-right">
-                  <span class="text-weight-bold text-primary">₹12,500</span>
+                  <span class="text-weight-bold text-primary">â‚¹12,500</span>
                   <q-badge color="positive" size="xs" class="q-ml-xs">+3mo FREE</q-badge>
                 </div>
               </div>
@@ -318,11 +318,11 @@
         flat
         class="no-border"
       >
-        <template v-[#top-left]>
+        <template #top-left>
           <div class="text-h6 text-weight-medium">Registered Fleet Categories</div>
         </template>
 
-        <template v-[#top-right]>
+        <template #top-right>
           <div class="row q-gutter-sm items-center">
             <q-input
               v-model="filterSearch"
@@ -332,7 +332,7 @@
               placeholder="Search types..."
               style="min-width: 250px"
             >
-              <template v-[#prepend]>
+              <template #prepend>
                 <q-icon name="search" />
               </template>
             </q-input>
@@ -351,7 +351,7 @@
         </template>
 
         <!-- Category Column -->
-        <template v-[#body-cell-vehicle_category]="props">
+        <template #body-cell-vehicle_category="props">
           <q-td :props="props">
             <q-chip
               :color="getCategoryColor(props.value)"
@@ -367,7 +367,7 @@
         </template>
 
         <!-- Subscription Rate Column -->
-        <template v-[#body-cell-subscription_rate]="props">
+        <template #body-cell-subscription_rate="props">
           <q-td :props="props">
             <div class="row items-center no-wrap">
               <span class="text-weight-bold text-primary">
@@ -390,14 +390,14 @@
         </template>
 
         <!-- Base Fare Formatting -->
-        <template v-[#body-cell-base_fare]="props">
+        <template #body-cell-base_fare="props">
           <q-td :props="props" class="text-weight-bold text-subtitle2">
-            ₹{{ Number(props.value || 0).toLocaleString('en-IN') }}
+            â‚¹{{ Number(props.value || 0).toLocaleString('en-IN') }}
           </q-td>
         </template>
 
         <!-- Capacity Formatting -->
-        <template v-[#body-cell-seating_capacity]="props">
+        <template #body-cell-seating_capacity="props">
           <q-td :props="props">
             <q-badge color="blue-2" text-color="blue-10" class="q-px-sm">
               <q-icon name="event_seat" class="q-mr-xs" /> {{ props.value || 1 }} Seats
@@ -406,7 +406,7 @@
         </template>
 
         <!-- Status Column -->
-        <template v-[#body-cell-status]="props">
+        <template #body-cell-status="props">
           <q-td :props="props">
             <q-chip
               :color="props.value === 'active' || props.value === true ? 'positive' : 'negative'"
@@ -421,7 +421,7 @@
         </template>
 
         <!-- Actions Column -->
-        <template v-[#body-cell-actions]="props">
+        <template #body-cell-actions="props">
           <q-td :props="props" style="white-space: nowrap">
             <!-- View Button -->
             <q-btn
@@ -539,7 +539,7 @@
             </div>
             <div class="col-6 col-sm-4">
               <div class="text-caption text-grey-6">Base Fare</div>
-              <div class="text-body2 text-weight-bold text-primary">₹{{ Number(viewRow.base_fare || 0).toLocaleString('en-IN') }}</div>
+              <div class="text-body2 text-weight-bold text-primary">â‚¹{{ Number(viewRow.base_fare || 0).toLocaleString('en-IN') }}</div>
             </div>
           </div>
 
@@ -595,7 +595,7 @@
                   lazy-rules
                   :rules="[val => !!val || 'Category is required']"
                 >
-                  <template v-[#prepend]>
+                  <template #prepend>
                     <q-icon :name="getCategoryIcon(vehicleType.category)" />
                   </template>
                 </q-select>
@@ -611,7 +611,7 @@
                   lazy-rules
                   :rules="[val => !!val || 'Vehicle type name is required']"
                 >
-                  <template v-[#prepend]>
+                  <template #prepend>
                     <q-icon name="minor_crash" />
                   </template>
                 </q-input>
@@ -625,7 +625,7 @@
               </template>
               <div class="text-caption">
                 <strong>Subscription for {{ vehicleType.category.toUpperCase() }}:</strong><br />
-                1st Month: <strong>FREE Trial</strong> • 2nd Month+: <strong>₹{{ getMonthlyRate(vehicleType.category) }}/mo</strong>.<br />
+                1st Month: <strong>FREE Trial</strong> â€¢ 2nd Month+: <strong>â‚¹{{ getMonthlyRate(vehicleType.category) }}/mo</strong>.<br />
                 Bonuses: 3M (+15d free), 6M (+1mo free), 1Y (+3mo free).
               </div>
             </q-banner>
@@ -645,7 +645,7 @@
                     val => val > 0 || 'Must be > 0'
                   ]"
                 >
-                  <template v-[#prepend]>
+                  <template #prepend>
                     <q-icon name="event_seat" />
                   </template>
                 </q-input>
@@ -659,7 +659,7 @@
                   outlined
                   dense
                 >
-                  <template v-[#prepend]>
+                  <template #prepend>
                     <q-icon name="scale" />
                   </template>
                 </q-input>
@@ -670,13 +670,13 @@
                   v-model.number="vehicleType.baseFare"
                   type="number"
                   label="Base Fare *"
-                  prefix="₹"
+                  prefix="â‚¹"
                   outlined
                   dense
                   lazy-rules
                   :rules="[val => val !== null && val !== '' || 'Required']"
                 >
-                  <template v-[#prepend]>
+                  <template #prepend>
                     <q-icon name="payments" />
                   </template>
                 </q-input>
@@ -868,9 +868,9 @@ const getMonthlyRate = (cat) => {
 // Subscription rate text helper
 const getSubscriptionRateText = (cat) => {
   const c = (cat || 'bike').toLowerCase()
-  if (c === 'bike') return '₹800/mo (+ free trial & bonus)'
-  if (c === 'auto') return '₹1,000/mo (+ free trial & bonus)'
-  return '₹1,200/mo (+ free trial & bonus)'
+  if (c === 'bike') return 'â‚¹800/mo (+ free trial & bonus)'
+  if (c === 'auto') return 'â‚¹1,000/mo (+ free trial & bonus)'
+  return 'â‚¹1,200/mo (+ free trial & bonus)'
 }
 
 // Select category and view its subscription
@@ -1101,3 +1101,4 @@ onMounted(() => {
   border-bottom: none;
 }
 </style>
+
