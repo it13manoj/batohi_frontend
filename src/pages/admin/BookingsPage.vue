@@ -1979,12 +1979,12 @@ const mapBooking = (b) => ({
   bookingNumber: b.booking_number || b.bookingNumber || ('BD1000' + b.id),
   customer: {
     name: b.Customer?.name || b.Customer?.fullName || b.customer?.name || 'Customer ' + (b.customer_id || ''),
-    email: b.Customer?.email || b.customer?.email || 'N/A',
-    mobile: b.Customer?.phone || b.Customer?.mobile || b.customer?.mobile || 'N/A'
+    email: b.customer?.email || b.customer?.email || 'N/A',
+    mobile: b.customer?.phone || b.Customer?.mobile || b.customer?.mobile || 'N/A'
   },
   vehicle: {
-    name: b.Vehicle?.title || b.Vehicle?.name || b.vehicle?.name || 'Vehicle',
-    registration: b.Vehicle?.registration_number || b.Vehicle?.vehicle_number || b.vehicle?.registration || 'N/A',
+    name: b.vehicle?.title || b.vehicle?.name || b.vehicle?.name || 'Vehicle',
+    registration: b.vehicle?.plate,
     type: b.Vehicle?.type || b.vehicle?.type || 'Standard'
   },
   pickup: b.pickup_location || b.pickup || 'Indore',
