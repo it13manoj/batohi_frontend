@@ -170,7 +170,32 @@
 
         <!-- Actions Column -->
         <template v-[#body-cell-actions]="props">
-          <q-td :props="props" class="q-gutter-x-xs">
+          <q-td :props="props" style="white-space: nowrap">
+            <!-- View Button -->
+            <q-btn
+              icon="visibility"
+              color="info"
+              flat
+              round
+              dense
+              @click="onViewRow(props.row)"
+            >
+              <q-tooltip>View Details</q-tooltip>
+            </q-btn>
+
+            <!-- Active / Inactive Toggle -->
+            <q-btn
+              :icon="props.row.status === 'active' ? 'toggle_on' : 'toggle_off'"
+              :color="props.row.status === 'active' ? 'positive' : 'grey-6'"
+              flat
+              round
+              dense
+              @click="onToggleStatus(props.row)"
+            >
+              <q-tooltip>{{ props.row.status === 'active' ? 'Set Inactive' : 'Set Active' }}</q-tooltip>
+            </q-btn>
+
+            <!-- Edit Button -->
             <q-btn
               icon="edit"
               color="primary"
@@ -181,6 +206,8 @@
             >
               <q-tooltip>Edit Vehicle</q-tooltip>
             </q-btn>
+
+            <!-- Delete Button -->
             <q-btn
               icon="delete"
               color="negative"
@@ -195,6 +222,120 @@
         </template>
       </q-table>
     </q-card>
+
+    <!-- VIEW VEHICLE DETAILS DIALOG -->
+    <q-dialog v-model="showViewDialog" transition-show="slide-up" transition-hide="slide-down">
+      <q-card style="width: 700px; max-width: 95vw; border-radius: 14px;">
+        <!-- Header -->
+        <q-card-section class="bg-info text-white row items-center justify-between q-pa-md">
+          <div class="text-h6 row items-center">
+            <q-icon name="directions_car" size="sm" class="q-mr-sm" />
+            Vehicle Details
+          </div>
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section v-if="viewRow" class="q-pa-lg q-gutter-y-md">
+          <!-- Status Badge -->
+          <div class="row items-center justify-between">
+            <span class="text-subtitle1 text-weight-bold text-dark">{{ viewRow.vehicle_name }}</span>
+            <q-chip
+              :color="getStatusColor(viewRow.status)"
+              text-color="white"
+              dense
+              class="text-capitalize"
+            >
+              {{ viewRow.status || 'N/A' }}
+            </q-chip>
+          </div>
+
+          <q-separator />
+
+          <!-- Basic Info -->
+          <div class="text-caption text-grey-7 text-weight-bold q-mb-xs">BASIC INFORMATION</div>
+          <div class="row q-col-gutter-md">
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Registration No.</div>
+              <div class="text-body2 text-weight-bold text-uppercase">{{ viewRow.registration_no || '-' }}</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Category</div>
+              <div class="text-body2">{{ getVehicleTypeLabel(viewRow.vehicle_type_id) }}</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Manufacturer</div>
+              <div class="text-body2">{{ viewRow.manufacturer || '-' }}</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Model</div>
+              <div class="text-body2">{{ viewRow.model || '-' }}</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Year</div>
+              <div class="text-body2">{{ viewRow.manufacturing_year || '-' }}</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Colour</div>
+              <div class="text-body2">{{ viewRow.colour || '-' }}</div>
+            </div>
+          </div>
+
+          <q-separator />
+
+          <!-- Specs -->
+          <div class="text-caption text-grey-7 text-weight-bold q-mb-xs">SPECIFICATIONS</div>
+          <div class="row q-col-gutter-md">
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Seating Capacity</div>
+              <div class="text-body2">{{ viewRow.seating_capacity || '-' }} seats</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Fuel Type</div>
+              <div class="text-body2">{{ viewRow.fuel_type || '-' }}</div>
+            </div>
+          </div>
+
+          <q-separator />
+
+          <!-- Documents -->
+          <div class="text-caption text-grey-7 text-weight-bold q-mb-xs">DOCUMENTATION</div>
+          <div class="row q-col-gutter-md">
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">RC Number</div>
+              <div class="text-body2 text-uppercase">{{ viewRow.rc_number || '-' }}</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Insurance No.</div>
+              <div class="text-body2">{{ viewRow.insurance_no || '-' }}</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Insurance Expiry</div>
+              <div class="text-body2">{{ viewRow.insurance_expiry_date ? viewRow.insurance_expiry_date.split('T')[0] : '-' }}</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Permit Number</div>
+              <div class="text-body2">{{ viewRow.permit_number || '-' }}</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Permit Expiry</div>
+              <div class="text-body2">{{ viewRow.permit_expiry_date ? viewRow.permit_expiry_date.split('T')[0] : '-' }}</div>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator />
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn
+            flat
+            color="primary"
+            icon="edit"
+            label="Edit This Vehicle"
+            @click="() => { showViewDialog.value = false; onEditRow(viewRow.value) }"
+          />
+          <q-btn flat color="grey-7" label="Close" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
     <!-- ADD / EDIT VEHICLE DIALOG POPUP -->
     <q-dialog v-model="showModal" persistent transition-show="scale" transition-hide="scale">
@@ -541,6 +682,10 @@ const isEditing = ref(false)
 const currentEditId = ref(null)
 const filterSearch = ref('')
 
+// View Details Dialog
+const showViewDialog = ref(false)
+const viewRow = ref(null)
+
 const currentYear = computed(() => new Date().getFullYear())
 
 // Dropdowns
@@ -639,6 +784,42 @@ const getStatusColor = (status) => {
 const openAddDialog = () => {
   onReset()
   showModal.value = true
+}
+
+// View Row Details
+const onViewRow = (row) => {
+  viewRow.value = row
+  showViewDialog.value = true
+}
+
+// Toggle Active / Inactive Status
+const onToggleStatus = async (row) => {
+  const newStatus = row.status === 'active' ? 'inactive' : 'active'
+  const label = newStatus === 'active' ? 'activate' : 'deactivate'
+
+  $q.dialog({
+    title: 'Change Vehicle Status',
+    message: `Are you sure you want to ${label} vehicle "${row.registration_no}"?`,
+    cancel: true,
+    persistent: true
+  }).onOk(async () => {
+    try {
+      await api.put(`/vehicles/${row.id}`, { status: newStatus })
+      row.status = newStatus
+      $q.notify({
+        type: 'positive',
+        message: `Vehicle ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`,
+        position: 'top'
+      })
+    } catch (error) {
+      console.error('Toggle Status Error:', error)
+      $q.notify({
+        type: 'negative',
+        message: error.response?.data?.message || 'Failed to update vehicle status.',
+        position: 'top'
+      })
+    }
+  })
 }
 
 // Form Edit Row Mapping
