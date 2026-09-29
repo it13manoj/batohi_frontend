@@ -422,7 +422,32 @@
 
         <!-- Actions Column -->
         <template v-[#body-cell-actions]="props">
-          <q-td :props="props" class="q-gutter-x-xs">
+          <q-td :props="props" style="white-space: nowrap">
+            <!-- View Button -->
+            <q-btn
+              icon="visibility"
+              color="info"
+              flat
+              round
+              dense
+              @click="onViewRow(props.row)"
+            >
+              <q-tooltip>View Details</q-tooltip>
+            </q-btn>
+
+            <!-- Active / Inactive Toggle -->
+            <q-btn
+              :icon="(props.row.status === 'active' || props.row.status === true) ? 'toggle_on' : 'toggle_off'"
+              :color="(props.row.status === 'active' || props.row.status === true) ? 'positive' : 'grey-6'"
+              flat
+              round
+              dense
+              @click="onToggleStatus(props.row)"
+            >
+              <q-tooltip>{{ (props.row.status === 'active' || props.row.status === true) ? 'Set Inactive' : 'Set Active' }}</q-tooltip>
+            </q-btn>
+
+            <!-- Edit Button -->
             <q-btn
               icon="edit"
               color="primary"
@@ -433,6 +458,8 @@
             >
               <q-tooltip>Edit Record</q-tooltip>
             </q-btn>
+
+            <!-- Delete Button -->
             <q-btn
               icon="delete"
               color="negative"
@@ -447,6 +474,95 @@
         </template>
       </q-table>
     </q-card>
+
+    <!-- VIEW VEHICLE TYPE DETAILS DIALOG -->
+    <q-dialog v-model="showViewDialog" transition-show="slide-up" transition-hide="slide-down">
+      <q-card style="width: 580px; max-width: 95vw; border-radius: 14px;">
+        <q-card-section class="bg-info text-white row items-center justify-between q-pa-md">
+          <div class="text-h6 row items-center">
+            <q-icon name="directions_car" size="sm" class="q-mr-sm" />
+            Vehicle Type Details
+          </div>
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section v-if="viewRow" class="q-pa-lg q-gutter-y-md">
+          <!-- Name & Status -->
+          <div class="row items-center justify-between">
+            <span class="text-subtitle1 text-weight-bold text-dark">{{ viewRow.name }}</span>
+            <q-chip
+              :color="(viewRow.status === 'active' || viewRow.status === true) ? 'positive' : 'negative'"
+              text-color="white"
+              dense
+              class="text-capitalize"
+            >
+              {{ (viewRow.status === 'active' || viewRow.status === true) ? 'Active' : 'Inactive' }}
+            </q-chip>
+          </div>
+
+          <q-separator />
+
+          <!-- Category -->
+          <div class="row q-col-gutter-md">
+            <div class="col-6">
+              <div class="text-caption text-grey-6">Vehicle Category</div>
+              <q-chip
+                :color="getCategoryColor(viewRow.vehicle_category)"
+                text-color="white"
+                dense
+                size="sm"
+                class="text-weight-bold text-uppercase q-mt-xs"
+              >
+                <q-icon :name="getCategoryIcon(viewRow.vehicle_category)" size="14px" class="q-mr-xs" />
+                {{ viewRow.vehicle_category || '-' }}
+              </q-chip>
+            </div>
+            <div class="col-6">
+              <div class="text-caption text-grey-6">Subscription Plan</div>
+              <div class="text-body2 text-primary text-weight-bold q-mt-xs">
+                {{ getSubscriptionRateText(viewRow.vehicle_category) }}
+              </div>
+            </div>
+          </div>
+
+          <q-separator />
+
+          <!-- Specs & Fare -->
+          <div class="row q-col-gutter-md">
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Seating Capacity</div>
+              <div class="text-body2">{{ viewRow.seating_capacity || '-' }} Seats</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Max Load (Kg)</div>
+              <div class="text-body2">{{ viewRow.luggage_capacity || viewRow.max_load_capacity || '-' }} Kg</div>
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="text-caption text-grey-6">Base Fare</div>
+              <div class="text-body2 text-weight-bold text-primary">₹{{ Number(viewRow.base_fare || 0).toLocaleString('en-IN') }}</div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div v-if="viewRow.description">
+            <div class="text-caption text-grey-6">Description</div>
+            <div class="text-body2 q-mt-xs">{{ viewRow.description }}</div>
+          </div>
+        </q-card-section>
+
+        <q-separator />
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn
+            flat
+            color="primary"
+            icon="edit"
+            label="Edit This Type"
+            @click="() => { showViewDialog.value = false; onEditRow(viewRow.value) }"
+          />
+          <q-btn flat color="grey-7" label="Close" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
     <!-- POPUP MODAL DIALOG (Add / Edit Form) -->
     <q-dialog v-model="showModal" persistent transition-show="scale" transition-hide="scale">
@@ -644,6 +760,10 @@ const isEditing = ref(false)
 const currentEditId = ref(null)
 const filterSearch = ref('')
 
+// View Details Dialog
+const showViewDialog = ref(false)
+const viewRow = ref(null)
+
 // Dropdown options
 const categoryOptions = ref([
   { label: 'Bike (Two-wheeler)', value: 'bike' },
@@ -774,6 +894,45 @@ const goToSubscription = (cat) => {
 const openAddDialog = () => {
   onReset()
   showModal.value = true
+}
+
+// View Row Details
+const onViewRow = (row) => {
+  viewRow.value = row
+  showViewDialog.value = true
+}
+
+// Toggle Active / Inactive Status
+const onToggleStatus = async (row) => {
+  const isCurrentlyActive = row.status === 'active' || row.status === true
+  const newStatus = isCurrentlyActive ? 'inactive' : 'active'
+  const label = newStatus === 'active' ? 'activate' : 'deactivate'
+
+  $q.dialog({
+    title: 'Change Type Status',
+    message: `Are you sure you want to ${label} "${row.name}"?`,
+    cancel: true,
+    persistent: true
+  }).onOk(async () => {
+    try {
+      await api.put(`/vehicleType/vehicle-types/${row.id}`, { status: newStatus })
+      row.status = newStatus
+      $q.notify({
+        type: 'positive',
+        message: `Vehicle type ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`,
+        position: 'top'
+      })
+    } catch (error) {
+      console.error('Toggle Status Error:', error)
+      // Update locally even if API fails
+      row.status = newStatus
+      $q.notify({
+        type: 'warning',
+        message: 'Status updated locally. Please sync when online.',
+        position: 'top'
+      })
+    }
+  })
 }
 
 // 1. Fetch Vehicle Types List from API
