@@ -396,7 +396,7 @@ const handleRegister = async () => {
       timeout: 3000
     })
 
-    // Reset Form
+    // Reset Form and clear any validation/error states so the UI does not retain red borders after redirect
     form.name = ''
     form.email = ''
     form.mobile = ''
@@ -406,6 +406,12 @@ const handleRegister = async () => {
     form.vehicleNumber = ''
     form.agencyCode = ''
     form.terms = false
+    activeRole.value = 'USERS'
+
+    if (registerForm.value) {
+      registerForm.value.resetValidation()
+      registerForm.value.reset()
+    }
 
     setTimeout(() => {
       router.push('/')

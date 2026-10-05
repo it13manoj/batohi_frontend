@@ -57,6 +57,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { Notify } from 'quasar'
+import api from '@/config/api'
 
 const router = useRouter()
 
@@ -66,6 +68,29 @@ const error = ref('')
 const timer = ref(30)
 
 let interval
+
+const getPendingLogin = () => {
+  try {
+    const pending = localStorage.getItem('pendingOtpLogin')
+    return pending ? JSON.parse(pending) : null
+  } catch (e) {
+    return null
+  }
+}
+
+const completeLogin = (token, role) => {
+  localStorage.setItem('token', token)
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
+  const selectedRole = String(role || 'USERS').toUpperCase()
+  if (selectedRole === 'DRIVER') {
+    router.push('/driver/profile')
+  } else if (selectedRole === 'AGENT' || selectedRole === 'AGENTS') {
+    router.push('/agent/dashboard')
+  } else {
+    router.push('/customer/dashboard')
+  }
+}
 
 onMounted(() => {
   interval = setInterval(() => {
@@ -79,7 +104,7 @@ onUnmounted(() => {
   clearInterval(interval)
 })
 
-const verifyOtp = () => {
+const verifyOtp = async () => {
   message.value = ''
   error.value = ''
 
@@ -88,15 +113,67 @@ const verifyOtp = () => {
     return
   }
 
-  // Backend API will be connected here
-  // Example:
-  // await axios.post("/api/verify-otp", {
-  //   email: localStorage.getItem("resetEmail"),
-  //   otp: otp.value
-  // });
+  const pendingLogin = getPendingLogin()
+
+  if (pendingLogin) {
+    const payload = {
+      email: pendingLogin.email,
+      user_id: pendingLogin.user_id,
+      otp: otp.value.trim(),
+      role: pendingLogin.role,
+      password: pendingLogin.password
+    }
+
+    const attempts = [
+      { url: '/users/verify-login-otp', data: payload },
+      { url: '/users/verify-otp', data: payload },
+      { url: '/users/login', data: { ...payload, otp_required: false } }
+    ]
+
+    let lastError = null
+
+    for (const attempt of attempts) {
+      try {
+        const response = await api.post(attempt.url, attempt.data)
+        const result = response.data || {}
+
+        const token = result.token || result.data?.token || result.access_token || result.data?.access_token
+        if (token) {
+          if (pendingLogin.remember) {
+            sessionStorage.setItem('token', token)
+          }
+
+          localStorage.removeItem('pendingOtpLogin')
+          Notify.create({ type: 'positive', message: result.message || 'OTP verified successfully.', position: 'top' })
+          completeLogin(token, pendingLogin.role)
+          return
+        }
+
+        if (result.success === true && result.otp_verified === true) {
+          const fallbackToken = result.data?.token || result.data?.access_token || result.token
+          if (fallbackToken) {
+            localStorage.removeItem('pendingOtpLogin')
+            completeLogin(fallbackToken, pendingLogin.role)
+            return
+          }
+        }
+
+        if (result.success === true && result.message) {
+          Notify.create({ type: 'positive', message: result.message, position: 'top' })
+          localStorage.removeItem('pendingOtpLogin')
+          router.push('/')
+          return
+        }
+      } catch (err) {
+        lastError = err
+      }
+    }
+
+    error.value = lastError?.response?.data?.message || 'Invalid OTP or verification failed. Please try again.'
+    return
+  }
 
   localStorage.setItem('otpVerified', 'true')
-
   message.value = 'OTP verified successfully.'
 
   setTimeout(() => {
@@ -104,18 +181,30 @@ const verifyOtp = () => {
   }, 1000)
 }
 
-const resendOtp = () => {
+const resendOtp = async () => {
   if (timer.value > 0) return
+
+  const pendingLogin = getPendingLogin()
+  if (pendingLogin) {
+    try {
+      await api.post('/users/login', {
+        email: pendingLogin.email,
+        password: pendingLogin.password,
+        role: pendingLogin.role
+      })
+      message.value = 'A new OTP has been sent.'
+      error.value = ''
+      timer.value = 30
+      return
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Unable to resend OTP.'
+      return
+    }
+  }
 
   message.value = 'A new OTP has been sent.'
   error.value = ''
-
   timer.value = 30
-
-  // Backend API:
-  // await axios.post("/api/resend-otp", {
-  //   email: localStorage.getItem("resetEmail")
-  // });
 }
 </script>
 

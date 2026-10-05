@@ -5,7 +5,6 @@
         <img
           src="../../assets/images/logo3.png"
           alt="batohiDrive Logo"
-          style="height: 250px; object-fit: contain"
         />
       </div>
 
@@ -142,7 +141,7 @@ const resetPassword = () => {
   width: 100%;
   max-width: 420px;
   background: white;
-  padding: 40px;
+  padding: clamp(22px, 5vw, 40px);
   border-radius: 12px;
   box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
 }
@@ -151,6 +150,15 @@ const resetPassword = () => {
   text-align: center;
   color: #1976d2;
   margin-bottom: 10px;
+}
+
+.logo img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: clamp(120px, 30vw, 250px);
+  object-fit: contain;
+  margin: 0 auto;
 }
 
 h4 {
@@ -248,5 +256,49 @@ h4 {
   color: #d32f2f;
   text-align: center;
   margin-top: 15px;
+}
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 14px;
+  }
+
+  .auth-card {
+    padding: 22px 16px;
+    border-radius: 10px;
+  }
+
+  h4 {
+    font-size: 1.6rem;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label,
+  .show-password label {
+    font-size: 14px;
+  }
+
+  .form-group input,
+  .btn {
+    font-size: 14px;
+    padding: 12px 13px;
+  }
+
+  .password-rules {
+    padding: 10px 12px;
+  }
+
+  .password-rules p {
+    font-size: 12px;
+  }
 }
 </style>

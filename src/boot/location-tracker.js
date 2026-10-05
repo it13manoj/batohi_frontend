@@ -5,6 +5,7 @@ export default boot(() => {
   let watchId = null
 
   const startBackgroundTracking = () => {
+
     if (watchId !== null) return
 
     if (!navigator.geolocation) {

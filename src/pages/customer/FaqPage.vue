@@ -1,46 +1,29 @@
 <template>
   <q-page class="faq-page">
-
     <!-- =====================================================
          HEADER
     ====================================================== -->
     <div class="faq-header">
-
       <div class="faq-header-content">
-
         <div class="header-icon">
-          <q-icon
-            name="help_outline"
-            size="38px"
-          />
+          <q-icon name="help_outline" size="38px" />
         </div>
 
         <div>
-          <div class="page-title">
-            Frequently Asked Questions
-          </div>
+          <div class="page-title"> Frequently Asked Questions </div>
 
           <div class="page-subtitle">
             Find answers to common questions about BatohiDrive
           </div>
         </div>
-
       </div>
-
     </div>
-
 
     <!-- =====================================================
          SEARCH
     ====================================================== -->
     <div class="container">
-
-      <q-card
-        flat
-        bordered
-        class="search-card"
-      >
-
+      <q-card flat bordered class="search-card">
         <q-input
           v-model="search"
           outlined
@@ -49,24 +32,16 @@
           placeholder="Search your question..."
           class="faq-search"
         >
-
           <template #prepend>
-            <q-icon
-              name="search"
-              color="primary"
-            />
+            <q-icon name="search" color="primary" />
           </template>
-
         </q-input>
-
       </q-card>
-
 
       <!-- =====================================================
            CATEGORY FILTER
       ====================================================== -->
       <div class="category-wrapper q-mt-lg">
-
         <q-btn
           :outline="selectedCategory !== 'All'"
           :unelevated="selectedCategory === 'All'"
@@ -86,15 +61,12 @@
           class="category-btn"
           @click="selectedCategory = category"
         />
-
       </div>
-
 
       <!-- =====================================================
            FAQ LIST
       ====================================================== -->
       <div class="faq-list q-mt-lg">
-
         <q-card
           v-for="faq in filteredFaqs"
           :key="faq.id"
@@ -102,23 +74,16 @@
           bordered
           class="faq-card"
         >
-
           <q-expansion-item
             expand-separator
             :label="faq.question"
             :default-opened="false"
             header-class="faq-question"
           >
-
             <q-card-section class="faq-answer">
-
-              <div
-                class="answer-content"
-                v-html="faq.answer"
-              />
+              <div class="answer-content" v-html="faq.answer" />
 
               <div class="faq-category">
-
                 <q-chip
                   dense
                   size="sm"
@@ -126,15 +91,10 @@
                   text-color="grey-8"
                   :label="faq.category"
                 />
-
               </div>
-
             </q-card-section>
-
           </q-expansion-item>
-
         </q-card>
-
 
         <!-- =================================================
              EMPTY STATE
@@ -145,14 +105,8 @@
           bordered
           class="empty-card"
         >
-
           <q-card-section class="text-center q-pa-xl">
-
-            <q-icon
-              name="search_off"
-              size="64px"
-              color="grey-5"
-            />
+            <q-icon name="search_off" size="64px" color="grey-5" />
 
             <div class="text-h6 text-weight-bold q-mt-md">
               No questions found
@@ -169,44 +123,26 @@
               class="q-mt-md"
               @click="clearSearch"
             />
-
           </q-card-section>
-
         </q-card>
-
       </div>
-
 
       <!-- =====================================================
            CONTACT SUPPORT
       ====================================================== -->
-      <q-card
-        flat
-        class="support-card q-mt-xl"
-      >
-
+      <q-card flat class="support-card q-mt-xl">
         <q-card-section>
-
           <div class="row items-center">
-
             <div class="support-icon">
-              <q-icon
-                name="support_agent"
-                size="32px"
-                color="primary"
-              />
+              <q-icon name="support_agent" size="32px" color="primary" />
             </div>
 
             <div class="col q-ml-md">
-
-              <div class="text-h6 text-weight-bold">
-                Still need help?
-              </div>
+              <div class="text-h6 text-weight-bold"> Still need help? </div>
 
               <div class="text-grey-7 q-mt-xs">
                 Our support team is here to help you with your booking.
               </div>
-
             </div>
 
             <q-btn
@@ -216,28 +152,21 @@
               label="Contact Support"
               @click="contactSupport"
             />
-
           </div>
-
         </q-card-section>
-
       </q-card>
-
 
       <!-- =====================================================
            QUICK LINKS
       ====================================================== -->
       <div class="quick-links q-mt-xl q-mb-xl">
-
         <div class="text-subtitle1 text-weight-bold q-mb-md">
           Helpful Information
         </div>
 
         <div class="row q-col-gutter-md">
-
           <!-- Terms -->
           <div class="col-12 col-sm-4">
-
             <q-card
               flat
               bordered
@@ -245,14 +174,8 @@
               clickable
               @click="goToTerms"
             >
-
               <q-card-section>
-
-                <q-icon
-                  name="description"
-                  size="28px"
-                  color="primary"
-                />
+                <q-icon name="description" size="28px" color="primary" />
 
                 <div class="text-subtitle1 text-weight-bold q-mt-sm">
                   Terms & Conditions
@@ -261,17 +184,12 @@
                 <div class="text-caption text-grey-7 q-mt-xs">
                   Read our terms and conditions.
                 </div>
-
               </q-card-section>
-
             </q-card>
-
           </div>
-
 
           <!-- Privacy -->
           <div class="col-12 col-sm-4">
-
             <q-card
               flat
               bordered
@@ -279,14 +197,8 @@
               clickable
               @click="goToPrivacy"
             >
-
               <q-card-section>
-
-                <q-icon
-                  name="privacy_tip"
-                  size="28px"
-                  color="primary"
-                />
+                <q-icon name="privacy_tip" size="28px" color="primary" />
 
                 <div class="text-subtitle1 text-weight-bold q-mt-sm">
                   Privacy Policy
@@ -295,17 +207,12 @@
                 <div class="text-caption text-grey-7 q-mt-xs">
                   Learn how we protect your information.
                 </div>
-
               </q-card-section>
-
             </q-card>
-
           </div>
-
 
           <!-- Cancellation -->
           <div class="col-12 col-sm-4">
-
             <q-card
               flat
               bordered
@@ -313,14 +220,8 @@
               clickable
               @click="goToCancellation"
             >
-
               <q-card-section>
-
-                <q-icon
-                  name="event_busy"
-                  size="28px"
-                  color="primary"
-                />
+                <q-icon name="event_busy" size="28px" color="primary" />
 
                 <div class="text-subtitle1 text-weight-bold q-mt-sm">
                   Cancellation Policy
@@ -329,25 +230,16 @@
                 <div class="text-caption text-grey-7 q-mt-xs">
                   Learn about booking cancellation rules.
                 </div>
-
               </q-card-section>
-
             </q-card>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
-
   </q-page>
 </template>
 
-
 <script setup>
-
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -355,13 +247,11 @@ import { useQuasar } from 'quasar'
 const router = useRouter()
 const $q = useQuasar()
 
-
 // =====================================================
 // SEARCH
 // =====================================================
 
 const search = ref('')
-
 
 // =====================================================
 // CATEGORY
@@ -369,324 +259,208 @@ const search = ref('')
 
 const selectedCategory = ref('All')
 
-
 // =====================================================
 // FAQ DATA
 // =====================================================
 
 const faqs = ref([
-
   {
     id: 1,
     category: 'Booking',
-
     question: 'How can I book a vehicle on BatohiDrive?',
-
     answer: `
       <p>
-        Booking a vehicle on BatohiDrive is simple.
+        Use the search and booking flow available on the customer dashboard. Select your trip details, choose an available vehicle, review the booking information, and complete payment to confirm the service.
       </p>
-
-      <ol>
-        <li>Open the <strong>Search Vehicle</strong> section.</li>
-        <li>Enter your pickup location and travel details.</li>
-        <li>Select a vehicle that suits your requirements.</li>
-        <li>Review the vehicle and booking details.</li>
-        <li>Continue with the booking and payment process.</li>
-      </ol>
-
       <p>
-        Once your booking is successfully confirmed, you can view it
-        from the <strong>My Bookings</strong> section.
+        Once confirmed, you can track the booking from the My Bookings section of your account.
       </p>
     `
   },
-
   {
     id: 2,
     category: 'Booking',
-
-    question: 'How can I search for available vehicles?',
-
+    question: 'Who is responsible for the vehicle and driver?',
     answer: `
       <p>
-        Go to the <strong>Search Vehicle</strong> page from your customer
-        dashboard.
+        The relevant driver and vehicle owner are responsible for the vehicle, driver documents, registration, insurance, and safe operation of the service.
       </p>
-
       <p>
-        Enter your pickup location, destination and required travel
-        details. Available vehicles will then be displayed based on
-        your search criteria.
+        BatohiDrive provides the platform access and booking facilitation, but does not own each vehicle listed on the app.
       </p>
     `
   },
-
   {
     id: 3,
     category: 'Booking',
-
     question: 'How do I know if my booking is confirmed?',
-
     answer: `
       <p>
-        After successfully completing your booking, you can check its
-        status from the <strong>My Bookings</strong> section.
+        A booking is considered confirmed only after the payment and booking process has been successfully completed and you receive the platform confirmation.
       </p>
-
       <p>
-        A confirmed booking will display its booking status along with
-        the vehicle and trip information.
+        You can check the status in the My Bookings section of your account.
       </p>
     `
   },
-
   {
     id: 4,
     category: 'Payment',
-
     question: 'What payment methods are available?',
-
     answer: `
       <p>
-        BatohiDrive supports the payment methods made available during
-        the checkout process.
+        BatohiDrive supports the payment methods made available during the booking and checkout flow.
       </p>
-
       <p>
-        The available payment options will be displayed before you
-        confirm your booking.
+        The available payment options are displayed before payment confirmation.
       </p>
     `
   },
-
   {
     id: 5,
     category: 'Payment',
-
     question: 'When will my payment be charged?',
-
     answer: `
       <p>
-        Payment is processed according to the booking and payment
-        instructions shown during checkout.
+        Payment is processed according to the checkout flow and the booking terms shown before confirmation.
       </p>
-
       <p>
-        Always review the final amount before completing your payment.
+        Please review the final amount before completing the transaction.
       </p>
     `
   },
-
   {
     id: 6,
     category: 'Cancellation',
-
     question: 'How can I cancel my booking?',
-
     answer: `
       <p>
-        You can cancel an eligible booking from the
-        <strong>My Bookings</strong> section.
+        You can cancel an eligible booking from the My Bookings section of your account.
       </p>
-
       <p>
-        Open the booking you want to cancel and select the
-        <strong>Cancel Booking</strong> option.
-      </p>
-
-      <p>
-        Cancellation eligibility and applicable charges depend on the
-        cancellation policy associated with your booking.
+        Cancellation rules and any applicable charges depend on the specific booking terms and the cancellation policy.
       </p>
     `
   },
-
   {
     id: 7,
     category: 'Cancellation',
-
     question: 'Will I receive a refund if I cancel my booking?',
-
     answer: `
       <p>
-        Refund eligibility depends on the cancellation terms applicable
-        to your booking.
+        Refund eligibility depends on the cancellation terms and the reason for cancellation.
       </p>
-
       <p>
-        The refund amount may vary depending on when the booking is
-        cancelled and the applicable cancellation rules.
-      </p>
-
-      <p>
-        Please check the <strong>Refund Policy</strong> before cancelling
-        your booking.
+        Some bookings may be fully refundable, partially refundable, or non-refundable depending on the policy associated with that booking.
       </p>
     `
   },
-
   {
     id: 8,
     category: 'Vehicle',
-
     question: 'Can I choose a specific vehicle?',
-
     answer: `
       <p>
-        Yes. When available, you can select a vehicle from the vehicles
-        displayed for your search.
+        Yes, when available. You may select a vehicle based on your search results and preferences.
       </p>
-
       <p>
-        Vehicle availability depends on your selected location,
-        date and booking requirements.
+        Vehicle availability can vary by location, date, time, and service conditions.
       </p>
     `
   },
-
   {
     id: 9,
     category: 'Vehicle',
-
     question: 'Can I see vehicle details before booking?',
-
     answer: `
       <p>
-        Yes. You can open the vehicle details page before completing
-        your booking.
-      </p>
-
-      <p>
-        Vehicle information may include vehicle type, seating capacity,
-        images, features and other relevant booking information.
+        Yes. Vehicle details are typically displayed before confirmation so that you can review the vehicle category, features, and service information.
       </p>
     `
   },
-
   {
     id: 10,
     category: 'Driver',
-
-    question: 'Will a driver be provided with my booking?',
-
+    question: 'Will a driver be assigned to my booking?',
     answer: `
       <p>
-        Driver availability depends on the type of vehicle and service
-        selected during booking.
+        Driver assignment depends on the service type and availability. If a driver is included in the service, the relevant booking details will be provided through the platform.
       </p>
-
       <p>
-        If a driver is included, the relevant driver information will
-        be provided according to the booking details.
+        Customers are expected to use the driver information only for the relevant booking and service context.
       </p>
     `
   },
-
   {
     id: 11,
     category: 'Account',
-
     question: 'How can I update my profile information?',
-
     answer: `
       <p>
-        Open your customer profile from the account menu.
+        Open your profile from the account menu and update the available fields that can be edited.
       </p>
-
       <p>
-        From there, you can update the profile information that is
-        available for editing.
+        Keep your personal and contact details current so your bookings and communications remain accurate.
       </p>
     `
   },
-
   {
     id: 12,
     category: 'Account',
-
     question: 'I forgot my password. What should I do?',
-
     answer: `
       <p>
-        On the login page, select <strong>Forgot Password</strong>.
+        Use the Forgot Password option on the login page and follow the verification steps to reset your password.
       </p>
-
       <p>
-        Follow the verification steps to verify your account and create
-        a new password.
+        Keep your login credentials secure and do not share them with anyone.
       </p>
     `
   },
-
   {
     id: 13,
-    category: 'Booking',
-
-    question: 'Where can I see my previous bookings?',
-
+    category: 'Policy',
+    question: 'Is BatohiDrive the owner of the vehicle used for service?',
     answer: `
       <p>
-        You can view your previous and current bookings from the
-        <strong>My Bookings</strong> section of your customer panel.
+        Generally, no. BatohiDrive provides the platform and booking access, while the driver or vehicle owner remains responsible for the vehicle and its lawful operation.
       </p>
-
       <p>
-        You can also check the status and details of individual bookings
-        from there.
+        Customers should verify the booking, vehicle, and service details shown in the app before the trip begins.
       </p>
     `
   },
-
   {
     id: 14,
     category: 'Support',
-
     question: 'How can I contact BatohiDrive support?',
-
     answer: `
       <p>
-        You can contact BatohiDrive support using the support options
-        available in your customer panel.
+        You can contact support through the support option available in the customer panel or through the official support channel shown in the app.
       </p>
-
       <p>
-        When contacting support about a booking, keep your booking
-        information available so the team can assist you more quickly.
+        Keep your booking ID and relevant details ready so the support team can review the issue quickly.
       </p>
     `
   }
-
 ])
-
 
 // =====================================================
 // CATEGORIES
 // =====================================================
 
 const categories = computed(() => {
-
-  return [
-    ...new Set(
-      faqs.value.map(faq => faq.category)
-    )
-  ]
-
+  return [...new Set(faqs.value.map(faq => faq.category))]
 })
-
 
 // =====================================================
 // FILTER FAQ
 // =====================================================
 
 const filteredFaqs = computed(() => {
-
-  const keyword = search.value
-    .toLowerCase()
-    .trim()
+  const keyword = search.value.toLowerCase().trim()
 
   return faqs.value.filter(faq => {
-
     const matchesCategory =
       selectedCategory.value === 'All' ||
       faq.category === selectedCategory.value
@@ -698,31 +472,24 @@ const filteredFaqs = computed(() => {
       faq.category.toLowerCase().includes(keyword)
 
     return matchesCategory && matchesSearch
-
   })
-
 })
-
 
 // =====================================================
 // CLEAR SEARCH
 // =====================================================
 
 const clearSearch = () => {
-
   search.value = ''
 
   selectedCategory.value = 'All'
-
 }
-
 
 // =====================================================
 // CONTACT SUPPORT
 // =====================================================
 
 const contactSupport = () => {
-
   $q.notify({
     type: 'info',
     message: 'Support section will be available soon.',
@@ -731,47 +498,34 @@ const contactSupport = () => {
 
   // Later you can navigate to:
   // router.push('/customer/support')
-
 }
-
 
 // =====================================================
 // TERMS
 // =====================================================
 
 const goToTerms = () => {
-
   router.push('/customer/terms-and-conditions')
-
 }
-
 
 // =====================================================
 // PRIVACY
 // =====================================================
 
 const goToPrivacy = () => {
-
   router.push('/customer/privacy-policy')
-
 }
-
 
 // =====================================================
 // CANCELLATION
 // =====================================================
 
 const goToCancellation = () => {
-
   router.push('/customer/cancellation-policy')
-
 }
-
 </script>
 
-
 <style scoped>
-
 /* =====================================================
    PAGE
 ===================================================== */
@@ -780,7 +534,6 @@ const goToCancellation = () => {
   min-height: 100%;
   background: #f7f8fa;
 }
-
 
 /* =====================================================
    HEADER
@@ -816,7 +569,6 @@ const goToCancellation = () => {
   margin-right: 16px;
 }
 
-
 /* =====================================================
    TITLES
 ===================================================== */
@@ -833,7 +585,6 @@ const goToCancellation = () => {
   font-size: 14px;
 }
 
-
 /* =====================================================
    CONTAINER
 ===================================================== */
@@ -843,7 +594,6 @@ const goToCancellation = () => {
   margin: auto;
   padding: 28px 20px;
 }
-
 
 /* =====================================================
    SEARCH CARD
@@ -859,7 +609,6 @@ const goToCancellation = () => {
   width: 100%;
 }
 
-
 /* =====================================================
    CATEGORY
 ===================================================== */
@@ -874,7 +623,6 @@ const goToCancellation = () => {
   border-radius: 8px;
   min-height: 38px;
 }
-
 
 /* =====================================================
    FAQ CARD
@@ -894,7 +642,6 @@ const goToCancellation = () => {
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
 }
 
-
 /* =====================================================
    FAQ QUESTION
 ===================================================== */
@@ -905,7 +652,6 @@ const goToCancellation = () => {
   color: #1f2937;
   min-height: 62px;
 }
-
 
 /* =====================================================
    FAQ ANSWER
@@ -935,7 +681,6 @@ const goToCancellation = () => {
   margin-bottom: 6px;
 }
 
-
 /* =====================================================
    CATEGORY CHIP
 ===================================================== */
@@ -943,7 +688,6 @@ const goToCancellation = () => {
 .faq-category {
   margin-top: 15px;
 }
-
 
 /* =====================================================
    EMPTY STATE
@@ -953,7 +697,6 @@ const goToCancellation = () => {
   border-radius: 12px;
   background: #ffffff;
 }
-
 
 /* =====================================================
    SUPPORT
@@ -978,7 +721,6 @@ const goToCancellation = () => {
   background: rgba(25, 118, 210, 0.1);
 }
 
-
 /* =====================================================
    QUICK LINKS
 ===================================================== */
@@ -997,13 +739,11 @@ const goToCancellation = () => {
   box-shadow: 0 5px 18px rgba(0, 0, 0, 0.07);
 }
 
-
 /* =====================================================
    MOBILE
 ===================================================== */
 
 @media (max-width: 600px) {
-
   .faq-header {
     padding: 20px 16px;
   }
@@ -1037,7 +777,5 @@ const goToCancellation = () => {
     width: 100%;
     margin-top: 15px;
   }
-
 }
-
 </style>

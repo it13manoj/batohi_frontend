@@ -94,7 +94,7 @@ const sendOtp = () => {
   width: 100%;
   max-width: 420px;
   background: #fff;
-  padding: 40px;
+  padding: clamp(22px, 5vw, 40px);
   border-radius: 12px;
   box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
 }
@@ -103,6 +103,13 @@ const sendOtp = () => {
   text-align: center;
   color: #1976d2;
   margin-bottom: 20px;
+}
+
+.logo img {
+  height: clamp(100px, 20vw, 150px);
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 h4 {
@@ -177,5 +184,46 @@ input:focus {
 .bottom-link a {
   color: #1976d2;
   text-decoration: none;
+}
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 14px;
+  }
+
+  .auth-card {
+    border-radius: 10px;
+    padding: 22px 16px;
+  }
+
+  h4 {
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 22px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  label {
+    font-size: 14px;
+  }
+
+  input,
+  .btn {
+    font-size: 14px;
+    padding: 12px 13px;
+  }
+
+  .success,
+  .error {
+    font-size: 13px;
+    line-height: 1.5;
+  }
 }
 </style>
