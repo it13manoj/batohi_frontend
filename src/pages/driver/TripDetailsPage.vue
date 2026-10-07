@@ -229,6 +229,40 @@
           </q-card>
 
           <!-- =================================================
+               LIVE MAP CARD (shown for accepted / started trips)
+          ================================================== -->
+          <q-card
+            v-if="['accepted', 'started'].includes(trip.status)"
+            class="content-card q-mb-lg"
+          >
+            <q-card-section class="row items-center justify-between q-pb-xs">
+              <div class="section-title text-dark">
+                <q-icon name="map" color="primary" class="q-mr-sm" />
+                Live Map View
+              </div>
+              <div class="row items-center q-gutter-xs">
+                <q-badge v-if="isGpsBroadcasting" color="positive" class="row items-center q-px-sm">
+                  <q-icon name="gps_fixed" size="12px" class="q-mr-xs" />GPS LIVE
+                </q-badge>
+                <q-badge v-else color="grey-6" class="row items-center q-px-sm">
+                  <q-icon name="gps_off" size="12px" class="q-mr-xs" />GPS OFF
+                </q-badge>
+                <q-chip v-if="routeTrailLength > 0" dense color="purple-1" text-color="purple" icon="route" size="sm">
+                  {{ routeTrailLength }} pts recorded
+                </q-chip>
+              </div>
+            </q-card-section>
+            <q-separator />
+            <div id="driver-live-map" class="driver-live-map"></div>
+            <q-card-actions class="q-pa-sm q-gutter-xs">
+              <q-btn dense flat icon="my_location" color="primary" label="Center on me" @click="centerMapOnDriver" />
+              <q-btn dense flat icon="navigation" color="deep-orange"
+                :label="trip.status === 'accepted' ? 'Go to Pickup' : 'Go to Drop-off'"
+                @click="trip.status === 'accepted' ? navigateToPickup() : navigateToDrop()" />
+            </q-card-actions>
+          </q-card>
+
+          <!-- =================================================
                CUSTOMER CARD
           ================================================== -->
           <q-card class="content-card q-mb-lg">
@@ -814,12 +848,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
+import * as L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import driverService from '@/services/driver.service'
 import invoiceService from '@/services/invoice.service'
 import liveTrackingService from '@/services/liveTracking.service'
+import { useRouteHistory } from '@/composables/useRouteHistory'
+import { LocalStorage } from 'quasar'
+import { drawRouteOnMap } from '@/utils/routingUtils'
 
 const $q = useQuasar()
 const router = useRouter()
@@ -844,6 +883,26 @@ const cancelReason = ref('')
 // ─── GPS Live Broadcasting (for 'started' trips) ───────────────────
 let gpsWatcherId = null
 const isGpsBroadcasting = ref(false)
+
+// ─── Route History composable ──────────────────────────────────────
+const routeHistory = useRouteHistory()
+const routeTrailLength = computed(() => routeHistory.trail.value.length)
+
+// ─── Driver mini-map (Leaflet) ─────────────────────────────────────
+let driverMap          = null
+let driverSelfMarker   = null
+let driverPickupMarker = null
+let driverDropMarker   = null
+let driverRoutePolyline = null
+let driverTrailPolyline = null
+
+// Get logged-in driver ID for route history storage
+const driverUserId = computed(() => {
+  const raw = LocalStorage.getItem('user') || LocalStorage.getItem('driver')
+  if (!raw) return null
+  try { return typeof raw === 'object' ? (raw.id || raw.driver_id || null) : JSON.parse(raw)?.id || null }
+  catch { return null }
+})
 
 // Extract Trip ID from route parameters or query
 const tripId = computed(() => {
@@ -1166,6 +1225,88 @@ function downloadReceiptAction() {
   })
 }
 
+// ─── Driver Mini-Map Helpers ──────────────────────────────────────
+const makeDriverIcon = (bgColor, svgPath, size = 40) => L.divIcon({
+  className: '',
+  html: `<div style="background:${bgColor};width:${size}px;height:${size}px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,.4);border:2px solid #fff">${svgPath}</div>`,
+  iconSize:   [size, size],
+  iconAnchor: [size / 2, size / 2]
+})
+
+const CAR_SVG_D = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 0 24 24" width="20px" fill="#fff"><path d="M0 0h24v24H0z" fill="none"/><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-5h14v5z"/></svg>`
+const PIN_SVG_D = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 0 24 24" width="20px" fill="#fff"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`
+
+const driverCarIcon    = (size = 42) => makeDriverIcon('#027be3', CAR_SVG_D, size)
+const driverPickupIco  = () => makeDriverIcon('#027be3', PIN_SVG_D, 34)
+const driverDropIco    = () => makeDriverIcon('#c10015', PIN_SVG_D, 34)
+
+async function initDriverMap() {
+  if (!trip.value) return
+  await nextTick()
+  const el = document.getElementById('driver-live-map')
+  if (!el || driverMap) return
+
+  const pickupLat = trip.value.pickupLat || null
+  const pickupLng = trip.value.pickupLng || null
+  const defaultLat = pickupLat || 25.6033
+  const defaultLng = pickupLng || 85.1092
+
+  driverMap = L.map('driver-live-map').setView([defaultLat, defaultLng], 14)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19
+  }).addTo(driverMap)
+
+  // Pickup marker
+  if (pickupLat && pickupLng) {
+    driverPickupMarker = L.marker([pickupLat, pickupLng], { icon: driverPickupIco() })
+      .addTo(driverMap).bindPopup('Pickup Point')
+  }
+
+  // Drop marker
+  const dropLat = trip.value.dropLat || null
+  const dropLng = trip.value.dropLng || null
+  if (dropLat && dropLng) {
+    driverDropMarker = L.marker([dropLat, dropLng], { icon: driverDropIco() })
+      .addTo(driverMap).bindPopup('Drop-off Point')
+
+    // Draw route on map (OSRM → alt → curved fallback)
+    if (pickupLat && pickupLng) {
+      driverRoutePolyline = await drawRouteOnMap(L, driverMap, pickupLat, pickupLng, dropLat, dropLng, {
+        color: '#007bff', weight: 4, opacity: 0.75,
+        existingPolyline: driverRoutePolyline
+      })
+    }
+  }
+}
+
+function updateDriverMapPosition(lat, lng) {
+  if (!driverMap) return
+  if (driverSelfMarker) {
+    driverSelfMarker.setLatLng([lat, lng])
+  } else {
+    driverSelfMarker = L.marker([lat, lng], { icon: driverCarIcon() })
+      .addTo(driverMap).bindPopup('You (Driver)')
+  }
+
+  // Update trail polyline
+  const trail = routeHistory.trail.value
+  if (trail.length >= 2) {
+    if (driverTrailPolyline) {
+      driverTrailPolyline.setLatLngs(trail)
+    } else {
+      driverTrailPolyline = L.polyline(trail, {
+        color: '#7b61ff', weight: 3, opacity: 0.75, dashArray: '6 8'
+      }).addTo(driverMap)
+    }
+  }
+}
+
+function centerMapOnDriver() {
+  if (driverMap && driverSelfMarker) {
+    driverMap.setView(driverSelfMarker.getLatLng(), 15, { animate: true })
+  }
+}
+
 // ─── GPS Live Broadcasting ────────────────────────────────────────
 function startGpsBroadcasting() {
   if (!trip.value?.id || gpsWatcherId !== null) return
@@ -1174,19 +1315,28 @@ function startGpsBroadcasting() {
     return
   }
 
+  // Start route history recording
+  routeHistory.start(trip.value.id, null, driverUserId.value)
+
   isGpsBroadcasting.value = true
   gpsWatcherId = navigator.geolocation.watchPosition(
     async (position) => {
       const { latitude, longitude, heading, speed, accuracy } = position.coords
+
+      // 1. Push live location to server (every GPS fix)
       try {
         await liveTrackingService.updateDriverLocation(trip.value.id, latitude, longitude, {
-          heading,
-          speed,
-          accuracy
+          heading, speed, accuracy
         })
       } catch (err) {
         console.warn('GPS broadcast error:', err?.message)
       }
+
+      // 2. Record route history point (every 2 min via composable)
+      routeHistory.recordPoint(latitude, longitude)
+
+      // 3. Update the driver mini-map marker + trail
+      updateDriverMapPosition(latitude, longitude)
     },
     (err) => {
       console.warn('Geolocation watch error:', err.message)
@@ -1213,10 +1363,16 @@ function stopGpsBroadcasting() {
     gpsWatcherId = null
     isGpsBroadcasting.value = false
   }
+  routeHistory.stop()
 }
 
-// Watch trip status and auto-start/stop GPS
-watch(() => trip.value?.status, (newStatus) => {
+// Watch trip status and auto-start/stop GPS + init map
+watch(() => trip.value?.status, async (newStatus) => {
+  if (newStatus === 'accepted' || newStatus === 'started') {
+    // Init driver map after the card renders
+    await nextTick()
+    setTimeout(() => initDriverMap(), 300)
+  }
   if (newStatus === 'started') {
     startGpsBroadcasting()
   } else if (['completed', 'cancelled', 'rejected'].includes(newStatus)) {
@@ -1229,12 +1385,24 @@ function goBack() {
   router.push({ name: 'DriverDashboard' })
 }
 
-onMounted(() => {
-  loadTrip()
+onMounted(async () => {
+  await loadTrip()
+  // If trip is already accepted/started on page load, init the map
+  if (trip.value && ['accepted', 'started'].includes(trip.value.status)) {
+    setTimeout(() => initDriverMap(), 500)
+  }
+  // Auto-start GPS if trip is already started
+  if (trip.value?.status === 'started') {
+    startGpsBroadcasting()
+  }
 })
 
 onUnmounted(() => {
   stopGpsBroadcasting()
+  if (driverMap) {
+    driverMap.remove()
+    driverMap = null
+  }
 })
 </script>
 
@@ -1263,6 +1431,15 @@ onUnmounted(() => {
   border-radius: 16px;
   border: 1px solid #e7eaf0;
   box-shadow: 0 3px 14px rgba(0, 0, 0, 0.05);
+}
+
+/* =====================================================
+   DRIVER LIVE MAP
+===================================================== */
+.driver-live-map {
+  width: 100%;
+  height: 320px;
+  z-index: 0;
 }
 
 .section-title {
